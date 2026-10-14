@@ -32,7 +32,7 @@
   const panel = document.getElementById("panel");
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-  const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9ñ ]+/g, " ").replace(/\s+/g, " ").trim();
+  const norm = (s) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9ñ ]+/g, " ").replace(/\s+/g, " ").trim();
   const isDesktop = () => matchMedia("(min-width: 860px)").matches;
   const canHover = matchMedia("(hover: hover)").matches;
 
@@ -71,6 +71,8 @@
     return out;
   }
 
+  const normLine = (c) => String(c).trim().replace(/[.\-]+$/, "").trim().replace(/^PSA(\d)/, "PSA $1");
+
   // Chapa de línea con su color oficial (si se conoce).
   function lineStyle(code) {
     const l = lines && lines[code];
@@ -100,6 +102,7 @@
   let current = null;             // parada abierta
   let refreshTimer = null;
   let fetchCtl = null;
+  let qTimer = null;               // búsqueda pendiente mientras se escribe
   let reqSeq = 0;                 // descarta respuestas de peticiones antiguas
   let lines = null;               // data/lineas.json: recorrido y paradas de cada línea
   let lineOrigin = null;          // parada desde la que se abrió la línea
@@ -118,7 +121,7 @@
   map.attributionControl.setPrefix(false);
   if (isDesktop()) L.control.zoom({ position: "topleft" }).addTo(map);
 
-  // Mapa base de OpenStreetMap: gratuito y sin clave. En modo oscuro se oscurece con CSS.
+  // Mapa base de OpenStreetMap: gratuito y sin clave.
   // OpenStreetMap exige saber desde qué web se piden los mapas (cabecera Referer).
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 19, referrerPolicy: "strict-origin-when-cross-origin",
@@ -273,7 +276,7 @@
 
   function highlight(name, tokens) {
     // Subraya las coincidencias sin tener en cuenta tildes.
-    const plain = name.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+    const plain = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
     const ranges = [];
     tokens.forEach((t) => { const i = plain.indexOf(t); if (i >= 0) ranges.push([i, i + t.length]); });
     if (!ranges.length) return esc(name);
@@ -394,7 +397,7 @@
   }
   function goBack() {
     if (history.state && history.state.d > 0) history.back();   // popstate llama a route()
-    else navigate(current && active ? `linea/${active.code}` : "", { replace: true });
+    else navigate("", { replace: true });
   }
   function route() {
     if (!stops.length) return;
@@ -450,7 +453,8 @@
     lineGroup.clearLayers();
     // Solo el sentido elegido: su trazado y sus paradas.
     const prev = active.stops;
-    active.stops = new Set(l.sentidos[active.dir].paradas);
+    const dir = l.sentidos[active.dir];
+    active.stops = new Set([...dir.paradas, ...(dir.otras || [])]);
     updateStopVisibility();
     stops.forEach((s) => {
       const on = active.stops.has(s.id);
@@ -458,7 +462,14 @@
       if (on || prev.has(s.id)) refreshIcon(s);
     });
     // Trazado con borde para que se vea sobre cualquier fondo.
-    const pts = decodePolyline(l.sentidos[active.dir].trazado);
+    // Ramales (solo algunos viajes): trazo continuo más fino, debajo del recorrido principal.
+    (dir.ramales || []).forEach((r) => {
+      const rp = decodePolyline(r);
+      L.polyline(rp, { renderer, color: "#13222C", weight: 7, opacity: 0.25, interactive: false }).addTo(lineGroup);
+      L.polyline(rp, { renderer, color: "#FFFFFF", weight: 6, opacity: 1, interactive: false }).addTo(lineGroup);
+      L.polyline(rp, { renderer, color: l.color, weight: 3.5, opacity: 0.9, interactive: false, lineCap: "round" }).addTo(lineGroup);
+    });
+    const pts = decodePolyline(dir.trazado);
     L.polyline(pts, { renderer, color: "#13222C", weight: 11, opacity: 0.35, interactive: false }).addTo(lineGroup);
     L.polyline(pts, { renderer, color: "#FFFFFF", weight: 9, opacity: 1, interactive: false }).addTo(lineGroup);
     L.polyline(pts, { renderer, color: l.color, weight: 6, opacity: 1, interactive: false, lineCap: "round" }).addTo(lineGroup);
@@ -466,7 +477,8 @@
 
   function fitLine() {
     const l = lines[active.code];
-    const pts = l.sentidos.flatMap((d) => decodePolyline(d.trazado));
+    const d = l.sentidos[active.dir];
+    const pts = [d.trazado, ...(d.ramales || [])].flatMap(decodePolyline);
     const r = panel.getBoundingClientRect();
     const opts = isDesktop()
       ? { paddingTopLeft: [r.right + 24, 24], paddingBottomRight: [24, 24] }
@@ -480,7 +492,7 @@
     if (changed) {
       clearLine();
       // Abierta desde una parada: el sentido que pasa por ella.
-      const dirWith = lineOrigin ? lines[code].sentidos.findIndex((d) => d.paradas.includes(lineOrigin)) : -1;
+      const dirWith = lineOrigin ? lines[code].sentidos.findIndex((d) => d.paradas.includes(lineOrigin) || (d.otras || []).includes(lineOrigin)) : -1;
       active = { code, dir: Math.max(0, dirWith), stops: new Set() };
     }
     const l = lines[code];
@@ -509,19 +521,26 @@
 
   function renderLineStops() {
     const l = lines[active.code];
-    const ids = l.sentidos[active.dir].paradas;
+    const dir = l.sentidos[active.dir];
     const list = $("#line-stops");
     list.style.setProperty("--lc", l.color);
-    list.replaceChildren(...ids.map((id) => byId.get(id)).filter(Boolean).map((s) =>
-      stopItem(s, { dist: me ? haversine(me, s.ll) : null, noLines: true })));
+    const item = (s) => stopItem(s, { dist: me ? haversine(me, s.ll) : null, noLines: true });
+    const items = dir.paradas.map((id) => byId.get(id)).filter(Boolean).map(item);
+    const extra = (dir.otras || []).map((id) => byId.get(id)).filter(Boolean);
+    if (extra.length) {
+      const head = groupHead(t("some_trips"));
+      head.classList.add("branch-head");
+      items.push(head, ...extra.map((s) => { const li = item(s); li.classList.add("branch"); return li; }));
+    }
+    list.replaceChildren(...items);
     $("#line-stops").scrollTop = 0;
   }
 
   // ---------- Ficha de parada ----------
-  function showStop(id) {
+  function showStop(id, { repaint = false } = {}) {
     const s = byId.get(id);
     if (current !== s) leaveStop();
-    clearLine();   // la ficha de parada se ve sin la línea anterior encima
+    if (!repaint) clearLine();   // la ficha de parada se ve sin la línea anterior encima
     current = s;
     showView("stop");
     $("#stop-name").textContent = s.name;
@@ -531,6 +550,7 @@
     $("#infobus").href = INFOBUS_URL(s.id);
     updateFavBtn();
     document.title = `${s.name} · Próximo Vitrasa`;
+    if (repaint) return;           // solo volver a escribir los textos (cambio de idioma)
     if (!isDesktop()) panel.dataset.state = "stop";
     selRing.setLatLng(s.ll).addTo(map);
     focusOn(s.ll);
@@ -609,7 +629,7 @@
     // Agrupa por línea y destino; muestra el próximo y el siguiente.
     const groups = new Map();
     list.forEach((b) => {
-      const linea = String(b.linea).trim();
+      const linea = normLine(b.linea);
       const ruta = titleCase(String(b.ruta || ""));
       const k = `${linea}|${ruta}`;
       if (!groups.has(k)) groups.set(k, { linea, ruta, mins: [] });
@@ -628,7 +648,7 @@
       // Toda la fila (número, destino y tiempo) abre la línea en el mapa.
       const known = lines && lines[g.linea];
       const tag = known ? "button" : "div";
-      const attrs = known ? ` type="button" data-line="${esc(g.linea)}" aria-label="${esc(t("see_line", { code: g.linea }))}"` : "";
+      const attrs = known ? ` type="button" data-line="${esc(g.linea)}" title="${esc(t("see_line", { code: g.linea }))}"` : "";
       return `<${tag} class="arrival"${attrs}>
         <span class="badge"${lineStyle(g.linea)}>${esc(g.linea)}</span>
         <span class="route"><b>${esc(g.ruta)}</b>${next}</span>
@@ -641,6 +661,8 @@
   // Paradas y líneas se abren desde cualquier lista o chapa del panel.
   $("#panel").addEventListener("click", (e) => {
     const stop = e.target.closest("button[data-id]");
+    // Abrir un resultado anula la búsqueda que estaba a punto de ejecutarse.
+    if (stop || e.target.closest("button[data-line]")) clearTimeout(qTimer);
     if (stop) { $("#q").blur(); navigate(stop.dataset.id); return; }
     const line = e.target.closest("button[data-line]");
     if (line) {
@@ -670,19 +692,23 @@
     toast(favs.includes(id) ? t("fav_added") : t("fav_removed"));
   });
   $("#refresh").addEventListener("click", () => loadArrivals(false));
-  $("#tab-near").addEventListener("click", () => setTab("near"));
-  $("#tab-fav").addEventListener("click", () => setTab("fav"));
-  $("#tab-lines").addEventListener("click", () => setTab("lines"));
+  // Tocar una pestaña muestra su contenido aunque quedara texto en el buscador.
+  TABS.forEach((tab) => $(`#tab-${tab}`).addEventListener("click", () => { $("#q").value = ""; setTab(tab); }));
   $("#locate").addEventListener("click", locate);
 
-  let qTimer;
   $("#q").addEventListener("input", () => {
     clearTimeout(qTimer);
     qTimer = setTimeout(() => { if (location.hash) navigate(""); else render(); }, 120);
   });
   $("#q").addEventListener("focus", () => { if (!isDesktop()) $("#panel").dataset.state = "full"; });
   $("#q").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") { const first = $("#list button[data-id]"); if (first) first.click(); }
+    if (e.key === "Enter") {
+      // Resultados al día con lo escrito antes de abrir el primero.
+      clearTimeout(qTimer);
+      if (!location.hash) render();
+      const first = $("#list button[data-id], #list button[data-line]");
+      if (first) first.click();
+    }
     if (e.key === "Escape") { e.target.value = ""; render(); }
   });
 
@@ -743,8 +769,9 @@
     applyStatic();
     // Volver a pintar lo que está a la vista con el idioma nuevo.
     if (current) {
-      showStop(current.id);
+      showStop(current.id, { repaint: true });
       if (lastArrivals) renderArrivals(lastArrivals);
+      showUpdated();
     } else if (active) showLine(active.code);
     else render();
   }

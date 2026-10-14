@@ -7,7 +7,11 @@ Uso:
     python3 tools/actualizar_lineas.py ruta/al/gtfs_vigo.zip
 
 Por cada línea de la lista oficial de paradas (data/oficial/paradas.json) y cada sentido,
-toma el recorrido que usan más viajes, lo simplifica y guarda sus paradas en orden.
+toma el recorrido que usan más viajes y guarda sus paradas en orden. Si alguna parada de esa
+línea solo la atienden variantes (ramales), añade los ramales necesarios para cubrirlas.
+
+Además corrige data/paradas.geojson: quita de cada parada las líneas que, según el GTFS,
+no tienen ningún viaje por ella (la lista oficial a veces está desactualizada).
 """
 import csv
 import io
@@ -142,7 +146,31 @@ def main(gtfs_zip: str) -> None:
         maximo = max(n_paradas[f] for f in c)
         completos = [f for f in c if n_paradas[f] >= 0.7 * maximo]
         elegidos[clave] = max(completos, key=lambda f: (c[f], n_paradas[f]))
-    formas_necesarias = set(elegidos.values())
+    # Paradas atendidas por cada línea según los viajes reales del GTFS.
+    atendidas = defaultdict(set)
+    for clave, c in uso.items():
+        for f in c:
+            atendidas[clave[0]].update(gtfs_a_parada[s] for _, s in paradas_viaje[viaje_de[f]] if s in gtfs_a_parada)
+
+    def paradas_de(forma):
+        return [gtfs_a_parada[s] for _, s in sorted(paradas_viaje[viaje_de[forma]]) if s in gtfs_a_parada]
+
+    # Ramales: variantes del mismo sentido necesarias para cubrir sus paradas que no están en el principal.
+    ramales = {}
+    for clave, c in uso.items():
+        servidas = set().union(*(set(paradas_de(f)) for f in c))
+        cubiertas = set(paradas_de(elegidos[clave]))
+        elegidas = []
+        while servidas - cubiertas:
+            resto = servidas - cubiertas
+            f = max((f for f in c if f != elegidos[clave] and f not in elegidas),
+                    key=lambda f: (len(resto & set(paradas_de(f))), c[f]), default=None)
+            if f is None or not resto & set(paradas_de(f)):
+                break
+            elegidas.append(f)
+            cubiertas |= set(paradas_de(f))
+        ramales[clave] = elegidas
+    formas_necesarias = set(elegidos.values()) | {f for fs in ramales.values() for f in fs}
 
     formas = defaultdict(list)
     for f in leer(z, "shapes.txt"):
@@ -164,11 +192,18 @@ def main(gtfs_zip: str) -> None:
         for clave in sorted(c for c in elegidos if c[0] == linea):
             forma = elegidos[clave]
             puntos = [(la, lo) for _, la, lo in sorted(formas[forma])]
-            ids = [gtfs_a_parada[s] for _, s in sorted(paradas_viaje[viaje_de[forma]]) if s in gtfs_a_parada]
+            ids = paradas_de(forma)
+            extra = []
+            for f in ramales[clave]:
+                extra += [p for p in paradas_de(f) if p not in ids and p not in extra]
             sentidos.append({
                 "destino": titulo(destinos[(clave, forma)].most_common(1)[0][0]),
                 "paradas": ids,
                 "trazado": codificar(simplificar(puntos, TOLERANCIA_M)),
+                # Paradas que solo atienden algunos viajes, y el trazado de esos ramales.
+                "otras": extra,
+                "ramales": [codificar(simplificar([(la, lo) for _, la, lo in sorted(formas[f])], TOLERANCIA_M))
+                            for f in ramales[clave]],
             })
         salida[linea] = {
             "nombre": titulo(r["route_long_name"]),
@@ -183,6 +218,21 @@ def main(gtfs_zip: str) -> None:
     faltan = sorted(lineas_actuales - set(salida))
     if faltan:
         print("Líneas sin recorrido en el GTFS:", ", ".join(faltan))
+
+    # Corregir las líneas de cada parada con los viajes reales.
+    ruta_paradas = ROOT / "data" / "paradas.geojson"
+    gj = json.loads(ruta_paradas.read_text(encoding="utf-8"))
+    quitadas = Counter()
+    for f in gj["features"]:
+        pid = f["properties"]["id"]
+        buenas = [l for l in f["properties"]["lineas"] if l not in salida or pid in atendidas[l]]
+        for l in set(f["properties"]["lineas"]) - set(buenas):
+            quitadas[l] += 1
+        f["properties"]["lineas"] = buenas
+    ruta_paradas.write_text(json.dumps(gj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    if quitadas:
+        print("Líneas quitadas de paradas donde no tienen viajes:",
+              ", ".join(f"{l} ({n})" for l, n in quitadas.most_common()))
 
 
 if __name__ == "__main__":

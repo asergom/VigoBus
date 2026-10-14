@@ -7,6 +7,8 @@ Uso:
     python3 tools/actualizar_paradas.py data/oficial/paradas.json
 
 Escribe data/paradas.geojson con: id (número de parada de Vitrasa), nombre y líneas.
+Después hay que ejecutar tools/actualizar_lineas.py, que corrige las líneas de cada parada
+con los viajes reales del GTFS.
 """
 import json
 import re
@@ -22,6 +24,8 @@ def limpiar_nombre(nombre: str) -> str:
     n = re.sub(r"\s{2,}(?=\S)", ", ", n)
     n = re.sub(r"\s+", " ", n)
     n = re.sub(r"\s*,\s*", ", ", n)
+    n = re.sub(r"\(\s+", "(", n)
+    n = re.sub(r"\s+\)", ")", n)
     return n
 
 

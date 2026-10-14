@@ -14,6 +14,7 @@ window.PV_I18N = {
 
   dict: {
     es: {
+      some_trips: "Solo en algunos viajes",
       language: "Idioma", map: "Mapa de paradas", panel: "Paradas", grip: "Ampliar o reducir panel",
       search_label: "Buscar parada o línea", search_ph: "Parada, número o línea",
       tab_near: "Cerca", tab_fav: "Favoritas", tab_lines: "Líneas", back: "Volver",
@@ -42,6 +43,7 @@ window.PV_I18N = {
       file_warning: "Abre la web desde un servidor (por ejemplo, GitHub Pages) para que se vea el mapa.",
     },
     gl: {
+      some_trips: "Só nalgunhas viaxes",
       language: "Idioma", map: "Mapa de paradas", panel: "Paradas", grip: "Ampliar ou reducir o panel",
       search_label: "Buscar parada ou liña", search_ph: "Parada, número ou liña",
       tab_near: "Preto", tab_fav: "Favoritas", tab_lines: "Liñas", back: "Volver",
@@ -70,6 +72,7 @@ window.PV_I18N = {
       file_warning: "Abre a web desde un servidor (por exemplo, GitHub Pages) para que se vexa o mapa.",
     },
     pt: {
+      some_trips: "Só em algumas viagens",
       language: "Idioma", map: "Mapa de paragens", panel: "Paragens", grip: "Expandir ou reduzir o painel",
       search_label: "Procurar paragem ou linha", search_ph: "Paragem, número ou linha",
       tab_near: "Perto", tab_fav: "Favoritas", tab_lines: "Linhas", back: "Voltar",
@@ -98,6 +101,7 @@ window.PV_I18N = {
       file_warning: "Abra o site a partir de um servidor (por exemplo, GitHub Pages) para ver o mapa.",
     },
     eu: {
+      some_trips: "Bidaia batzuetan bakarrik",
       language: "Hizkuntza", map: "Geltokien mapa", panel: "Geltokiak", grip: "Handitu edo txikitu panela",
       search_label: "Bilatu geltokia edo linea", search_ph: "Geltokia, zenbakia edo linea",
       tab_near: "Gertu", tab_fav: "Gogokoak", tab_lines: "Lineak", back: "Itzuli",
@@ -126,6 +130,7 @@ window.PV_I18N = {
       file_warning: "Ireki webgunea zerbitzari batetik (adibidez, GitHub Pages) mapa ikusteko.",
     },
     ca: {
+      some_trips: "Només en alguns viatges",
       language: "Idioma", map: "Mapa de parades", panel: "Parades", grip: "Amplia o redueix el tauler",
       search_label: "Cerca una parada o línia", search_ph: "Parada, número o línia",
       tab_near: "A prop", tab_fav: "Preferides", tab_lines: "Línies", back: "Torna",
@@ -154,6 +159,7 @@ window.PV_I18N = {
       file_warning: "Obre el web des d'un servidor (per exemple, GitHub Pages) perquè es vegi el mapa.",
     },
     en: {
+      some_trips: "Only on some trips",
       language: "Language", map: "Stop map", panel: "Stops", grip: "Expand or collapse panel",
       search_label: "Search for a stop or line", search_ph: "Stop, number or line",
       tab_near: "Nearby", tab_fav: "Favourites", tab_lines: "Lines", back: "Back",
@@ -182,6 +188,7 @@ window.PV_I18N = {
       file_warning: "Open the site from a server (for example, GitHub Pages) to see the map.",
     },
     fr: {
+      some_trips: "Seulement sur certains trajets",
       language: "Langue", map: "Carte des arrêts", panel: "Arrêts", grip: "Agrandir ou réduire le panneau",
       search_label: "Rechercher un arrêt ou une ligne", search_ph: "Arrêt, numéro ou ligne",
       tab_near: "À proximité", tab_fav: "Favoris", tab_lines: "Lignes", back: "Retour",
@@ -210,6 +217,7 @@ window.PV_I18N = {
       file_warning: "Ouvrez le site depuis un serveur (par exemple GitHub Pages) pour afficher la carte.",
     },
     de: {
+      some_trips: "Nur bei einigen Fahrten",
       language: "Sprache", map: "Haltestellenkarte", panel: "Haltestellen", grip: "Bereich vergrößern oder verkleinern",
       search_label: "Haltestelle oder Linie suchen", search_ph: "Haltestelle, Nummer oder Linie",
       tab_near: "In der Nähe", tab_fav: "Favoriten", tab_lines: "Linien", back: "Zurück",

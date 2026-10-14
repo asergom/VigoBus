@@ -64,8 +64,15 @@ Los recorridos y colores de las líneas salen del GTFS del Concello
 (https://datos.vigo.org/data/transporte/gtfs_vigo.zip). Para actualizarlos:
 
 ```
+python3 tools/actualizar_paradas.py
 python3 tools/actualizar_lineas.py ruta/al/gtfs_vigo.zip
 ```
+
+`actualizar_lineas.py` guarda, por cada línea y sentido, el recorrido principal y los ramales
+necesarios para que la línea pase por todas sus paradas (en el mapa, los ramales se ven con un
+trazo más fino). También corrige las líneas de cada parada con los viajes reales del GTFS: en
+octubre de 2026 la lista oficial asignaba la C3d a 64 paradas de Urzáiz y Gran Vía por las que
+no pasa (comprobado también con los tiempos en vivo).
 
 La capa original de QGIS tenía 935 paradas válidas. Al cruzarla con la lista oficial faltaban 293, y 67 ya no existían (ni en la lista ni en la API de tiempos); están en `data/descartadas.csv`.
 

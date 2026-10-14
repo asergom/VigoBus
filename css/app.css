@@ -200,6 +200,11 @@ button.badge:hover { filter: brightness(1.08); }
   content: ""; position: absolute; left: 19px; top: 50%; width: 16px; height: 16px; margin-top: -8px;
   border-radius: 50%; background: var(--surface); border: 4px solid var(--lc); box-sizing: border-box; pointer-events: none;
 }
+/* Paradas de ramales: sin trazo continuo, con punto más pequeño */
+.route-list .branch-head { padding-left: 46px; }
+.route-list .branch-head::before, .route-list .branch-head::after, .route-list .branch::before { display: none; }
+.route-list .branch::after { width: 12px; height: 12px; margin-top: -6px; left: 21px; border-width: 3px; }
+@media (min-width: 860px) { .route-list .branch-head { padding-left: 52px; } .route-list .branch::after { left: 25px; } }
 @media (min-width: 860px) { .stops.route-list button { padding-left: 52px; } .route-list li::before { left: 28px; } .route-list li::after { left: 23px; } }
 .route { min-width: 0; }
 .route b { display: block; font-weight: 600; font-size: 16px; line-height: 1.2; overflow-wrap: anywhere; }
