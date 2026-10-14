@@ -446,22 +446,20 @@
   function drawLine() {
     const l = lines[active.code];
     lineGroup.clearLayers();
+    // Solo el sentido elegido: su trazado y sus paradas.
+    const prev = active.stops;
+    active.stops = new Set(l.sentidos[active.dir].paradas);
     updateStopVisibility();
     stops.forEach((s) => {
       const on = active.stops.has(s.id);
       s.marker.setOpacity(on ? 1 : 0.12).setZIndexOffset(on ? 500 : 0);
-      if (on) refreshIcon(s);
+      if (on || prev.has(s.id)) refreshIcon(s);
     });
-    // Primero el sentido no elegido (más tenue) y encima el elegido, con borde para verse en cualquier fondo.
-    const order = l.sentidos.map((d, i) => i).sort((a, b) => (a === active.dir) - (b === active.dir));
-    order.forEach((i) => {
-      const pts = decodePolyline(l.sentidos[i].trazado);
-      const main = i === active.dir;
-      L.polyline(pts, { renderer, color: "#13222C", weight: 11, opacity: main ? 0.35 : 0.15, interactive: false }).addTo(lineGroup);
-      L.polyline(pts, { renderer, color: "#FFFFFF", weight: 9, opacity: main ? 1 : 0.6, interactive: false }).addTo(lineGroup);
-      L.polyline(pts, { renderer, color: l.color, weight: 6, opacity: main ? 1 : 0.45, interactive: false,
-        dashArray: main ? null : "2 9", lineCap: "round" }).addTo(lineGroup);
-    });
+    // Trazado con borde para que se vea sobre cualquier fondo.
+    const pts = decodePolyline(l.sentidos[active.dir].trazado);
+    L.polyline(pts, { renderer, color: "#13222C", weight: 11, opacity: 0.35, interactive: false }).addTo(lineGroup);
+    L.polyline(pts, { renderer, color: "#FFFFFF", weight: 9, opacity: 1, interactive: false }).addTo(lineGroup);
+    L.polyline(pts, { renderer, color: l.color, weight: 6, opacity: 1, interactive: false, lineCap: "round" }).addTo(lineGroup);
   }
 
   function fitLine() {
@@ -479,7 +477,7 @@
     const changed = !active || active.code !== code;
     if (changed) {
       clearLine();
-      active = { code, dir: 0, stops: new Set(lines[code].sentidos.flatMap((d) => d.paradas)) };
+      active = { code, dir: 0, stops: new Set() };
     }
     const l = lines[code];
     showView("line");
