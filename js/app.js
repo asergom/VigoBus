@@ -73,10 +73,16 @@
   if (isDesktop()) L.control.zoom({ position: "topleft" }).addTo(map);
 
   // Mapa base de OpenStreetMap: gratuito y sin clave. En modo oscuro se oscurece con CSS.
+  // OpenStreetMap exige saber desde qué web se piden los mapas (cabecera Referer).
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    maxZoom: 19,
+    maxZoom: 19, referrerPolicy: "strict-origin-when-cross-origin",
     attribution: '© <a href="https://www.openstreetmap.org/copyright">Colaboradores de OpenStreetMap</a>',
   }).addTo(map);
+
+  // Abierta como archivo (file://) no hay web de origen y OpenStreetMap bloquea el mapa.
+  if (location.protocol === "file:") {
+    setTimeout(() => toast("Abre la web desde un servidor (por ejemplo, GitHub Pages) para que se vea el mapa."), 800);
+  }
 
   const css = getComputedStyle(document.documentElement);
   const RED = css.getPropertyValue("--bus").trim() || "#D3202F";
