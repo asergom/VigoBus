@@ -1,0 +1,25 @@
+name: Descargar paradas oficiales
+on:
+  push:
+    branches: [datos-oficiales]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  descargar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descargar dataset del Concello de Vigo
+        run: |
+          mkdir -p data/oficial
+          curl -sSL --retry 3 -m 120 -o data/oficial/paradas.json https://datos.vigo.org/data/transporte/paradas.json
+          ls -la data/oficial
+          head -c 600 data/oficial/paradas.json
+      - name: Guardar en la rama
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add data/oficial
+          git commit -m "Datos oficiales de paradas descargados" || echo "sin cambios"
+          git push
