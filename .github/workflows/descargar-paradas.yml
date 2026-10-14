@@ -16,6 +16,16 @@ jobs:
           curl -sSL --retry 3 -m 120 -o data/oficial/paradas.json https://datos.vigo.org/data/transporte/paradas.json
           ls -la data/oficial
           head -c 600 data/oficial/paradas.json
+      - name: Comprobar paradas que no están en la lista oficial
+        run: |
+          : > data/oficial/comprobacion.jsonl
+          while read id; do
+            [ -z "$id" ] && continue
+            r=$(curl -sS -m 30 "https://datos.vigo.org/vci_api_app/api2.jsp?id=$id&ttl=1&tipo=TRANSPORTE-ESTIMACION-PARADA")
+            echo "{\"id\":\"$id\",\"respuesta\":$r}" >> data/oficial/comprobacion.jsonl
+            sleep 0.5
+          done < data/oficial/comprobar.txt
+          wc -l data/oficial/comprobacion.jsonl
       - name: Guardar en la rama
         run: |
           git config user.name "github-actions"
