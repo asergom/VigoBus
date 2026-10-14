@@ -1,0 +1,29 @@
+name: Descargar recorridos de lineas
+on:
+  push:
+    branches: [datos-lineas]
+permissions:
+  contents: write
+jobs:
+  descargar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: GTFS del Concello
+        run: |
+          mkdir -p fuentes
+          curl -sSL --retry 3 -m 180 -o fuentes/gtfs_vigo.zip https://datos.vigo.org/data/transporte/gtfs_vigo.zip
+          unzip -l fuentes/gtfs_vigo.zip || true
+      - name: Rutas de OpenStreetMap
+        run: |
+          Q='[out:json][timeout:120];relation["type"="route"]["route"="bus"](42.10,-8.85,42.30,-8.60);out geom;'
+          curl -sS --retry 3 -m 240 -A "proximovitrasa (github.com/asergom/proximovitrasa)" \
+            --data-urlencode "data=$Q" https://overpass-api.de/api/interpreter -o fuentes/osm_rutas.json
+          ls -la fuentes
+      - name: Guardar
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add fuentes
+          git commit -m "Fuentes de recorridos descargadas" || true
+          git push
