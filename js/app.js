@@ -72,10 +72,10 @@
   map.attributionControl.setPrefix(false);
   if (isDesktop()) L.control.zoom({ position: "topleft" }).addTo(map);
 
-  const dark = matchMedia("(prefers-color-scheme: dark)").matches;
-  L.tileLayer(`https://{s}.basemaps.cartocdn.com/${dark ? "dark_all" : "light_all"}/{z}/{x}/{y}{r}.png`, {
-    maxZoom: 20, subdomains: "abcd",
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> · © <a href="https://carto.com/attributions">CARTO</a>',
+  // Mapa base de OpenStreetMap: gratuito y sin clave. En modo oscuro se oscurece con CSS.
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">Colaboradores de OpenStreetMap</a>',
   }).addTo(map);
 
   const css = getComputedStyle(document.documentElement);

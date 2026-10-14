@@ -1,6 +1,6 @@
 // Service worker: la app (interfaz y paradas) funciona sin conexión.
 // Los tiempos de llegada siempre se piden a la red. Sube VERSION al cambiar archivos.
-const VERSION = "pv-v1";
+const VERSION = "pv-v2";
 const SHELL = [
   "./",
   "index.html",

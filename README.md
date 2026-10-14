@@ -58,4 +58,8 @@ python3 -m http.server
 
 y abre http://localhost:8000.
 
-Mapa base © OpenStreetMap y © CARTO.
+## Coste
+
+Todo es gratuito y sin claves: el mapa base es el de OpenStreetMap (con su atribución), los tiempos vienen de la API abierta del Concello de Vigo y Leaflet y Barlow son de código abierto. Para alojarla basta GitHub Pages.
+
+Mapa base © colaboradores de OpenStreetMap.

@@ -180,6 +180,11 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .leaflet-control-attribution { font-size: 11px; }
 .leaflet-top.leaflet-left { top: env(safe-area-inset-top); }
 .leaflet-bar a { color: var(--ink); background: var(--surface); border-color: var(--line); }
+/* Mapa base apagado para que destaquen las paradas; en modo oscuro, invertido. */
+.leaflet-tile-pane { filter: saturate(.55) contrast(.92) brightness(1.03); }
+@media (prefers-color-scheme: dark) {
+  .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.4); }
+}
 .me-dot { width: 18px; height: 18px; border-radius: 50%; background: #1C6FA8; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(28, 111, 168, .25); }
 
 /* ---------- Escritorio: panel lateral ---------- */
