@@ -170,6 +170,8 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   display: grid; grid-template-columns: 58px 1fr auto; align-items: center; gap: 12px;
   padding: 10px 0; border-bottom: 1px solid var(--line);
 }
+button.arrival { width: 100%; border-width: 0 0 1px; border-style: solid; border-color: var(--line); background: none; text-align: left; cursor: pointer; }
+button.arrival:hover { background: var(--surface); }
 /* Distintivo de línea, como en la señalética */
 .badge {
   display: grid; place-items: center; height: 40px; min-width: 52px; padding: 0 6px;

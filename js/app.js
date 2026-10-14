@@ -102,6 +102,7 @@
   let fetchCtl = null;
   let reqSeq = 0;                 // descarta respuestas de peticiones antiguas
   let lines = null;               // data/lineas.json: recorrido y paradas de cada línea
+  let lineOrigin = null;          // parada desde la que se abrió la línea
   let active = null;              // línea iluminada: { code, dir }
 
   function loadFavs() {
@@ -175,7 +176,7 @@
 
   // Centra un punto en la zona del mapa que no tapa el panel.
   function focusOn(ll, zoom) {
-    const z = Math.max(zoom || map.getZoom(), 16);
+    const z = zoom != null ? zoom : Math.max(map.getZoom(), 16);
     const p = map.project(ll, z);
     const panel = $("#panel");
     // En móvil se usa la altura final del panel, no la de mitad de animación.
@@ -439,6 +440,7 @@
     const was = active.stops;
     active = null;
     lineGroup.clearLayers();
+    selRing.remove();
     updateStopVisibility();
     stops.forEach((s) => { s.marker.setOpacity(1).setZIndexOffset(0); if (was.has(s.id)) refreshIcon(s); });
   }
@@ -477,7 +479,9 @@
     const changed = !active || active.code !== code;
     if (changed) {
       clearLine();
-      active = { code, dir: 0, stops: new Set() };
+      // Abierta desde una parada: el sentido que pasa por ella.
+      const dirWith = lineOrigin ? lines[code].sentidos.findIndex((d) => d.paradas.includes(lineOrigin)) : -1;
+      active = { code, dir: Math.max(0, dirWith), stops: new Set() };
     }
     const l = lines[code];
     showView("line");
@@ -493,7 +497,14 @@
     document.title = `${t("line_n", { code })} · Próximo Vitrasa`;
     if (!isDesktop()) panel.dataset.state = "peek";
     drawLine();
-    if (changed) fitLine();
+    if (changed) {
+      const origin = lineOrigin && byId.get(lineOrigin);
+      // Desde una parada: un poco más alejado que la ficha, pero sin encuadrar la línea entera;
+      // el usuario aleja el mapa si quiere verla completa.
+      if (origin) { focusOn(origin.ll, LINE_STOPS_ZOOM); selRing.setLatLng(origin.ll).addTo(map); }
+      else fitLine();
+    }
+    lineOrigin = null;
   }
 
   function renderLineStops() {
@@ -510,6 +521,7 @@
   function showStop(id) {
     const s = byId.get(id);
     if (current !== s) leaveStop();
+    clearLine();   // la ficha de parada se ve sin la línea anterior encima
     current = s;
     showView("stop");
     $("#stop-name").textContent = s.name;
@@ -613,11 +625,15 @@
       const eta = m <= 0 ? `<span class="eta now"><b>${esc(t("arriving"))}</b></span>`
                          : `<span class="eta"><b>${m}</b><span>${esc(t("min"))}</span></span>`;
       const next = g.mins[1] != null ? `<small>${esc(t("next", { n: g.mins[1] }))}</small>` : "";
-      return `<div class="arrival">
-        ${lineChip(g.linea, "badge")}
+      // Toda la fila (número, destino y tiempo) abre la línea en el mapa.
+      const known = lines && lines[g.linea];
+      const tag = known ? "button" : "div";
+      const attrs = known ? ` type="button" data-line="${esc(g.linea)}" aria-label="${esc(t("see_line", { code: g.linea }))}"` : "";
+      return `<${tag} class="arrival"${attrs}>
+        <span class="badge"${lineStyle(g.linea)}>${esc(g.linea)}</span>
         <span class="route"><b>${esc(g.ruta)}</b>${next}</span>
         ${eta}
-      </div>`;
+      </${tag}>`;
     }).join("");
   }
 
@@ -627,7 +643,13 @@
     const stop = e.target.closest("button[data-id]");
     if (stop) { $("#q").blur(); navigate(stop.dataset.id); return; }
     const line = e.target.closest("button[data-line]");
-    if (line) { $("#q").blur(); navigate(`linea/${line.dataset.line}`); return; }
+    if (line) {
+      $("#q").blur();
+      // Si se abre desde una parada, la línea se muestra alrededor de esa parada.
+      lineOrigin = current ? current.id : null;
+      navigate(`linea/${line.dataset.line}`);
+      return;
+    }
     const dir = e.target.closest("button[data-dir]");
     if (dir && active) {
       active.dir = Number(dir.dataset.dir);
