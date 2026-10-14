@@ -2,10 +2,13 @@
 
 Mapa de las paradas de Vitrasa en Vigo con los próximos buses de cada parada.
 
-- Busca paradas por nombre o por número.
+- Busca paradas por nombre o número, y líneas por código o nombre.
+- **Líneas**: al elegir una, su recorrido se ilumina en el mapa con el color oficial y sus paradas se tiñen de ese color; el panel muestra las paradas en orden en cada sentido.
+- Disponible en español, galego, português, euskara, català, English, français y Deutsch (textos dentro de la propia web).
 - **Cerca** muestra las paradas más próximas a tu ubicación con la distancia andando. Sin ubicación, muestra las de la zona del mapa.
 - **Favoritas** guarda paradas en el propio dispositivo.
-- Cada parada tiene enlace propio: `https://…/#5660` abre directamente la Gran Vía, 19.
+- Cada parada y cada línea tienen enlace propio: `#5660` abre la Gran Vía, 19 y `#linea/C3d` la línea C3d.
+- En el móvil, el panel se desliza hacia abajo para ver el mapa casi entero.
 - Se puede instalar en el móvil como app y funciona sin conexión. Los tiempos de llegada sí necesitan red.
 
 Es una web estática, sin compilación: se publica tal cual en GitHub Pages o en cualquier hosting.
@@ -15,11 +18,14 @@ Es una web estática, sin compilación: se publica tal cual en GitHub Pages o en
 ```
 index.html              página
 css/app.css             estilos (modo claro y oscuro)
-js/app.js               lógica: mapa, búsqueda, cercanía, favoritas, tiempos
+js/app.js               lógica: mapa, búsqueda, cercanía, favoritas, líneas, tiempos
+js/i18n.js              textos de la interfaz en los 8 idiomas y banderas
 data/paradas.geojson    1.161 paradas: id (número de Vitrasa), nombre y líneas
 data/oficial/           lista oficial de paradas descargada del Concello
 data/descartadas.csv    paradas de la versión antigua que ya no existen
+data/lineas.json        recorrido, color y paradas de las 44 líneas
 tools/actualizar_paradas.py   genera paradas.geojson desde la lista oficial
+tools/actualizar_lineas.py    genera lineas.json desde el GTFS oficial
 vendor/leaflet/         Leaflet 1.9.4
 fonts/                  Barlow (licencia OFL)
 icons/, manifest.webmanifest, sw.js   app instalable
@@ -53,6 +59,13 @@ python3 tools/actualizar_paradas.py
 ```
 
 Después sube `VERSION` en `sw.js` para que las apps instaladas descarguen los datos nuevos.
+
+Los recorridos y colores de las líneas salen del GTFS del Concello
+(https://datos.vigo.org/data/transporte/gtfs_vigo.zip). Para actualizarlos:
+
+```
+python3 tools/actualizar_lineas.py ruta/al/gtfs_vigo.zip
+```
 
 La capa original de QGIS tenía 935 paradas válidas. Al cruzarla con la lista oficial faltaban 293, y 67 ya no existían (ni en la lista ni en la API de tiempos); están en `data/descartadas.csv`.
 

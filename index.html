@@ -15,49 +15,73 @@
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-  <div id="map" aria-label="Mapa de paradas"></div>
+  <div id="map" data-i18n-aria="map"></div>
 
-  <button id="locate" class="locate" type="button" aria-label="Mostrar paradas cerca de mí">
+  <button id="locate" class="locate" type="button" data-i18n-aria="locate">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7" fill="none"/></svg>
   </button>
 
-  <aside id="panel" class="panel" data-state="peek" aria-label="Paradas">
-    <button id="grip" class="grip" type="button" aria-label="Ampliar o reducir panel"><span></span></button>
+  <aside id="panel" class="panel" data-state="peek" data-i18n-aria="panel">
+    <button id="grip" class="grip" type="button" data-i18n-aria="grip"><span></span></button>
 
     <header class="brand">
       <span class="brand-mark" aria-hidden="true"></span>
       <h1>Próximo Vitrasa</h1>
+      <div class="lang">
+        <button id="lang-btn" class="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" data-i18n-aria="language">
+          <svg class="flag" viewBox="0 0 30 20" aria-hidden="true"></svg>
+          <span id="lang-code"></span>
+          <svg class="caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10l5 5 5-5"/></svg>
+        </button>
+        <ul id="lang-menu" class="lang-menu" role="listbox" hidden data-i18n-aria="language"></ul>
+      </div>
     </header>
 
     <div class="search">
-      <label class="visually-hidden" for="q">Buscar parada</label>
+      <label class="visually-hidden" for="q" data-i18n="search_label"></label>
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
       <input id="q" type="search" inputmode="search" autocomplete="off" spellcheck="false"
-             placeholder="Nombre o número de parada">
+             data-i18n-ph="search_ph">
     </div>
 
     <!-- Lista: resultados de búsqueda, cerca de mí o favoritas -->
     <section id="home" class="view">
       <div class="tabs" role="tablist">
-        <button role="tab" id="tab-near" aria-selected="true" type="button">Cerca</button>
-        <button role="tab" id="tab-fav" aria-selected="false" type="button">Favoritas</button>
+        <button role="tab" id="tab-near" aria-selected="true" type="button" data-i18n="tab_near"></button>
+        <button role="tab" id="tab-fav" aria-selected="false" type="button" data-i18n="tab_fav"></button>
+        <button role="tab" id="tab-lines" aria-selected="false" type="button" data-i18n="tab_lines"></button>
       </div>
       <p id="list-note" class="note"></p>
       <ul id="list" class="stops"></ul>
     </section>
 
+    <!-- Línea: recorrido iluminado en el mapa y paradas en orden -->
+    <section id="line" class="view" hidden>
+      <div class="stop-head">
+        <button id="line-back" class="icon-btn" type="button" data-i18n-aria="back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="stop-title line-title">
+          <span id="line-badge" class="badge"></span>
+          <h2 id="line-name"></h2>
+        </div>
+      </div>
+      <div id="line-dirs" class="tabs dirs" role="tablist" data-i18n-aria="direction"></div>
+      <ol id="line-stops" class="stops route-list"></ol>
+    </section>
+
     <!-- Ficha de parada -->
     <section id="stop" class="view" hidden>
       <div class="stop-head">
-        <button id="back" class="icon-btn" type="button" aria-label="Volver">
+        <button id="back" class="icon-btn" type="button" data-i18n-aria="back">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
         </button>
         <div class="stop-title">
           <h2 id="stop-name"></h2>
-          <p class="stop-meta">Parada <strong id="stop-id"></strong><span id="stop-dist"></span></p>
-          <p id="stop-lines" class="lines" aria-label="Líneas que paran aquí"></p>
+          <p class="stop-meta"><span id="stop-id"></span><span id="stop-dist"></span></p>
+          <p id="stop-lines" class="lines" data-i18n-aria="lines_here"></p>
         </div>
-        <button id="fav" class="icon-btn fav" type="button" aria-pressed="false" aria-label="Guardar en favoritas">
+        <button id="fav" class="icon-btn fav" type="button" aria-pressed="false">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.7l5.9-.8z"/></svg>
         </button>
       </div>
@@ -66,8 +90,8 @@
 
       <footer class="stop-foot">
         <span id="updated"></span>
-        <button id="refresh" type="button">Actualizar</button>
-        <a id="infobus" target="_blank" rel="noopener">Abrir en Infobus</a>
+        <button id="refresh" type="button" data-i18n="refresh"></button>
+        <a id="infobus" target="_blank" rel="noopener" data-i18n="infobus"></a>
       </footer>
     </section>
   </aside>
@@ -75,6 +99,7 @@
   <div id="toast" class="toast" role="status" hidden></div>
 
   <script src="vendor/leaflet/leaflet.js"></script>
+  <script src="js/i18n.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

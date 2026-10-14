@@ -68,14 +68,19 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   border-radius: 18px 18px 0 0;
   box-shadow: var(--shadow);
   transition: height .28s cubic-bezier(.2, .8, .2, 1);
+  overflow: hidden;
 }
+@media (prefers-reduced-motion: reduce) { .panel, .locate { transition: none; } }
 .panel[data-state="stop"] { height: 64dvh; }
+/* Minimizada: solo el asa y la cabecera, para ver el mapa casi entero */
+.panel[data-state="min"] { height: 92px; min-height: 0; }
+.panel[data-state="min"] .search, .panel[data-state="min"] .view { visibility: hidden; }
 .panel[data-state="full"] { height: calc(100dvh - 56px); }
 
-.grip { display: grid; place-items: center; width: 100%; height: 22px; padding: 0; border: 0; background: none; flex: none; }
+.grip { display: grid; place-items: center; width: 100%; height: 26px; padding: 0; border: 0; background: none; flex: none; touch-action: none; }
 .grip span { width: 40px; height: 4px; border-radius: 2px; background: var(--line); }
 
-.brand { display: flex; align-items: center; gap: 10px; margin: 2px 0 10px; flex: none; }
+.brand { display: flex; align-items: center; gap: 10px; margin: 2px 0 10px; flex: none; position: relative; z-index: 2; }
 .brand h1 { margin: 0; font: 700 22px/1 var(--cond); letter-spacing: .01em; }
 /* Marca: la señal circular de parada */
 .brand-mark { width: 18px; height: 18px; border-radius: 50%; background: var(--bus); box-shadow: inset 0 0 0 4px var(--paper), 0 0 0 2px var(--bus); }
@@ -91,6 +96,29 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .search input:focus { outline: none; border-color: var(--focus); box-shadow: 0 0 0 3px color-mix(in srgb, var(--focus) 25%, transparent); }
 
 .view { display: flex; flex-direction: column; min-height: 0; flex: 1; margin-top: 12px; }
+
+/* ---------- Selector de idioma ---------- */
+.lang { margin-left: auto; position: relative; }
+.lang-btn {
+  display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 8px 0 6px;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--surface); font-weight: 600; font-size: 14px;
+}
+.lang-btn .caret { width: 16px; height: 16px; color: var(--granite); }
+.flag { width: 24px; height: 16px; border-radius: 3px; flex: none; box-shadow: 0 0 0 1px rgba(19, 34, 44, .15); overflow: hidden; }
+.lang-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; min-width: 180px;
+  list-style: none; margin: 0; padding: 6px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--surface); box-shadow: var(--shadow);
+}
+.lang-menu button {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 10px;
+  border: 0; border-radius: 8px; background: none; text-align: left; font-size: 16px;
+}
+.lang-menu button:hover { background: var(--paper); }
+.lang-menu [aria-selected="true"] button { font-weight: 600; background: var(--paper); }
+/* Abierto hacia arriba cuando el panel está abajo (móvil) para que no se corte */
+@media (max-width: 859px) { .lang-menu { top: auto; bottom: calc(100% + 6px); } .panel[data-state="full"] .lang-menu { top: calc(100% + 6px); bottom: auto; } }
+.panel:has(.lang-menu:not([hidden])) { overflow: visible; }
 
 /* ---------- Pestañas ---------- */
 .tabs { display: flex; gap: 4px; padding: 3px; border-radius: 10px; background: color-mix(in srgb, var(--line) 60%, transparent); flex: none; }
@@ -112,15 +140,21 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .stops .name { font-weight: 600; font-size: 17px; line-height: 1.25; }
 .stops .sub { grid-column: 1; color: var(--granite); font-size: 14px; }
 .stops .dist { grid-row: 1 / span 3; align-self: start; margin-top: 3px; grid-column: 2; font: 600 17px/1 var(--cond); color: var(--granite); text-align: right; }
+.stops .group-head { padding: 14px 16px 6px; font-size: 14px; font-weight: 600; color: var(--granite); border-bottom: 1px solid var(--line); }
+@media (min-width: 860px) { .stops .group-head { padding-left: 20px; } }
 .stops mark { background: none; color: inherit; text-decoration: underline; text-decoration-color: var(--bus); text-decoration-thickness: 2px; text-underline-offset: 3px; }
 
 /* Líneas que paran: chapas pequeñas, del mismo estilo que el distintivo de la ficha */
 .lines { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 0; grid-column: 1; }
 .lines:empty { display: none; }
-.lines i {
+.lines i, .lines .chip {
   font: normal 600 13px/1 var(--cond); padding: 3px 5px 2px; border-radius: 4px;
   border: 1px solid var(--line); color: var(--ink); background: var(--surface);
 }
+/* Con color oficial de la línea */
+.lines [style*="--lc"] { background: var(--lc); color: var(--lt); border-color: color-mix(in srgb, var(--lc) 70%, #13222C); }
+.lines .chip { cursor: pointer; font-size: 15px; padding: 5px 8px 4px; border-radius: 6px; }
+.lines .chip:hover { filter: brightness(1.08); }
 
 /* ---------- Ficha de parada ---------- */
 .stop-head { display: grid; grid-template-columns: auto 1fr auto; align-items: start; gap: 8px; flex: none; }
@@ -139,9 +173,32 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 /* Distintivo de línea, como en la señalética */
 .badge {
   display: grid; place-items: center; height: 40px; min-width: 52px; padding: 0 6px;
-  border-radius: 9px; background: var(--badge-bg); color: var(--badge-fg);
+  border-radius: 9px; background: var(--lc, var(--badge-bg)); color: var(--lt, var(--badge-fg));
   font: 700 23px/1 var(--cond); letter-spacing: .01em;
 }
+button.badge { border: 0; cursor: pointer; }
+button.badge:hover { filter: brightness(1.08); }
+
+/* ---------- Líneas ---------- */
+.stops .line-row { grid-template-columns: auto 1fr; column-gap: 14px; }
+.line-row .badge { height: 34px; min-width: 50px; font-size: 20px; }
+.line-row .name { font-size: 16px; }
+.line-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.line-title .badge { flex: none; }
+.line-title h2 { margin: 0; font-size: 22px; }
+.dirs { margin-top: 12px; }
+.dirs button { height: auto; min-height: 34px; padding: 6px 8px; line-height: 1.15; font-size: 14px; }
+/* Paradas de la línea en orden: trazo vertical del color de la línea con un punto por parada */
+.route-list li { position: relative; }
+.stops.route-list button { padding-left: 46px; }
+.route-list li::before { content: ""; position: absolute; left: 24px; top: 0; bottom: 0; width: 6px; background: var(--lc); }
+.route-list li:first-child::before { top: 50%; }
+.route-list li:last-child::before { bottom: 50%; }
+.route-list li::after {
+  content: ""; position: absolute; left: 19px; top: 50%; width: 16px; height: 16px; margin-top: -8px;
+  border-radius: 50%; background: var(--surface); border: 4px solid var(--lc); box-sizing: border-box; pointer-events: none;
+}
+@media (min-width: 860px) { .stops.route-list button { padding-left: 52px; } .route-list li::before { left: 28px; } .route-list li::after { left: 23px; } }
 .route { min-width: 0; }
 .route b { display: block; font-weight: 600; font-size: 16px; line-height: 1.2; overflow-wrap: anywhere; }
 .route small { color: var(--granite); font-size: 14px; }
@@ -173,6 +230,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   transition: bottom .28s cubic-bezier(.2, .8, .2, 1);
 }
 .panel[data-state="stop"] ~ .locate { bottom: calc(64dvh + 14px); }
+.panel[data-state="min"] ~ .locate { bottom: 106px; }
 .locate.busy svg { opacity: .4; }
 .panel[data-state="full"] ~ .locate { display: none; }
 
