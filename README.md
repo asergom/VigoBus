@@ -16,8 +16,10 @@ Es una web estática, sin compilación: se publica tal cual en GitHub Pages o en
 index.html              página
 css/app.css             estilos (modo claro y oscuro)
 js/app.js               lógica: mapa, búsqueda, cercanía, favoritas, tiempos
-data/paradas.geojson    935 paradas: id (código Vitrasa) y nombre
-data/revisar.csv        puntos descartados de los datos originales, para revisar
+data/paradas.geojson    1.161 paradas: id (número de Vitrasa), nombre y líneas
+data/oficial/           lista oficial de paradas descargada del Concello
+data/descartadas.csv    paradas de la versión antigua que ya no existen
+tools/actualizar_paradas.py   genera paradas.geojson desde la lista oficial
 vendor/leaflet/         Leaflet 1.9.4
 fonts/                  Barlow (licencia OFL)
 icons/, manifest.webmanifest, sw.js   app instalable
@@ -41,14 +43,18 @@ Si el navegador bloqueara esa API por CORS, se puede poner un proxy delante sin 
 
 ## Datos
 
-`data/paradas.geojson` sale de la capa original de QGIS (996 puntos), limpiada así:
+Las paradas salen de la lista oficial del portal de datos abiertos del Concello de Vigo:
+https://datos.vigo.org/data/transporte/paradas.json (1.161 paradas con sus líneas).
 
-- Se quitan 30 puntos sin nombre ni código.
-- Se recuperan códigos que estaban escritos en el nombre ("Parada 20012", "14106").
-- Los códigos 1280 y 5660 estaban repetidos. Se mantuvo el punto que coincide con la API oficial (Avda. Castelao 41 y Gran Vía 19) y el otro pasó a revisión.
-- Los puntos con nombre pero sin código no pueden mostrar tiempos, así que están en `data/revisar.csv` para completarlos.
+Para actualizarlas, descarga ese archivo en `data/oficial/paradas.json` y ejecuta:
 
-Para añadir o corregir una parada, edita el GeoJSON: `{"id": "5660", "nombre": "Gran Vía, 19"}` y sus coordenadas `[lon, lat]`. Después sube `VERSION` en `sw.js` para que las apps instaladas descarguen los datos nuevos.
+```
+python3 tools/actualizar_paradas.py
+```
+
+Después sube `VERSION` en `sw.js` para que las apps instaladas descarguen los datos nuevos.
+
+La capa original de QGIS tenía 935 paradas válidas. Al cruzarla con la lista oficial faltaban 293, y 67 ya no existían (ni en la lista ni en la API de tiempos); están en `data/descartadas.csv`.
 
 ## Probar en local
 

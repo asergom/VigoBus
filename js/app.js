@@ -89,19 +89,28 @@
   const INK = css.getPropertyValue("--ink").trim() || "#13222C";
   const renderer = L.canvas({ padding: 0.3, tolerance: 6 });
 
-  const radiusFor = (z) => (z <= 12 ? 2.5 : z === 13 ? 3.5 : z === 14 ? 5 : z === 15 ? 6.5 : 8);
-  const styleFor = (s, z) => ({
-    renderer, radius: radiusFor(z), weight: z >= 14 ? 2 : 1,
-    color: favs.includes(s.id) ? INK : "#FFFFFF",
-    fillColor: RED, fillOpacity: 1,
-  });
+  // Icono de parada: tamaño según el zoom; las favoritas, en azul ría.
+  const sizeFor = (z) => (z <= 12 ? 12 : z === 13 ? 16 : z === 14 ? 20 : z === 15 ? 26 : 30);
+  const iconCache = new Map();
+  function iconFor(s, z) {
+    const fav = favs.includes(s.id), size = sizeFor(z), k = `${fav}|${size}`;
+    if (!iconCache.has(k)) {
+      iconCache.set(k, L.icon({
+        iconUrl: fav ? "icons/parada-fav.svg" : "icons/parada.svg",
+        iconSize: [size, size], iconAnchor: [size / 2, size / 2], className: "stop-icon",
+      }));
+    }
+    return iconCache.get(k);
+  }
+  const refreshIcon = (s) => s.marker.setIcon(iconFor(s, map.getZoom()));
 
-  const selRing = L.circleMarker(VIGO, { renderer, radius: 15, weight: 3, color: RED, fill: false, interactive: false });
+  const selRing = L.circleMarker(VIGO, { renderer, radius: 22, weight: 3, color: RED, fill: false, interactive: false });
   let meMarker = null;
 
   map.on("zoomend", () => {
     const z = map.getZoom();
-    stops.forEach((s) => s.marker.setStyle(styleFor(s, z)));
+    stops.forEach((s) => s.marker.setIcon(iconFor(s, z)));
+    selRing.setRadius(sizeFor(z) / 2 + 7);
   });
   map.on("moveend", () => { if (mode === "near" && !me && !current) renderNear(); });
 
@@ -123,9 +132,9 @@
     .then((gj) => {
       stops = gj.features.map((f) => {
         const [lon, lat] = f.geometry.coordinates;
-        const s = { id: f.properties.id, name: f.properties.nombre, ll: [lat, lon] };
+        const s = { id: f.properties.id, name: f.properties.nombre, lines: f.properties.lineas || [], ll: [lat, lon] };
         s.key = norm(`${s.name} ${s.id}`);
-        s.marker = L.circleMarker(s.ll, styleFor(s, map.getZoom()))
+        s.marker = L.marker(s.ll, { icon: iconFor(s, map.getZoom()), keyboard: false, alt: `Parada ${s.id}` })
           .on("click", () => openStop(s.id))
           .addTo(map);
         if (canHover) s.marker.bindTooltip(() => `${esc(s.name)} (${esc(s.id)})`, { direction: "top", offset: [0, -6] });
@@ -148,6 +157,7 @@
     li.innerHTML = `<button type="button" data-id="${esc(s.id)}">
       <span class="name">${extra.nameHtml || esc(s.name)}</span>
       <span class="sub">Parada ${esc(s.id)}${extra.sub ? ` · ${esc(extra.sub)}` : ""}</span>
+      ${s.lines.length ? `<span class="lines">${s.lines.map((l) => `<i>${esc(l)}</i>`).join("")}</span>` : ""}
       ${extra.dist != null ? `<span class="dist">${fmtDist(extra.dist)}</span>` : ""}
     </button>`;
     return li;
@@ -285,6 +295,7 @@
     $("#stop").hidden = false;
     $("#stop-name").textContent = s.name;
     $("#stop-id").textContent = s.id;
+    $("#stop-lines").innerHTML = s.lines.map((l) => `<i>${esc(l)}</i>`).join("");
     $("#stop-dist").textContent = me ? ` · ${fmtDist(haversine(me, s.ll))}, ${walkMin(haversine(me, s.ll))} min andando` : "";
     $("#infobus").href = INFOBUS_URL(s.id);
     updateFavBtn();
@@ -411,7 +422,7 @@
     favs = favs.includes(id) ? favs.filter((x) => x !== id) : [...favs, id];
     saveFavs();
     updateFavBtn();
-    current.marker.setStyle(styleFor(current, map.getZoom()));
+    refreshIcon(current);
     toast(favs.includes(id) ? "Guardada en favoritas" : "Quitada de favoritas");
   });
   $("#refresh").addEventListener("click", () => loadArrivals(false));

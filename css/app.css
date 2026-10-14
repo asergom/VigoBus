@@ -111,8 +111,16 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .stops button:hover { background: var(--surface); }
 .stops .name { font-weight: 600; font-size: 17px; line-height: 1.25; }
 .stops .sub { grid-column: 1; color: var(--granite); font-size: 14px; }
-.stops .dist { grid-row: 1 / span 2; grid-column: 2; font: 600 17px/1 var(--cond); color: var(--granite); text-align: right; }
+.stops .dist { grid-row: 1 / span 3; align-self: start; margin-top: 3px; grid-column: 2; font: 600 17px/1 var(--cond); color: var(--granite); text-align: right; }
 .stops mark { background: none; color: inherit; text-decoration: underline; text-decoration-color: var(--bus); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+
+/* Líneas que paran: chapas pequeñas, del mismo estilo que el distintivo de la ficha */
+.lines { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 0; grid-column: 1; }
+.lines:empty { display: none; }
+.lines i {
+  font: normal 600 13px/1 var(--cond); padding: 3px 5px 2px; border-radius: 4px;
+  border: 1px solid var(--line); color: var(--ink); background: var(--surface);
+}
 
 /* ---------- Ficha de parada ---------- */
 .stop-head { display: grid; grid-template-columns: auto 1fr auto; align-items: start; gap: 8px; flex: none; }
@@ -180,11 +188,10 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .leaflet-control-attribution { font-size: 11px; }
 .leaflet-top.leaflet-left { top: env(safe-area-inset-top); }
 .leaflet-bar a { color: var(--ink); background: var(--surface); border-color: var(--line); }
-/* Mapa base apagado para que destaquen las paradas; en modo oscuro, invertido. */
-.leaflet-tile-pane { filter: saturate(.55) contrast(.92) brightness(1.03); }
-@media (prefers-color-scheme: dark) {
-  .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.4); }
-}
+/* Mapa base de OpenStreetMap con sus colores, apenas suavizado para que destaquen las paradas. */
+.leaflet-tile-pane { filter: saturate(.85); }
+.stop-icon { filter: drop-shadow(0 1px 2px rgba(19, 34, 44, .45)); }
+.leaflet-marker-icon.stop-icon:hover { z-index: 1000 !important; }
 .me-dot { width: 18px; height: 18px; border-radius: 50%; background: #1C6FA8; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(28, 111, 168, .25); }
 
 /* ---------- Escritorio: panel lateral ---------- */

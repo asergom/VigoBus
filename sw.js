@@ -1,6 +1,6 @@
 // Service worker: la app (interfaz y paradas) funciona sin conexión.
 // Los tiempos de llegada siempre se piden a la red. Sube VERSION al cambiar archivos.
-const VERSION = "pv-v3";
+const VERSION = "pv-v4";
 const SHELL = [
   "./",
   "index.html",
@@ -15,6 +15,8 @@ const SHELL = [
   "fonts/BarlowCondensed-SemiBold.woff2",
   "fonts/BarlowCondensed-Bold.woff2",
   "icons/favicon.svg",
+  "icons/parada.svg",
+  "icons/parada-fav.svg",
   "manifest.webmanifest",
 ];
 
