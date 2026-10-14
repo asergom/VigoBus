@@ -159,7 +159,14 @@
   const selRing = L.circleMarker(VIGO, { renderer, radius: 22, weight: 3, color: RED, fill: false, interactive: false });
   let meMarker = null;
 
+  // Con una línea elegida y el mapa alejado, las paradas se ocultan para que se vea bien el recorrido.
+  const LINE_STOPS_ZOOM = 15;
+  function updateStopVisibility() {
+    map.getContainer().classList.toggle("hide-stops", !!active && map.getZoom() < LINE_STOPS_ZOOM);
+  }
+
   map.on("zoomend", () => {
+    updateStopVisibility();
     const z = map.getZoom();
     stops.forEach((s) => s.marker.setIcon(iconFor(s, z)));
     selRing.setRadius(sizeFor(z) / 2 + 7);
@@ -432,12 +439,14 @@
     const was = active.stops;
     active = null;
     lineGroup.clearLayers();
+    updateStopVisibility();
     stops.forEach((s) => { s.marker.setOpacity(1).setZIndexOffset(0); if (was.has(s.id)) refreshIcon(s); });
   }
 
   function drawLine() {
     const l = lines[active.code];
     lineGroup.clearLayers();
+    updateStopVisibility();
     stops.forEach((s) => {
       const on = active.stops.has(s.id);
       s.marker.setOpacity(on ? 1 : 0.12).setZIndexOffset(on ? 500 : 0);
