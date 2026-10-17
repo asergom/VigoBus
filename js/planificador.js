@@ -237,12 +237,15 @@
     // los buses de esa línea y sentido en la parada de subida, [] si la API no da ninguno y null
     // si no se sabe (sin respuesta). Devuelve una copia con dep/arr nuevos y, en cada tramo en bus,
     // "live": el dato usado (o null si se usa el horario).
-    function retime(j, live, time = new Date()) {
-      const base = new Date(time.getFullYear(), time.getMonth(), time.getDate());
+    // time: ahora (los minutos de la API cuentan desde aquí); start: hora de salida pedida (la
+    // misma que en search). Con salida más tarde, solo sirven los buses en vivo que pasan después.
+    function retime(j, live, time = new Date(), start = time) {
+      const base = new Date(start.getFullYear(), start.getMonth(), start.getDate());
       const now = (time - base) / 1000;
-      const trips = tripsFor(time);
+      const s0 = Math.max(now, (start - base) / 1000);
+      const trips = tripsFor(start);
       const out = { ...j, legs: j.legs.map((l) => ({ ...l })) };
-      let t = now, prevBus = false;
+      let t = s0, prevBus = false;
       for (const leg of out.legs) {
         if (leg.type === "walk") { t += leg.m / WALK; continue; }
         const pt = pats[leg.pat], tr = trips(pt);
@@ -277,7 +280,7 @@
       out.arr = t;
       const first = out.legs.find((l) => l.type === "bus");
       out.dep = first.dep - out.legs[0].m / WALK;
-      out.score = out.arr - now + WALK_PENALTY * out.walkM / WALK + TRANSFER_PENALTY * out.transfers + (out.legs.some((l) => l.doubtful) ? 1200 : 0);
+      out.score = out.arr - s0 + WALK_PENALTY * out.walkM / WALK + TRANSFER_PENALTY * out.transfers + (out.legs.some((l) => l.doubtful) ? 1200 : 0);
       return out;
     }
 
