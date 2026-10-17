@@ -10,22 +10,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Descargar vías de la zona de Vitrasa (Overpass)
+      - name: Descargar direcciones (portales) de la zona de Vitrasa (Overpass)
         run: |
           mkdir -p data/osm
-          Q='[out:json][timeout:300];(way["highway"](42.135,-8.835,42.290,-8.610););(._;>;);out body;'
+          Q='[out:json][timeout:300];(nwr["addr:housenumber"](42.135,-8.835,42.290,-8.610););out center tags;'
           for U in https://overpass-api.de/api/interpreter https://overpass.kumi.systems/api/interpreter https://overpass.private.coffee/api/interpreter; do
             echo "Probando $U"
-            if curl -sS -f --max-time 600 -A "proximovitrasa (github.com/asergom/proximovitrasa)" --data-urlencode "data=$Q" "$U" -o vias.json && python3 -c "import json;d=json.load(open('vias.json'));assert len(d['elements'])>10000;print(len(d['elements']))"; then
+            if curl -sS -f --max-time 600 -A "proximovitrasa (github.com/asergom/proximovitrasa)" --data-urlencode "data=$Q" "$U" -o dir.json && python3 -c "import json;d=json.load(open('dir.json'));print(len(d['elements']));assert 'elements' in d"; then
               break
             fi
           done
-          gzip -9 -c vias.json > data/osm/vias.json.gz
+          gzip -9 -c dir.json > data/osm/direcciones.json.gz
           ls -la data/osm
       - name: Guardar
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git add data/osm/vias.json.gz
-          git commit -m "Datos OSM de vías de la zona de Vitrasa"
+          git add data/osm/direcciones.json.gz
+          git commit -m "Direcciones OSM de la zona de Vitrasa"
           git push
