@@ -7,7 +7,7 @@ Mapa de las paradas de Vitrasa en Vigo con los próximos buses de cada parada.
 - Disponible en español, galego, português, euskara, català, English, français y Deutsch (textos dentro de la propia web).
 - **Cerca** muestra las paradas más próximas a tu ubicación con la distancia andando. Sin ubicación, muestra las de la zona del mapa.
 - **Favoritas** guarda paradas en el propio dispositivo.
-- **Cómo llegar**: indica desde dónde y hasta dónde quieres ir (una parada, tu ubicación o un punto del mapa) y la web calcula la ruta a pie, con distancia y tiempo. La ruta se calcula en el propio dispositivo con una red de calles de OpenStreetMap guardada en la web, sin servicios externos. Desde cada parada, "Cómo llegar aquí" la pone como destino.
+- **Cómo llegar**: indica desde dónde y hasta dónde quieres ir (una calle con su número, una parada, tu ubicación o un punto del mapa; las direcciones se van proponiendo mientras escribes) y la web calcula la ruta a pie, con distancia y tiempo. La ruta se calcula en el propio dispositivo con una red de calles de OpenStreetMap guardada en la web, sin servicios externos. Desde cada parada, "Cómo llegar aquí" la pone como destino.
 - Cada parada y cada línea tienen enlace propio: `#5660` abre la Gran Vía, 19 y `#linea/C3d` la línea C3d. Una ruta también: `#ir/p5660/42.23700,-8.72060` (parada → punto).
 - En el móvil, el panel se desliza hacia abajo para ver el mapa casi entero.
 - Se puede instalar en el móvil como app y funciona sin conexión. Los tiempos de llegada sí necesitan red.
@@ -22,15 +22,19 @@ css/app.css             estilos (modo claro y oscuro)
 js/app.js               lógica: mapa, búsqueda, cercanía, favoritas, líneas, tiempos
 js/i18n.js              textos de la interfaz en los 8 idiomas y banderas
 js/peaton.js            rutas a pie con la red peatonal propia
+js/direcciones.js       búsqueda de direcciones (calle y número)
 data/paradas.geojson    1.161 paradas: id (número de Vitrasa), nombre y líneas
 data/oficial/           lista oficial de paradas descargada del Concello
 data/descartadas.csv    paradas de la versión antigua que ya no existen
 data/lineas.json        recorrido, color y paradas de las 44 líneas
 data/peatonal.json      red peatonal: calles, aceras y caminos de la zona de Vitrasa (OpenStreetMap)
+data/direcciones.json   calles con nombre y números de portal (OpenStreetMap)
 data/osm/vias.json.gz   vías de OpenStreetMap descargadas, de las que sale la red peatonal
+data/osm/direcciones.json.gz   portales de OpenStreetMap descargados
 tools/actualizar_paradas.py   genera paradas.geojson desde la lista oficial
 tools/actualizar_lineas.py    genera lineas.json desde el GTFS oficial
 tools/actualizar_peatonal.py  genera peatonal.json desde las vías de OpenStreetMap
+tools/actualizar_direcciones.py  genera direcciones.json desde las vías y portales de OpenStreetMap
 vendor/leaflet/         Leaflet 1.9.4
 fonts/                  Barlow (licencia OFL)
 icons/, manifest.webmanifest, sw.js   app instalable
@@ -107,6 +111,28 @@ coincide con la de routing.openstreetmap.de con una diferencia media del 2,5 %, 
 más corta. Haciendo que OpenStreetMap siga la misma ruta, sus tramos miden lo mismo (±1 %): la
 diferencia viene de que su servicio no busca el camino más corto, sino que prefiere ciertos
 tipos de vía.
+
+### Direcciones
+
+`data/direcciones.json` reúne las calles con nombre de la red de OpenStreetMap (3.425) y los
+portales que tiene OpenStreetMap en la zona (4.403, en 638 calles). Se descargan con Overpass:
+
+```
+[out:json][timeout:300];(nwr["addr:housenumber"](42.135,-8.835,42.290,-8.610););out center tags;
+```
+
+Guarda el resultado comprimido en `data/osm/direcciones.json.gz` y ejecuta:
+
+```
+python3 tools/actualizar_direcciones.py
+```
+
+La búsqueda no distingue tildes ni el tipo de vía escrito de otra forma ("calle Urzaiz 7" encuentra
+"Rúa de Urzáiz, 7"). Si el portal está en OpenStreetMap se usa su posición; si no, se estima entre
+los números conocidos más cercanos del mismo lado de la calle (comprobado quitando cada portal
+conocido: mediana de 10 m de error, 88 % a menos de 50 m) y, si la calle no tiene ninguno, se usa su
+punto central. En esos casos la web avisa de que la posición es aproximada. OpenStreetMap tiene
+todavía pocos portales en Vigo; completarlos con el Catastro queda como mejora futura.
 
 ## Probar en local
 

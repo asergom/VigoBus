@@ -694,19 +694,31 @@
   const ICON_MAP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>';
   const ICON_WALK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4.2" r="1.8"/><path d="M9.5 21l2.2-5.5 2.6 2.3V21M11.7 15.5l1-5.3-3.2 1.3-1 3M12.7 10.2l2 2.6 2.8 1"/></svg>';
 
-  function endToken(p) { return !p ? "" : p.kind === "stop" ? `p${p.id}` : fmtLL(p.ll); }
+  // Una dirección viaja en la dirección web como "lat,lon~Rúa de Urzáiz, 19".
+  function endToken(p) {
+    if (!p) return "";
+    if (p.kind === "stop") return `p${p.id}`;
+    return p.kind === "addr" ? `${fmtLL(p.ll)}~${encodeURIComponent(p.label)}` : fmtLL(p.ll);
+  }
   function parseEnd(tok, prev) {
     if (!tok) return null;
-    if (prev && endToken(prev) === tok) return prev;   // conserva "Mi ubicación" al volver
+    if (prev && decodeURIComponent(endToken(prev)) === tok) return prev;   // conserva "Mi ubicación" al volver
     if (tok[0] === "p" && byId.has(tok.slice(1))) return stopEnd(byId.get(tok.slice(1)));
-    const m = tok.match(/^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/);
-    return m ? { kind: "map", ll: [Number(m[1]), Number(m[2])] } : null;
+    const m = tok.match(/^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)(?:~(.+))?$/);
+    if (!m) return null;
+    const ll = [Number(m[1]), Number(m[2])];
+    return m[3] ? { kind: "addr", ll, label: m[3] } : { kind: "map", ll };
   }
   function endLabel(p) {
     if (!p) return "";
     if (p.kind === "stop") return `${byId.get(p.id).name} (${p.id})`;
+    if (p.kind === "addr") return p.label;
     return p.kind === "me" ? t("my_location") : t("map_point");
   }
+
+  // Diccionario de calles y portales (js/direcciones.js); se descarga al abrir "Cómo llegar".
+  let dirData = null;
+  const ensureDir = () => window.PV_DIR.load().then((d) => (dirData = d));
   const pinIcon = (w) => L.divIcon({ className: "trip-pin", html: `<span class="pin pin-${w}">${w.toUpperCase()}</span>`, iconSize: [30, 30], iconAnchor: [15, 15] });
 
   function openTrip(b) {
@@ -718,7 +730,8 @@
   function showTrip(h) {
     leaveStop();
     clearLine();
-    const [, ta = "", tb = ""] = h.split("/");
+    // Cada parte se decodifica por separado: el nombre de una calle puede llevar "/".
+    const [, ta = "", tb = ""] = location.hash.slice(1).split("/").map((x) => { try { return decodeURIComponent(x); } catch { return x; } });
     trip.a = parseEnd(ta, trip.a);
     trip.b = parseEnd(tb, trip.b);
     trip.picking = null;
@@ -728,6 +741,7 @@
     closeSugg();
     renderTripFields();
     computeTrip(true);
+    ensureDir().catch(() => {});
   }
 
   function leaveTrip() {
@@ -778,7 +792,26 @@
     return li;
   }
 
-  // Sugerencias mientras se escribe en Desde o Hasta.
+  // Una calle propuesta. num: número escrito; "" toda la calle; null falta el número (al tocarla
+  // se completa el campo con "Calle, " para seguir escribiendo).
+  function addrItem(st, num, tokens) {
+    const li = document.createElement("li");
+    let sub;
+    if (num === null) sub = t("addr_add_num");
+    else if (num === "") sub = t("addr_whole");
+    else sub = dirData.resolve(st, num).exact ? t("addr_exact") : t("addr_approx");
+    // Calles con el mismo nombre en sitios distintos: se dice cerca de qué parada están.
+    if (st.dup && stops.length) sub += ` · ${t("near_stop", { name: nearest(st.ll, 1)[0].s.name })}`;
+    const label = num ? `${st.name}, ${num}` : st.name;
+    li.innerHTML = `<button type="button" data-addr="${st.i}" data-num="${num === null ? "" : esc(num)}"${num === null ? ' data-fill="1"' : ""}>
+      <span class="name">${highlight(label, tokens)}</span>
+      <span class="sub">${esc(sub)}</span>
+      ${me ? `<span class="dist">${fmtDist(haversine(me, dirData.resolve(st, num || "").ll))}</span>` : ""}
+    </button>`;
+    return li;
+  }
+
+  // Sugerencias mientras se escribe en Desde o Hasta: direcciones (calle y número) y paradas.
   function openSugg(which) {
     trip.editing = which;
     const inp = $(`#trip-${which}`);
@@ -786,13 +819,24 @@
     const typed = q && q !== endLabel(trip[which]) ? q : "";
     $(`[data-clear="${which}"]`).hidden = !inp.value;
     const items = [specialItem("me", ICON_ME, t("my_location")), specialItem("map", ICON_MAP, t("pick_map"))];
+    if (typed && !dirData) ensureDir().then(() => { if (trip.editing === which) openSugg(which); }).catch(() => {});
     if (typed) {
       const tokens = norm(typed).split(" ").filter(Boolean);
-      const res = matchStops(typed).slice(0, 40);
+      const addr = [];
+      if (dirData) {
+        const p = dirData.parse(typed);
+        const found = dirData.matchStreets(p.street, p.num ? 4 : 6);
+        found.forEach((st) => addr.push(addrItem(st, p.num, tokens)));
+        // Con número a medio escribir: otros portales conocidos de la primera calle ("1" → 10, 12…).
+        if (p.num && found[0]) dirData.numbersStarting(found[0], p.num).forEach((n) => addr.push(addrItem(found[0], n, tokens)));
+      }
+      const res = matchStops(typed).slice(0, addr.length ? 25 : 40);
+      if (addr.length) items.push(groupHead(t("res_addr")), ...addr);
       if (res.length) {
         items.push(groupHead(t("res_stops")));
         res.forEach((s) => items.push(stopItem(s, { nameHtml: highlight(s.name, tokens), noLines: true, dist: me ? haversine(me, s.ll) : null })));
-      } else {
+      }
+      if (!addr.length && !res.length) {
         const li = document.createElement("li");
         li.className = "group-head";
         li.textContent = t("trip_no_stops", { q: typed });
@@ -841,6 +885,7 @@
     L.polyline(r.coords, { renderer, color: "#FFFFFF", weight: 10, opacity: 0.95, interactive: false, lineCap: "round", lineJoin: "round" }).addTo(tripLayer);
     L.polyline(r.coords, { renderer, color: "#1C6FA8", weight: 6, opacity: 1, interactive: false, lineCap: "round", lineJoin: "round", dashArray: "0.1 10" }).addTo(tripLayer);
     lastTrip = { total: r.dist + r.offFrom + r.offTo, fecha: net.fecha };
+    lastTrip.approx = [trip.a, trip.b].filter((p) => p.kind === "addr" && p.approx).map((p) => p.label);
     renderTripResult();
     if (fit) fitPoints([...r.coords, ...ends], 17);
   }
@@ -857,6 +902,7 @@
         <span class="what">${esc(t("on_foot"))}<small>${fmtDist(lastTrip.total)}</small></span>
         <span class="eta">${eta}</span>
       </div>
+      ${(lastTrip.approx || []).map((label) => `<p class="trip-note">${esc(t("approx_note", { label }))}</p>`).join("")}
       <p class="trip-note">${esc(t("trip_source", { date }))} <a href="${osm}" target="_blank" rel="noopener">${esc(t("trip_compare"))}</a></p>`;
   }
 
@@ -871,23 +917,45 @@
       trip.picking = null;
       renderTripFields();
       openSugg(w);
-      inp.select();
+      if (inp.dataset.keep) { delete inp.dataset.keep; inp.setSelectionRange(inp.value.length, inp.value.length); }
+      else inp.select();
       if (!isDesktop()) panel.dataset.state = "full";
     });
     inp.addEventListener("input", () => openSugg(w));
     inp.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        const first = $("#trip-sugg button[data-id]");
+        const first = $("#trip-sugg button[data-addr], #trip-sugg button[data-id]");
         if (first) first.click();
       }
       if (e.key === "Escape") { inp.value = endLabel(trip[w]); inp.blur(); closeSugg(); setPanel(baseState()); }
     });
   });
+  // Tocar una sugerencia no quita el foco al campo (así se puede seguir escribiendo).
+  $("#trip-sugg").addEventListener("mousedown", (e) => { if (e.target.closest("button")) e.preventDefault(); });
   $("#trip-sugg").addEventListener("click", (e) => {
     e.stopPropagation();   // aquí una parada no abre su ficha: se elige como origen o destino
     const w = trip.editing || targetEnd();
     const stop = e.target.closest("button[data-id]");
     if (stop) { setEnd(w, stopEnd(byId.get(stop.dataset.id))); return; }
+    const ad = e.target.closest("button[data-addr]");
+    if (ad && dirData) {
+      const st = dirData.streets[Number(ad.dataset.addr)];
+      const inp = $(`#trip-${w}`);
+      if (ad.dataset.fill) {
+        // Calle sin número: se completa el campo para escribir el número a continuación.
+        inp.value = `${st.name}, `;
+        inp.dataset.keep = "1";
+        inp.focus();
+        delete inp.dataset.keep;
+        inp.setSelectionRange(inp.value.length, inp.value.length);
+        openSugg(w);
+        return;
+      }
+      const num = ad.dataset.num;
+      const r = dirData.resolve(st, num);
+      setEnd(w, { kind: "addr", ll: r.ll, label: num ? `${st.name}, ${num}` : st.name, approx: !r.exact && !!num });
+      return;
+    }
     const sp = e.target.closest("button[data-trip]");
     if (!sp) return;
     if (sp.dataset.trip === "me") {

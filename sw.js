@@ -1,7 +1,7 @@
 // Service worker: la app (interfaz y paradas) funciona sin conexión.
-// La red peatonal (data/peatonal.json) se guarda en caché la primera vez que se usa.
+// La red peatonal y las direcciones (data/peatonal.json, data/direcciones.json) se guardan en caché la primera vez que se usan.
 // Los tiempos de llegada siempre se piden a la red. Sube VERSION al cambiar archivos.
-const VERSION = "pv-v12";
+const VERSION = "pv-v13";
 const SHELL = [
   "./",
   "index.html",
@@ -9,6 +9,7 @@ const SHELL = [
   "js/i18n.js",
   "js/app.js",
   "js/peaton.js",
+  "js/direcciones.js",
   "data/paradas.geojson",
   "data/lineas.json",
   "vendor/leaflet/leaflet.css",
