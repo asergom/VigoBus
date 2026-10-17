@@ -198,7 +198,7 @@
         const s = { id: f.properties.id, name: f.properties.nombre, lines: f.properties.lineas || [], ll: [lat, lon] };
         s.key = norm(`${s.name} ${s.id}`);
         s.marker = L.marker(s.ll, { icon: iconFor(s, map.getZoom()), keyboard: false, alt: s.name })
-          .on("click", () => navigate(s.id, { replace: !!current }))
+          .on("click", () => { if (tripOpen()) tripPickStop(s); else navigate(s.id, { replace: !!current }); })
           .addTo(map);
         if (canHover) s.marker.bindTooltip(() => `${esc(s.name)} (${esc(s.id)})`, { direction: "top", offset: [0, -6] });
         byId.set(s.id, s);
@@ -289,17 +289,23 @@
     return parts.join("");
   }
 
+  // Paradas que coinciden con lo escrito: por número de poste o por palabras del nombre (sin tildes).
+  function matchStops(q) {
+    const nq = norm(q);
+    const tokens = nq.split(" ").filter(Boolean);
+    if (/^\d+[a-z]?$/.test(nq)) {
+      return stops.filter((s) => s.id.toLowerCase().startsWith(nq))
+        .sort((a, b) => a.id.length - b.id.length || a.id.localeCompare(b.id));
+    }
+    const res = stops.filter((s) => tokens.every((t) => s.key.includes(t)));
+    res.sort((a, b) => (a.key.startsWith(tokens[0]) ? 0 : 1) - (b.key.startsWith(tokens[0]) ? 0 : 1) || a.name.localeCompare(b.name, "es"));
+    return res;
+  }
+
   function renderSearch(q) {
     const nq = norm(q);
     const tokens = nq.split(" ").filter(Boolean);
-    let res;
-    if (/^\d+[a-z]?$/.test(nq)) {
-      res = stops.filter((s) => s.id.toLowerCase().startsWith(nq))
-        .sort((a, b) => a.id.length - b.id.length || a.id.localeCompare(b.id));
-    } else {
-      res = stops.filter((s) => tokens.every((t) => s.key.includes(t)));
-      res.sort((a, b) => (a.key.startsWith(tokens[0]) ? 0 : 1) - (b.key.startsWith(tokens[0]) ? 0 : 1) || a.name.localeCompare(b.name, "es"));
-    }
+    const res = matchStops(q);
     // Líneas: por código ("18" → 18A, 18B, 18H; "c3" → C3d, C3i) o por nombre ("hospital").
     const compact = nq.replace(/ /g, "");
     const lineRes = !lines ? [] : Object.keys(lines).filter((code) => {
@@ -357,7 +363,7 @@
   }
 
   // ---------- Ubicación ----------
-  function locate() {
+  function getPosition(onOk) {
     if (!("geolocation" in navigator)) { toast(t("geo_unsupported")); return; }
     const btn = $("#locate");
     btn.classList.add("busy");
@@ -367,6 +373,20 @@
         me = [pos.coords.latitude, pos.coords.longitude];
         const icon = L.divIcon({ className: "", html: '<div class="me-dot"></div>', iconSize: [18, 18] });
         if (meMarker) meMarker.setLatLng(me); else meMarker = L.marker(me, { icon, interactive: false, keyboard: false }).addTo(map);
+        onOk(me);
+      },
+      (err) => {
+        btn.classList.remove("busy");
+        toast(err.code === 1 ? t("geo_denied") : t("geo_error"));
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
+    );
+  }
+
+  function locate() {
+    // En "Cómo llegar" solo se centra el mapa en tu posición, sin salir de la vista.
+    if (tripOpen()) { getPosition((ll) => focusOn(ll, 16)); return; }
+    getPosition(() => {
         if (location.hash) navigate("");
         $("#q").value = "";
         setTab("near");
@@ -377,17 +397,11 @@
         } else {
           focusOn(me, 16);
         }
-      },
-      (err) => {
-        btn.classList.remove("busy");
-        toast(err.code === 1 ? t("geo_denied") : t("geo_error"));
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 30000 }
-    );
+    });
   }
 
   // ---------- Navegación ----------
-  // El estado vive en la dirección: "" inicio, "#5660" parada, "#linea/18A" línea.
+  // El estado vive en la dirección: "" inicio, "#5660" parada, "#linea/18A" línea, "#ir/A/B" cómo llegar.
   // Así el botón Atrás del móvil y los enlaces compartidos funcionan solos.
   function navigate(hash, { replace = false } = {}) {
     const url = hash ? `#${hash}` : location.pathname + location.search;
@@ -402,6 +416,7 @@
   function route() {
     if (!stops.length) return;
     const h = decodeURIComponent(location.hash.slice(1));
+    if (h === "ir" || h.startsWith("ir/")) { showTrip(h); return; }
     if (h.startsWith("linea/")) {
       const code = h.slice(6);
       if (!lines) return;                      // se reintenta al cargar las líneas
@@ -417,7 +432,9 @@
   addEventListener("popstate", route);
 
   function showView(id) {
-    ["home", "line", "stop"].forEach((v) => ($(`#${v}`).hidden = v !== id));
+    ["home", "line", "stop", "trip"].forEach((v) => ($(`#${v}`).hidden = v !== id));
+    panel.dataset.view = id;
+    if (id !== "trip") leaveTrip();
   }
 
   function leaveStop() {
@@ -475,15 +492,19 @@
     L.polyline(pts, { renderer, color: l.color, weight: 6, opacity: 1, interactive: false, lineCap: "round" }).addTo(lineGroup);
   }
 
-  function fitLine() {
-    const l = lines[active.code];
-    const d = l.sentidos[active.dir];
-    const pts = [d.trazado, ...(d.ramales || [])].flatMap(decodePolyline);
+  // Encuadra unos puntos en la zona del mapa que no tapa el panel.
+  function fitPoints(pts, maxZoom) {
     const r = panel.getBoundingClientRect();
     const opts = isDesktop()
       ? { paddingTopLeft: [r.right + 24, 24], paddingBottomRight: [24, 24] }
       : { paddingTopLeft: [16, 16], paddingBottomRight: [16, Math.max(260, innerHeight * 0.46) + 16] };
-    map.fitBounds(L.latLngBounds(pts), { ...opts, maxZoom: 16 });
+    map.fitBounds(L.latLngBounds(pts), { ...opts, maxZoom });
+  }
+
+  function fitLine() {
+    const l = lines[active.code];
+    const d = l.sentidos[active.dir];
+    fitPoints([d.trazado, ...(d.ramales || [])].flatMap(decodePolyline), 16);
   }
 
   function showLine(code) {
@@ -657,6 +678,251 @@
     }).join("");
   }
 
+  // ---------- Cómo llegar (de A a B; por ahora, a pie) ----------
+  // Cada extremo es { kind: "stop" | "me" | "map", ll: [lat, lon], id? }. En la dirección: #ir/<A>/<B>,
+  // con "p1234" para una parada y "lat,lon" para un punto. La ruta se calcula en el propio
+  // dispositivo con la red peatonal de OpenStreetMap (js/peaton.js), sin servicios externos.
+  const trip = { a: null, b: null, editing: null, picking: null };
+  const tripLayer = L.layerGroup().addTo(map);
+  const tripPins = {};
+  let tripSeq = 0;
+  let lastTrip = null;
+  const tripOpen = () => !$("#trip").hidden;
+  const fmtLL = (ll) => `${ll[0].toFixed(5)},${ll[1].toFixed(5)}`;
+  const stopEnd = (s) => ({ kind: "stop", id: s.id, ll: s.ll });
+  const ICON_ME = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/><circle cx="12" cy="12" r="7"/></svg>';
+  const ICON_MAP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.4"/></svg>';
+  const ICON_WALK = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4.2" r="1.8"/><path d="M9.5 21l2.2-5.5 2.6 2.3V21M11.7 15.5l1-5.3-3.2 1.3-1 3M12.7 10.2l2 2.6 2.8 1"/></svg>';
+
+  function endToken(p) { return !p ? "" : p.kind === "stop" ? `p${p.id}` : fmtLL(p.ll); }
+  function parseEnd(tok, prev) {
+    if (!tok) return null;
+    if (prev && endToken(prev) === tok) return prev;   // conserva "Mi ubicación" al volver
+    if (tok[0] === "p" && byId.has(tok.slice(1))) return stopEnd(byId.get(tok.slice(1)));
+    const m = tok.match(/^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/);
+    return m ? { kind: "map", ll: [Number(m[1]), Number(m[2])] } : null;
+  }
+  function endLabel(p) {
+    if (!p) return "";
+    if (p.kind === "stop") return `${byId.get(p.id).name} (${p.id})`;
+    return p.kind === "me" ? t("my_location") : t("map_point");
+  }
+  const pinIcon = (w) => L.divIcon({ className: "trip-pin", html: `<span class="pin pin-${w}">${w.toUpperCase()}</span>`, iconSize: [30, 30], iconAnchor: [15, 15] });
+
+  function openTrip(b) {
+    if (!trip.a && me) trip.a = { kind: "me", ll: me };
+    if (b) trip.b = b;
+    navigate(`ir/${endToken(trip.a)}/${endToken(trip.b)}`);
+  }
+
+  function showTrip(h) {
+    leaveStop();
+    clearLine();
+    const [, ta = "", tb = ""] = h.split("/");
+    trip.a = parseEnd(ta, trip.a);
+    trip.b = parseEnd(tb, trip.b);
+    trip.picking = null;
+    showView("trip");
+    document.title = `${t("trip_title")} · Próximo Vitrasa`;
+    if (!isDesktop() && panel.dataset.state !== "full") panel.dataset.state = "peek";
+    closeSugg();
+    renderTripFields();
+    computeTrip(true);
+  }
+
+  function leaveTrip() {
+    tripSeq++;
+    trip.picking = null;
+    lastTrip = null;
+    tripLayer.clearLayers();
+    Object.values(tripPins).forEach((m) => m.remove());
+  }
+
+  function setEnd(which, p) {
+    trip[which] = p;
+    trip.picking = null;
+    $("#toast").hidden = true;   // el aviso de "toca el mapa" ya no hace falta
+    const h = `#ir/${endToken(trip.a)}/${endToken(trip.b)}`.replace(/\/+$/, "");
+    history.replaceState(history.state, "", h);
+    $(`#trip-${which}`).blur();
+    closeSugg();
+    renderTripFields();
+    setPanel(baseState());
+    computeTrip(true);
+  }
+
+  // A qué campo va un punto elegido en el mapa: el que se está editando o el primero vacío.
+  const targetEnd = () => trip.picking || trip.editing || (!trip.a ? "a" : "b");
+  function tripPickStop(s) { setEnd(targetEnd(), stopEnd(s)); }
+
+  function renderTripFields() {
+    ["a", "b"].forEach((w) => {
+      const inp = $(`#trip-${w}`);
+      if (document.activeElement !== inp) inp.value = endLabel(trip[w]);
+      $(`[data-clear="${w}"]`).hidden = !inp.value;
+      inp.closest(".trip-field").classList.toggle("picking", trip.picking === w);
+      const p = trip[w];
+      if (p && tripOpen()) {
+        if (!tripPins[w]) {
+          tripPins[w] = L.marker(p.ll, { icon: pinIcon(w), draggable: true, keyboard: false, zIndexOffset: 1000 })
+            .on("dragend", (e) => { const ll = e.target.getLatLng(); setEnd(w, { kind: "map", ll: [ll.lat, ll.lng] }); });
+        }
+        tripPins[w].setLatLng(p.ll).addTo(map);
+      } else if (tripPins[w]) tripPins[w].remove();
+    });
+  }
+
+  function specialItem(kind, icon, label) {
+    const li = document.createElement("li");
+    li.innerHTML = `<button type="button" class="special" data-trip="${kind}">${icon}<span class="name">${esc(label)}</span></button>`;
+    return li;
+  }
+
+  // Sugerencias mientras se escribe en Desde o Hasta.
+  function openSugg(which) {
+    trip.editing = which;
+    const inp = $(`#trip-${which}`);
+    const q = inp.value.trim();
+    const typed = q && q !== endLabel(trip[which]) ? q : "";
+    $(`[data-clear="${which}"]`).hidden = !inp.value;
+    const items = [specialItem("me", ICON_ME, t("my_location")), specialItem("map", ICON_MAP, t("pick_map"))];
+    if (typed) {
+      const tokens = norm(typed).split(" ").filter(Boolean);
+      const res = matchStops(typed).slice(0, 40);
+      if (res.length) {
+        items.push(groupHead(t("res_stops")));
+        res.forEach((s) => items.push(stopItem(s, { nameHtml: highlight(s.name, tokens), noLines: true, dist: me ? haversine(me, s.ll) : null })));
+      } else {
+        const li = document.createElement("li");
+        li.className = "group-head";
+        li.textContent = t("trip_no_stops", { q: typed });
+        items.push(li);
+      }
+    }
+    $("#trip-sugg").replaceChildren(...items);
+    $("#trip-sugg").hidden = false;
+    $("#trip-result").hidden = true;
+  }
+  function closeSugg() {
+    trip.editing = null;
+    $("#trip-sugg").hidden = true;
+    $("#trip-result").hidden = false;
+  }
+
+  async function computeTrip(fit) {
+    const seq = ++tripSeq;
+    tripLayer.clearLayers();
+    lastTrip = null;
+    const box = $("#trip-result");
+    const ends = [trip.a, trip.b].filter(Boolean).map((p) => p.ll);
+    if (ends.length < 2) {
+      box.innerHTML = `<p class="trip-note">${esc(t("trip_hint"))}</p>`;
+      if (fit && ends.length) focusOn(ends[0], Math.max(map.getZoom(), 15));
+      // Se adelanta la descarga de la red para que la ruta salga al instante.
+      window.PV_PEATON.load().catch(() => {});
+      return;
+    }
+    box.innerHTML = `<p class="trip-note">${esc(t("trip_loading"))}</p>`;
+    let net;
+    try { net = await window.PV_PEATON.load(); }
+    catch { if (seq === tripSeq) box.innerHTML = `<div class="state"><strong>${esc(t("trip_net_error"))}</strong></div>`; return; }
+    if (seq !== tripSeq) return;
+    const r = net.route(trip.a.ll, trip.b.ll);
+    if (!r) {
+      box.innerHTML = `<div class="state"><strong>${esc(t("trip_none"))}</strong></div>`;
+      if (fit) fitPoints(ends, 17);
+      return;
+    }
+    // Tramo a pie: puntos azules sobre un borde blanco, como en los mapas habituales.
+    // Si el punto pedido está lejos de la calle, una línea fina lo une con ella.
+    const thin = { renderer, color: "#1C6FA8", weight: 2.5, opacity: 0.8, dashArray: "3 6", interactive: false };
+    if (r.offFrom > 4) L.polyline([trip.a.ll, r.from], thin).addTo(tripLayer);
+    if (r.offTo > 4) L.polyline([r.to, trip.b.ll], thin).addTo(tripLayer);
+    L.polyline(r.coords, { renderer, color: "#FFFFFF", weight: 10, opacity: 0.95, interactive: false, lineCap: "round", lineJoin: "round" }).addTo(tripLayer);
+    L.polyline(r.coords, { renderer, color: "#1C6FA8", weight: 6, opacity: 1, interactive: false, lineCap: "round", lineJoin: "round", dashArray: "0.1 10" }).addTo(tripLayer);
+    lastTrip = { total: r.dist + r.offFrom + r.offTo, fecha: net.fecha };
+    renderTripResult();
+    if (fit) fitPoints([...r.coords, ...ends], 17);
+  }
+
+  function renderTripResult() {
+    if (!lastTrip) return;
+    const min = walkMin(lastTrip.total);
+    const eta = min < 60 ? `<b>${min}</b><span>${esc(t("min"))}</span>`
+      : `<b>${Math.floor(min / 60)}</b><span>h</span> <b>${min % 60}</b><span>${esc(t("min"))}</span>`;
+    const date = new Date(`${lastTrip.fecha}T12:00:00`).toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" });
+    const osm = `https://www.openstreetmap.org/directions?engine=fossgis_osrm_foot&route=${fmtLL(trip.a.ll)}%3B${fmtLL(trip.b.ll)}`;
+    $("#trip-result").innerHTML = `<div class="trip-card">
+        <span class="mode">${ICON_WALK}</span>
+        <span class="what">${esc(t("on_foot"))}<small>${fmtDist(lastTrip.total)}</small></span>
+        <span class="eta">${eta}</span>
+      </div>
+      <p class="trip-note">${esc(t("trip_source", { date }))} <a href="${osm}" target="_blank" rel="noopener">${esc(t("trip_compare"))}</a></p>`;
+  }
+
+  map.on("click", (e) => {
+    if (!tripOpen()) return;
+    setEnd(targetEnd(), { kind: "map", ll: [e.latlng.lat, e.latlng.lng] });
+  });
+
+  ["a", "b"].forEach((w) => {
+    const inp = $(`#trip-${w}`);
+    inp.addEventListener("focus", () => {
+      trip.picking = null;
+      renderTripFields();
+      openSugg(w);
+      inp.select();
+      if (!isDesktop()) panel.dataset.state = "full";
+    });
+    inp.addEventListener("input", () => openSugg(w));
+    inp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        const first = $("#trip-sugg button[data-id]");
+        if (first) first.click();
+      }
+      if (e.key === "Escape") { inp.value = endLabel(trip[w]); inp.blur(); closeSugg(); setPanel(baseState()); }
+    });
+  });
+  $("#trip-sugg").addEventListener("click", (e) => {
+    e.stopPropagation();   // aquí una parada no abre su ficha: se elige como origen o destino
+    const w = trip.editing || targetEnd();
+    const stop = e.target.closest("button[data-id]");
+    if (stop) { setEnd(w, stopEnd(byId.get(stop.dataset.id))); return; }
+    const sp = e.target.closest("button[data-trip]");
+    if (!sp) return;
+    if (sp.dataset.trip === "me") {
+      getPosition((ll) => setEnd(w, { kind: "me", ll }));
+    } else {
+      // Elegir en el mapa: el siguiente toque en el mapa marca el punto.
+      $(`#trip-${w}`).blur();
+      closeSugg();
+      trip.picking = w;
+      renderTripFields();
+      setPanel("min");
+      toast(t("pick_map_hint"));
+    }
+  });
+  document.querySelectorAll("[data-clear]").forEach((b) => b.addEventListener("click", () => {
+    const w = b.dataset.clear;
+    trip[w] = null;
+    const h = `#ir/${endToken(trip.a)}/${endToken(trip.b)}`.replace(/\/+$/, "");
+    history.replaceState(history.state, "", h);
+    $(`#trip-${w}`).value = "";
+    renderTripFields();
+    computeTrip(false);
+    $(`#trip-${w}`).focus();
+  }));
+  $("#trip-swap").addEventListener("click", () => {
+    [trip.a, trip.b] = [trip.b, trip.a];
+    const h = `#ir/${endToken(trip.a)}/${endToken(trip.b)}`.replace(/\/+$/, "");
+    history.replaceState(history.state, "", h);
+    renderTripFields();
+    computeTrip(false);
+  });
+  $("#trip-back").addEventListener("click", goBack);
+  $("#go-trip").addEventListener("click", () => { clearTimeout(qTimer); $("#q").blur(); openTrip(); });
+  $("#trip-here").addEventListener("click", () => { if (current) openTrip(stopEnd(current)); });
+
   // ---------- Eventos ----------
   // Paradas y líneas se abren desde cualquier lista o chapa del panel.
   $("#panel").addEventListener("click", (e) => {
@@ -773,6 +1039,7 @@
       if (lastArrivals) renderArrivals(lastArrivals);
       showUpdated();
     } else if (active) showLine(active.code);
+    else if (tripOpen()) { renderTripFields(); computeTrip(false); document.title = `${t("trip_title")} · Próximo Vitrasa`; }
     else render();
   }
   $("#lang-btn").addEventListener("click", (e) => { e.stopPropagation(); toggleLangMenu(); });

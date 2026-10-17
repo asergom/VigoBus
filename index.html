@@ -34,11 +34,18 @@
       </div>
     </header>
 
-    <div class="search">
-      <label class="visually-hidden" for="q" data-i18n="search_label"></label>
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
-      <input id="q" type="search" inputmode="search" autocomplete="off" spellcheck="false"
-             data-i18n-ph="search_ph">
+    <div class="search-row">
+      <div class="search">
+        <label class="visually-hidden" for="q" data-i18n="search_label"></label>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+        <input id="q" type="search" inputmode="search" autocomplete="off" spellcheck="false"
+               data-i18n-ph="search_ph">
+      </div>
+      <!-- Cómo llegar: de un punto a otro -->
+      <button id="go-trip" class="trip-btn" type="button" data-i18n-aria="trip_open">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 21.2 12 12 21.2 2.8 12z"/><path d="M9.5 14.5v-2.2a1.6 1.6 0 0 1 1.6-1.6h4.4M13.6 8.4l2.3 2.3-2.3 2.3"/></svg>
+        <span data-i18n="trip_btn"></span>
+      </button>
     </div>
 
     <!-- Lista: resultados de búsqueda, cerca de mí o favoritas -->
@@ -67,6 +74,39 @@
       <ol id="line-stops" class="stops route-list"></ol>
     </section>
 
+    <!-- Cómo llegar: desde / hasta, por ahora a pie -->
+    <section id="trip" class="view" hidden>
+      <div class="stop-head trip-head">
+        <button id="trip-back" class="icon-btn" type="button" data-i18n-aria="back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <h2 class="trip-title" data-i18n="trip_title"></h2>
+      </div>
+      <div class="trip-fields">
+        <div class="trip-field">
+          <span class="pin pin-a" aria-hidden="true">A</span>
+          <label class="visually-hidden" for="trip-a" data-i18n="from"></label>
+          <input id="trip-a" type="text" autocomplete="off" spellcheck="false" data-end="a" data-i18n-ph="from_ph">
+          <button class="clear" type="button" data-clear="a" data-i18n-aria="clear" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <div class="trip-field">
+          <span class="pin pin-b" aria-hidden="true">B</span>
+          <label class="visually-hidden" for="trip-b" data-i18n="to"></label>
+          <input id="trip-b" type="text" autocomplete="off" spellcheck="false" data-end="b" data-i18n-ph="to_ph">
+          <button class="clear" type="button" data-clear="b" data-i18n-aria="clear" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <button id="trip-swap" class="icon-btn swap" type="button" data-i18n-aria="swap">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4v16M4.5 7.5 8 4l3.5 3.5M16 20V4M12.5 16.5 16 20l3.5-3.5"/></svg>
+        </button>
+      </div>
+      <ul id="trip-sugg" class="stops trip-sugg" hidden></ul>
+      <div id="trip-result" class="trip-result" aria-live="polite"></div>
+    </section>
+
     <!-- Ficha de parada -->
     <section id="stop" class="view" hidden>
       <div class="stop-head">
@@ -88,6 +128,7 @@
       <footer class="stop-foot">
         <span id="updated"></span>
         <button id="refresh" type="button" data-i18n="refresh"></button>
+        <button id="trip-here" type="button" data-i18n="trip_here"></button>
         <a id="infobus" target="_blank" rel="noopener" data-i18n="infobus"></a>
       </footer>
     </section>
@@ -100,6 +141,7 @@
 
   <script src="vendor/leaflet/leaflet.js"></script>
   <script src="js/i18n.js"></script>
+  <script src="js/peaton.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

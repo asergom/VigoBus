@@ -7,7 +7,8 @@ Mapa de las paradas de Vitrasa en Vigo con los próximos buses de cada parada.
 - Disponible en español, galego, português, euskara, català, English, français y Deutsch (textos dentro de la propia web).
 - **Cerca** muestra las paradas más próximas a tu ubicación con la distancia andando. Sin ubicación, muestra las de la zona del mapa.
 - **Favoritas** guarda paradas en el propio dispositivo.
-- Cada parada y cada línea tienen enlace propio: `#5660` abre la Gran Vía, 19 y `#linea/C3d` la línea C3d.
+- **Cómo llegar**: indica desde dónde y hasta dónde quieres ir (una parada, tu ubicación o un punto del mapa) y la web calcula la ruta a pie, con distancia y tiempo. La ruta se calcula en el propio dispositivo con una red de calles de OpenStreetMap guardada en la web, sin servicios externos. Desde cada parada, "Cómo llegar aquí" la pone como destino.
+- Cada parada y cada línea tienen enlace propio: `#5660` abre la Gran Vía, 19 y `#linea/C3d` la línea C3d. Una ruta también: `#ir/p5660/42.23700,-8.72060` (parada → punto).
 - En el móvil, el panel se desliza hacia abajo para ver el mapa casi entero.
 - Se puede instalar en el móvil como app y funciona sin conexión. Los tiempos de llegada sí necesitan red.
 
@@ -20,12 +21,16 @@ index.html              página
 css/app.css             estilos (modo claro y oscuro)
 js/app.js               lógica: mapa, búsqueda, cercanía, favoritas, líneas, tiempos
 js/i18n.js              textos de la interfaz en los 8 idiomas y banderas
+js/peaton.js            rutas a pie con la red peatonal propia
 data/paradas.geojson    1.161 paradas: id (número de Vitrasa), nombre y líneas
 data/oficial/           lista oficial de paradas descargada del Concello
 data/descartadas.csv    paradas de la versión antigua que ya no existen
 data/lineas.json        recorrido, color y paradas de las 44 líneas
+data/peatonal.json      red peatonal: calles, aceras y caminos de la zona de Vitrasa (OpenStreetMap)
+data/osm/vias.json.gz   vías de OpenStreetMap descargadas, de las que sale la red peatonal
 tools/actualizar_paradas.py   genera paradas.geojson desde la lista oficial
 tools/actualizar_lineas.py    genera lineas.json desde el GTFS oficial
+tools/actualizar_peatonal.py  genera peatonal.json desde las vías de OpenStreetMap
 vendor/leaflet/         Leaflet 1.9.4
 fonts/                  Barlow (licencia OFL)
 icons/, manifest.webmanifest, sw.js   app instalable
@@ -76,6 +81,33 @@ no pasa (comprobado también con los tiempos en vivo).
 
 La capa original de QGIS tenía 935 paradas válidas. Al cruzarla con la lista oficial faltaban 293, y 67 ya no existían (ni en la lista ni en la API de tiempos); están en `data/descartadas.csv`.
 
+### Red peatonal
+
+`data/peatonal.json` sale de las vías de OpenStreetMap de la zona de Vitrasa (de Teis y Bouzas
+hasta Porriño), descargadas con Overpass:
+
+```
+[out:json][timeout:300];(way["highway"](42.135,-8.835,42.290,-8.610););(._;>;);out body;
+```
+
+Guarda el resultado comprimido en `data/osm/vias.json.gz` y ejecuta:
+
+```
+python3 tools/actualizar_peatonal.py
+```
+
+El script se queda con las vías por las que se puede ir a pie (mismas reglas generales que el
+perfil a pie de OSRM), une los tramos, descarta islas sueltas y guarda la red en un formato
+compacto (unos 39.000 cruces, 0,7 MB comprimido). Al elegir la ruta, las pistas y sendas de
+tierra cuentan un 25 % más largas para preferir calles y aceras; la distancia mostrada es la
+real. El tiempo se calcula a 4,5 km/h, sin tener en cuenta las cuestas por ahora.
+
+Comprobación (octubre de 2026): en 12 rutas de 300 m a 8,6 km por todo Vigo, la distancia
+coincide con la de routing.openstreetmap.de con una diferencia media del 2,5 %, siempre algo
+más corta. Haciendo que OpenStreetMap siga la misma ruta, sus tramos miden lo mismo (±1 %): la
+diferencia viene de que su servicio no busca el camino más corto, sino que prefiere ciertos
+tipos de vía.
+
 ## Probar en local
 
 ```
@@ -88,4 +120,6 @@ y abre http://localhost:8000.
 
 Todo es gratuito y sin claves: el mapa base es el de OpenStreetMap (con su atribución), los tiempos vienen de la API abierta del Concello de Vigo y Leaflet y Barlow son de código abierto. Para alojarla basta GitHub Pages.
 
-Mapa base © colaboradores de OpenStreetMap.
+Mapa base y red peatonal © colaboradores de OpenStreetMap. La red peatonal (`data/peatonal.json`
+y `data/osm/`) es una base de datos derivada de OpenStreetMap y se distribuye con la licencia
+ODbL (https://opendatacommons.org/licenses/odbl/).
