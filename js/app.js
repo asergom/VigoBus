@@ -107,6 +107,7 @@
   let lines = null;               // data/lineas.json: recorrido y paradas de cada línea
   let lineRuta = null;            // destino de la fila de llegadas desde la que se abrió la línea
   let active = null;              // línea iluminada: { code, dir, stops, from, fromDir }
+  let tripRouteOn = false;        // hay un viaje dibujado en "Cómo llegar"
 
   function loadFavs() {
     try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch { return []; }
@@ -166,7 +167,10 @@
   // Con una línea elegida y el mapa alejado, las paradas se ocultan para que se vea bien el recorrido.
   const LINE_STOPS_ZOOM = 15;
   function updateStopVisibility() {
-    map.getContainer().classList.toggle("hide-stops", !!active && map.getZoom() < LINE_STOPS_ZOOM);
+    // En "Cómo llegar", con un viaje dibujado, las paradas se atenúan (y se ocultan al alejar).
+    const route = !!active || tripRouteOn;
+    map.getContainer().classList.toggle("hide-stops", route && map.getZoom() < LINE_STOPS_ZOOM);
+    map.getContainer().classList.toggle("dim-stops", tripRouteOn);
   }
 
   map.on("zoomend", () => {
@@ -212,7 +216,7 @@
       $("#list-note").textContent = t("stops_error");
     });
 
-  fetch("data/lineas.json")
+  const linesReady = fetch("data/lineas.json")
     .then((r) => r.json())
     .then((d) => {
       lines = d;
@@ -221,7 +225,8 @@
       else if (current) $("#stop-lines").innerHTML = current.lines.map((l) => lineChip(l)).join("");
       else render();
     })
-    .catch(() => { lines = {}; });
+    .catch(() => { lines = {}; })
+    .then(() => lines);
 
   // ---------- Lista ----------
   function stopItem(s, extra) {
@@ -869,7 +874,7 @@
   // Cada extremo es { kind: "stop" | "me" | "map", ll: [lat, lon], id? }. En la dirección: #ir/<A>/<B>,
   // con "p1234" para una parada y "lat,lon" para un punto. La ruta se calcula en el propio
   // dispositivo con la red peatonal de OpenStreetMap (js/peaton.js), sin servicios externos.
-  const trip = { a: null, b: null, editing: null, picking: null };
+  const trip = { a: null, b: null, editing: null, picking: null, sel: null };   // sel: opción abierta
   const tripLayer = L.layerGroup().addTo(map);
   const tripPins = {};
   let tripSeq = 0;
@@ -922,34 +927,50 @@
     trip.a = parseEnd(ta, trip.a);
     trip.b = parseEnd(tb, trip.b);
     trip.picking = null;
+    const same = tripOpen() && lastTrip && lastTrip.hash === location.hash;
     showView("trip");
     document.title = `${t("trip_title")} · Próximo Vitrasa`;
     if (!isDesktop() && panel.dataset.state !== "full") panel.dataset.state = "peek";
     closeSugg();
     renderTripFields();
-    computeTrip(true);
+    if (same) {
+      // Mismo origen y destino: solo cambia la opción abierta (botón Atrás o Adelante).
+      trip.sel = (history.state && history.state.opt) || null;
+      renderTripResult();
+      drawTrip(true);
+    } else computeTrip(true);
     ensureDir().catch(() => {});
   }
 
   function leaveTrip() {
     tripSeq++;
     trip.picking = null;
+    trip.sel = null;
     lastTrip = null;
+    stopTripLive();
     tripLayer.clearLayers();
     Object.values(tripPins).forEach((m) => m.remove());
+    tripRouteOn = false;
+    updateStopVisibility();
   }
 
   function setEnd(which, p) {
     trip[which] = p;
     trip.picking = null;
     $("#toast").hidden = true;   // el aviso de "toca el mapa" ya no hace falta
-    const h = `#ir/${endToken(trip.a)}/${endToken(trip.b)}`.replace(/\/+$/, "");
-    history.replaceState(history.state, "", h);
+    tripReplace();
     $(`#trip-${which}`).blur();
     closeSugg();
     renderTripFields();
     setPanel(baseState());
     computeTrip(true);
+  }
+
+  // Dirección web al día con los extremos (sin opción abierta: hay que volver a calcular).
+  function tripReplace() {
+    trip.sel = null;
+    const h = `#ir/${endToken(trip.a)}/${endToken(trip.b)}`.replace(/\/+$/, "");
+    history.replaceState({ d: (history.state && history.state.d) || 0 }, "", h);
   }
 
   // A qué campo va un punto elegido en el mapa: el que se está editando o el primero vacío.
@@ -1040,58 +1061,389 @@
     $("#trip-result").hidden = false;
   }
 
+  // ---------- Planificador: en bus de A a B ----------
+  // Las opciones salen de los horarios (js/planificador.js, data/viajes.json) y después se corrigen
+  // con los tiempos en vivo de las paradas de subida. Cada 30 s se vuelve a calcular todo.
+  const PLAN = window.PV_PLAN;
+  const MAX_WALK_STOP = 1000;        // metros a pie como máximo hasta la parada de subida o desde la de bajada
+  const liveCache = new Map();       // parada → { at, list | null } (null: sin respuesta)
+  const walkCache = new Map();       // tramos a pie ya calculados
+  const patShape = new Map();        // recorrido → { sh, along[] }
+  let tripTimer = null, tripTick = null, tripBuses = [];
+
+  function stopTripLive() {
+    clearTimeout(tripTimer);
+    clearInterval(tripTick);
+    tripTimer = tripTick = null;
+    tripBuses.forEach((b) => b.marker && b.marker.remove());
+    tripBuses = [];
+  }
+
+  // Paradas alcanzables a pie desde un punto: Map(índice de parada en el plan → metros).
+  function stopsAround(net, plan, ll) {
+    for (const max of [MAX_WALK_STOP, MAX_WALK_STOP * 1.6]) {
+      const dist = net.around(ll, max);
+      const out = new Map();
+      for (const s of stops) {
+        const i = plan.index.get(s.id);
+        if (i == null || haversine(ll, s.ll) > max) continue;
+        const m = dist(s.ll);
+        if (m <= max) out.set(i, m);
+      }
+      if (out.size) return out;
+    }
+    return new Map();
+  }
+
+  // Tiempos en vivo de una parada (se reutilizan durante 20 s).
+  function getLive(id) {
+    const c = liveCache.get(id);
+    if (c && Date.now() - c.at < 20000) return Promise.resolve(c);
+    if (lastArrivals && lastArrivalsId === id && lastUpdate && Date.now() - lastUpdate.getTime() < 20000) {
+      const e = { at: lastUpdate.getTime(), list: lastArrivals };
+      liveCache.set(id, e);
+      return Promise.resolve(e);
+    }
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 8000);
+    return fetchEstimates(id, ctl.signal)
+      .then((d) => ({ at: Date.now(), list: d.estimaciones || [] }))
+      .catch(() => ({ at: Date.now(), list: null }))
+      .then((e) => { clearTimeout(timer); liveCache.set(id, e); return e; });
+  }
+
+  // Buses en vivo de la línea y sentido de un tramo, en su parada de subida.
+  function liveFor(plan, leg) {
+    const e = liveCache.get(plan.ids[leg.board]);
+    if (!e || !e.list) return null;
+    const l = lines[leg.line];
+    const dest = l && l.sentidos[leg.dir] ? norm(l.sentidos[leg.dir].destino) : null;
+    const id = plan.ids[leg.board];
+    const both = l && l.sentidos.filter((d) => d.paradas.includes(id) || (d.otras || []).includes(id)).length > 1;
+    return e.list.filter((x) => normLine(x.linea) === leg.line && (!both || !dest || norm(String(x.ruta || "")) === dest))
+      .map((x) => ({ ...x, _at: e.at }));
+  }
+
   async function computeTrip(fit) {
     const seq = ++tripSeq;
+    stopTripLive();
     tripLayer.clearLayers();
     lastTrip = null;
+    tripRouteOn = false;
+    updateStopVisibility();
     const box = $("#trip-result");
     const ends = [trip.a, trip.b].filter(Boolean).map((p) => p.ll);
     if (ends.length < 2) {
       box.innerHTML = `<p class="trip-note">${esc(t("trip_hint"))}</p>`;
       if (fit && ends.length) focusOn(ends[0], Math.max(map.getZoom(), 15));
-      // Se adelanta la descarga de la red para que la ruta salga al instante.
+      // Se adelanta la descarga de la red y de los horarios para que la ruta salga al instante.
       window.PV_PEATON.load().catch(() => {});
+      PLAN.load().catch(() => {});
       return;
     }
     box.innerHTML = `<p class="trip-note">${esc(t("trip_loading"))}</p>`;
-    let net;
+    let net, plan = null;
     try { net = await window.PV_PEATON.load(); }
     catch { if (seq === tripSeq) box.innerHTML = `<div class="state"><strong>${esc(t("trip_net_error"))}</strong></div>`; return; }
+    try { [plan] = await Promise.all([PLAN.load(), linesReady]); } catch { plan = null; }
     if (seq !== tripSeq) return;
     const r = net.route(trip.a.ll, trip.b.ll);
-    if (!r) {
-      box.innerHTML = `<div class="state"><strong>${esc(t("trip_none"))}</strong></div>`;
-      if (fit) fitPoints(ends, 17);
-      return;
+    lastTrip = {
+      hash: location.hash, net, plan, planError: !plan, fecha: net.fecha,
+      walk: r ? { dist: r.dist + r.offFrom + r.offTo, r } : null,
+      approx: [trip.a, trip.b].filter((p) => p.kind === "addr" && p.approx).map((p) => p.label),
+      cands: [], opts: [], live: false,
+    };
+    if (plan) {
+      lastTrip.origins = stopsAround(net, plan, trip.a.ll);
+      lastTrip.dests = stopsAround(net, plan, trip.b.ll);
+      planSearch();
     }
-    // Tramo a pie: puntos azules sobre un borde blanco, como en los mapas habituales.
-    // Si el punto pedido está lejos de la calle, una línea fina lo une con ella.
-    const thin = { renderer, color: "#1C6FA8", weight: 2.5, opacity: 0.8, dashArray: "3 6", interactive: false };
-    if (r.offFrom > 4) L.polyline([trip.a.ll, r.from], thin).addTo(tripLayer);
-    if (r.offTo > 4) L.polyline([r.to, trip.b.ll], thin).addTo(tripLayer);
-    L.polyline(r.coords, { renderer, color: "#FFFFFF", weight: 10, opacity: 0.95, interactive: false, lineCap: "round", lineJoin: "round" }).addTo(tripLayer);
-    L.polyline(r.coords, { renderer, color: "#1C6FA8", weight: 6, opacity: 1, interactive: false, lineCap: "round", lineJoin: "round", dashArray: "0.1 10" }).addTo(tripLayer);
-    lastTrip = { total: r.dist + r.offFrom + r.offTo, fecha: net.fecha };
-    lastTrip.approx = [trip.a, trip.b].filter((p) => p.kind === "addr" && p.approx).map((p) => p.label);
+    const st = history.state && history.state.opt;
+    trip.sel = st && (st === "walk" || lastTrip.opts.some((o) => o.key === st)) ? st : null;
     renderTripResult();
-    if (fit) fitPoints([...r.coords, ...ends], 17);
+    drawTrip(fit);
+    if (lastTrip.cands.length) refreshLive(seq);
   }
 
-  function renderTripResult() {
-    if (!lastTrip) return;
-    const min = walkMin(lastTrip.total);
-    const eta = min < 60 ? `<b>${min}</b><span>${esc(t("min"))}</span>`
-      : `<b>${Math.floor(min / 60)}</b><span>h</span> <b>${min % 60}</b><span>${esc(t("min"))}</span>`;
-    const date = new Date(`${lastTrip.fecha}T12:00:00`).toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" });
-    const osm = `https://www.openstreetmap.org/directions?engine=fossgis_osrm_foot&route=${fmtLL(trip.a.ll)}%3B${fmtLL(trip.b.ll)}`;
-    $("#trip-result").innerHTML = `<div class="trip-card">
-        <span class="mode">${ICON_WALK}</span>
-        <span class="what">${esc(t("on_foot"))}<small>${fmtDist(lastTrip.total)}</small></span>
-        <span class="eta">${eta}</span>
-      </div>
-      ${(lastTrip.approx || []).map((label) => `<p class="trip-note">${esc(t("approx_note", { label }))}</p>`).join("")}
-      <p class="trip-note">${esc(t("trip_source", { date }))} <a href="${osm}" target="_blank" rel="noopener">${esc(t("trip_compare"))}</a></p>`;
+  // Busca de nuevo con la hora actual (las opciones del horario, aún sin tiempos en vivo).
+  function planSearch() {
+    const lt = lastTrip;
+    const now = new Date();
+    lt.base = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    lt.cands = lt.plan.search({ origins: lt.origins, dests: lt.dests, walk: lt.walk ? lt.walk.dist : Infinity, time: now });
+    if (!lt.live) lt.opts = lt.plan.choose(lt.cands, now, lt.walk ? lt.walk.dist : Infinity);
   }
+
+  async function refreshLive(seq) {
+    const lt = lastTrip;
+    if (!lt || !lt.plan) return;
+    clearTimeout(tripTimer);
+    const ids = new Set();
+    lt.cands.forEach((j) => j.legs.forEach((l) => l.type === "bus" && ids.add(lt.plan.ids[l.board])));
+    await Promise.all([...ids].map(getLive));
+    if (seq !== tripSeq || lastTrip !== lt) return;
+    const now = new Date();
+    const re = lt.cands.map((j) => lt.plan.retime(j, (leg) => liveFor(lt.plan, leg), now));
+    lt.opts = lt.plan.choose(re, now, lt.walk ? lt.walk.dist : Infinity);
+    lt.live = true;
+    lt.updated = now;
+    // La opción abierta se mantiene aunque deje de estar entre las mejores.
+    if (trip.sel && trip.sel !== "walk" && !lt.opts.some((o) => o.key === trip.sel)) {
+      const keep = re.find((o) => o.key === trip.sel && !o.broken);
+      if (keep) lt.opts.push(keep); else trip.sel = null;
+    }
+    renderTripResult();
+    drawTrip(false);
+    tripTimer = setTimeout(() => {
+      if (seq !== tripSeq || lastTrip !== lt) return;
+      if (document.hidden) return;             // al volver a la pestaña se actualiza (visibilitychange)
+      planSearch();
+      refreshLive(seq);
+    }, REFRESH_MS);
+  }
+
+  // ---------- Opciones: textos ----------
+  const nowSec = () => (Date.now() - lastTrip.base) / 1000;
+  const clock = (sec) => new Date(lastTrip.base + sec * 1000).toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
+  function durHtml(min) {
+    min = Math.max(1, Math.round(min));
+    return min < 60 ? `<b>${min}</b><span>${esc(t("min"))}</span>`
+      : `<b>${Math.floor(min / 60)}</b><span>h</span> <b>${min % 60}</b><span>${esc(t("min"))}</span>`;
+  }
+  const stopName = (i) => { const s = byId.get(lastTrip.plan.ids[i]); return s ? s.name : lastTrip.plan.ids[i]; };
+  const badge = (code) => `<span class="badge"${lineStyle(code)}>${esc(code)}</span>`;
+  const walkChip = (m) => `<span class="walk-chip">${ICON_WALK}<small>${walkMin(m)}</small></span>`;
+  const CHEV = '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+  // "Pasa en 4 min" (en vivo) / "A las 9:14" (horario).
+  function whenHtml(leg) {
+    const m = Math.round((leg.dep - nowSec()) / 60);
+    const txt = m <= 0 ? t("arriving") : m < 60 ? t("in_min", { n: m }) : t("at_time", { time: clock(leg.dep) });
+    if (leg.live) return `<span class="live">${esc(txt)}</span>`;
+    return `<span class="sched">${esc(m < 60 && m > 0 ? t("at_time", { time: clock(leg.dep) }) : txt)} · ${esc(t("scheduled"))}</span>`;
+  }
+  function chain(j) {
+    const parts = [];
+    j.legs.forEach((l) => {
+      if (l.type === "bus") parts.push(badge(l.line));
+      else if (l.m >= 60) parts.push(walkChip(l.m));
+    });
+    return parts.join(CHEV);
+  }
+
+  // Opción que se ve en el mapa: la elegida o, si no, la primera de la lista.
+  function shownKey() {
+    const lt = lastTrip;
+    if (trip.sel) return trip.sel;
+    const walkFirst = lt.walk && (!lt.opts[0] || nowSec() + walkMin(lt.walk.dist) * 60 <= lt.opts[0].arr);
+    return walkFirst || !lt.opts[0] ? "walk" : lt.opts[0].key;
+  }
+  const busKey = (l) => `${l.line}|${l.board}`;
+
+  // Lista de opciones; con una elegida, sus pasos.
+  function renderTripResult() {
+    const lt = lastTrip;
+    if (!lt) return;
+    const box = $("#trip-result");
+    const walkMinTotal = lt.walk ? walkMin(lt.walk.dist) : Infinity;
+    const notes = (lt.approx || []).map((label) => `<p class="trip-note">${esc(t("approx_note", { label }))}</p>`).join("");
+    if (trip.sel) {
+      const j = trip.sel === "walk" ? null : lt.opts.find((o) => o.key === trip.sel);
+      if (trip.sel === "walk" || j) { box.innerHTML = renderSteps(j) + notes; return; }
+      trip.sel = null;
+    }
+    const shown = shownKey();
+    const cur = (k) => (k === shown ? ' aria-current="true"' : "");
+    const items = lt.opts.map((j) => {
+      const first = j.legs.find((l) => l.type === "bus");
+      const total = (j.arr - nowSec()) / 60;
+      return `<li><button type="button" class="opt" data-opt="${esc(j.key)}"${cur(j.key)}>
+        <span class="chain">${chain(j)}</span>
+        <span class="eta">${durHtml(total)}</span>
+        <span class="when">${whenHtml(first)} · ${esc(stopName(first.board))}${first.doubtful ? ` <span class="warn">${esc(t("no_live"))}</span>` : ""}</span>
+        <span class="arr">${esc(t("arrive_at", { time: clock(j.arr) }))}</span>
+      </button></li>`;
+    });
+    // Ir andando: primero si llega antes que cualquier bus; si no, al final.
+    if (lt.walk) {
+      const w = `<li><button type="button" class="opt walk" data-opt="walk"${cur("walk")}>
+        <span class="chain">${walkChip(lt.walk.dist)}<span class="what">${esc(t("on_foot"))}</span></span>
+        <span class="eta">${durHtml(walkMinTotal)}</span>
+        <span class="when">${esc(fmtDist(lt.walk.dist))}</span>
+        <span class="arr">${esc(t("arrive_at", { time: clock(nowSec() + walkMinTotal * 60) }))}</span>
+      </button></li>`;
+      const firstBus = lt.opts[0];
+      if (!firstBus || nowSec() + walkMinTotal * 60 <= firstBus.arr) items.unshift(w); else items.push(w);
+    }
+    let head = "";
+    if (lt.planError) head = `<p class="trip-note">${esc(t("plan_error"))}</p>`;
+    else if (!lt.opts.length) head = `<div class="state"><strong>${esc(t("plan_none"))}</strong></div>`;
+    if (!items.length) head = `<div class="state"><strong>${esc(t("trip_none"))}</strong></div>`;
+    const date = lt.plan ? new Date(`${lt.plan.fecha}T12:00:00`).toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" }) : "";
+    const foot = lt.opts.length ? `<p class="trip-note">${lt.live ? "" : `${esc(t("live_checking"))} `}${esc(t("plan_note", { date }))}</p>` : "";
+    box.innerHTML = `${head}<ul class="trip-opts">${items.join("")}</ul>${notes}${foot}`;
+  }
+
+  function renderSteps(j) {
+    const lt = lastTrip;
+    const back = `<button type="button" class="opts-back" data-opt-back="1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>${esc(t("all_options"))}</button>`;
+    if (!j) {
+      // A pie: como antes de existir el planificador.
+      const date = new Date(`${lt.fecha}T12:00:00`).toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" });
+      const osm = `https://www.openstreetmap.org/directions?engine=fossgis_osrm_foot&route=${fmtLL(trip.a.ll)}%3B${fmtLL(trip.b.ll)}`;
+      return `${back}<div class="trip-card"><span class="mode">${ICON_WALK}</span>
+          <span class="what">${esc(t("on_foot"))}<small>${fmtDist(lt.walk.dist)}</small></span>
+          <span class="eta">${durHtml(walkMin(lt.walk.dist))}</span></div>
+        <p class="trip-note">${esc(t("trip_source", { date }))} <a href="${osm}" target="_blank" rel="noopener">${esc(t("trip_compare"))}</a></p>`;
+    }
+    const steps = [];
+    const legs = j.legs;
+    legs.forEach((l, k) => {
+      if (l.type === "walk") {
+        const next = legs[k + 1];
+        let text;
+        if (k === 0) text = t("step_walk_to", { dist: fmtDist(l.m), place: stopName(next.board) });
+        else if (l.transfer) text = l.m < 30 ? t("step_change_same") : t("step_change", { dist: fmtDist(l.m), place: stopName(next.board) });
+        else text = t("step_walk_dest", { dist: fmtDist(l.m) });
+        if (l.m < 30 && !l.transfer) return;
+        steps.push(`<li class="step walk"><span class="ico">${ICON_WALK}</span>
+          <span class="txt">${esc(text)}<small>${esc(t("walk", { n: walkMin(l.m) }))}</small></span></li>`);
+      } else {
+        const ln = lines[l.line];
+        const dest = ln && ln.sentidos[l.dir] ? ln.sentidos[l.dir].destino : "";
+        const rideMin = Math.max(1, Math.round((l.arr - l.dep) / 60));
+        const where = l.live ? ` <span class="bus-pos" data-bus="${esc(busKey(l))}"></span>` : "";
+        steps.push(`<li class="step bus" style="--lc:${ln ? ln.color : "var(--ink)"}"><span class="ico">${badge(l.line)}</span>
+          <span class="txt">${esc(t("step_board", { stop: stopName(l.board), id: lastTrip.plan.ids[l.board] }))}
+            <small class="dest">${esc(t("towards", { dest }))}</small>
+            <small>${whenHtml(l)}${where}${l.doubtful ? ` · <span class="warn">${esc(t("no_live"))}</span>` : ""}</small>
+            <small>${esc(t(l.stops === 1 ? "stops_1" : "stops_n", { n: l.stops, min: rideMin }))}</small>
+            <b class="alight">${esc(t("step_alight", { stop: stopName(l.alight) }))}</b></span></li>`);
+      }
+    });
+    steps.push(`<li class="step end"><span class="ico"><span class="pin pin-b">B</span></span>
+      <span class="txt">${esc(t("step_arrive", { time: clock(j.arr) }))}</span></li>`);
+    const total = (j.arr - nowSec()) / 60;
+    return `${back}<div class="opt-head"><span class="chain">${chain(j)}</span><span class="eta">${durHtml(total)}</span></div>
+      <ol class="steps">${steps.join("")}</ol>`;
+  }
+
+  // ---------- Opciones: mapa ----------
+  function walkPath(from, to) {
+    const k = `${fmtLL(from)}|${fmtLL(to)}`;
+    if (!walkCache.has(k)) {
+      const r = lastTrip.net.route(from, to);
+      walkCache.set(k, r ? [from, ...r.coords, to] : [from, to]);
+      if (walkCache.size > 200) walkCache.delete(walkCache.keys().next().value);
+    }
+    return walkCache.get(k);
+  }
+  function busPath(leg) {
+    const plan = lastTrip.plan;
+    const pt = plan.pats[leg.pat];
+    if (!patShape.has(pt.n)) {
+      const dir = lines[pt.l].sentidos[pt.s];
+      const sh = BUS.prepare(BUS.decode(pt.f < 0 ? dir.trazado : dir.ramales[pt.f]));
+      const along = BUS.stopsAlong(sh, pt.p.map((i) => byId.get(plan.ids[i]).ll)).map((r) => r.along);
+      patShape.set(pt.n, { sh, along });
+    }
+    const { sh, along } = patShape.get(pt.n);
+    return along[leg.to] > along[leg.from] ? BUS.slice(sh, along[leg.from], along[leg.to])
+      : [byId.get(plan.ids[leg.board]).ll, byId.get(plan.ids[leg.alight]).ll];
+  }
+  const walkStyle = (pts) => [
+    L.polyline(pts, { renderer, color: "#FFFFFF", weight: 10, opacity: 0.95, interactive: false, lineCap: "round", lineJoin: "round" }),
+    L.polyline(pts, { renderer, color: "#1C6FA8", weight: 6, opacity: 1, interactive: false, lineCap: "round", lineJoin: "round", dashArray: "0.1 10" }),
+  ];
+
+  // Dibuja la opción elegida (o la primera de la lista) y sus buses en camino.
+  function drawTrip(fit) {
+    const lt = lastTrip;
+    tripLayer.clearLayers();
+    tripBuses.forEach((b) => b.marker && b.marker.remove());
+    tripBuses = [];
+    clearInterval(tripTick);
+    tripRouteOn = !!lt;
+    updateStopVisibility();
+    if (!lt) return;
+    const shown = shownKey();
+    const all = [trip.a.ll, trip.b.ll];
+    if (shown === "walk") {
+      if (!lt.walk) { if (fit) fitPoints(all, 17); return; }
+      const r = lt.walk.r;
+      const thin = { renderer, color: "#1C6FA8", weight: 2.5, opacity: 0.8, dashArray: "3 6", interactive: false };
+      if (r.offFrom > 4) L.polyline([trip.a.ll, r.from], thin).addTo(tripLayer);
+      if (r.offTo > 4) L.polyline([r.to, trip.b.ll], thin).addTo(tripLayer);
+      walkStyle(r.coords).forEach((p) => p.addTo(tripLayer));
+      if (fit) fitPoints([...r.coords, ...all], 17);
+      return;
+    }
+    const j = lt.opts.find((o) => o.key === shown);
+    if (!j) return;
+    const plan = lt.plan;
+    const llOf = (i) => byId.get(plan.ids[i]).ll;
+    j.legs.forEach((l, k) => {
+      if (l.type !== "walk") return;
+      const from = k === 0 ? trip.a.ll : llOf(j.legs[k - 1].alight);
+      const to = k === j.legs.length - 1 ? trip.b.ll : llOf(j.legs[k + 1].board);
+      if (l.m < 8) return;
+      const pts = walkPath(from, to);
+      walkStyle(pts).forEach((p) => p.addTo(tripLayer));
+      all.push(...pts);
+    });
+    j.legs.forEach((l) => {
+      if (l.type !== "bus") return;
+      const ln = lines[l.line];
+      const pts = busPath(l);
+      L.polyline(pts, { renderer, color: "#13222C", weight: 11, opacity: 0.35, interactive: false }).addTo(tripLayer);
+      L.polyline(pts, { renderer, color: "#FFFFFF", weight: 9, opacity: 1, interactive: false }).addTo(tripLayer);
+      L.polyline(pts, { renderer, color: ln.color, weight: 6, opacity: 1, interactive: false, lineCap: "round" }).addTo(tripLayer);
+      [l.board, l.alight].forEach((i) => L.circleMarker(llOf(i), { renderer, radius: 6, weight: 3.5, color: ln.color, fillColor: "#FFFFFF", fillOpacity: 1, interactive: false }).addTo(tripLayer));
+      all.push(...pts);
+      // Bus en camino hacia la parada de subida (con dato en vivo).
+      if (l.live && isFinite(Number(l.live.metros))) {
+        const dir = ln.sentidos[l.dir];
+        const loc = BUS.locateStop(dir, plan.ids[l.board], (id) => (byId.get(id) || {}).ll || [0, 0]);
+        if (loc) tripBuses.push({ key: busKey(l), loc, est: l.live, at: l.live._at, color: ln.color, texto: ln.texto });
+      }
+    });
+    drawTripBuses();
+    if (tripBuses.length) tripTick = setInterval(drawTripBuses, 1000);
+    else tripTick = setInterval(() => { if (lastTrip && !trip.sel) renderTripResult(); }, 15000);   // "pasa en N min" al día
+    if (fit) fitPoints(all, 17);
+  }
+
+  const busState = (b) => BUS.busAt(b.loc, b.est, (Date.now() - b.at) / 60000);
+  function drawTripBuses() {
+    tripBuses.forEach((b) => {
+      const s = busState(b);
+      // En los pasos: a qué distancia va el bus de la parada.
+      const span = document.querySelector(`#trip-result .bus-pos[data-bus="${CSS.escape(b.key)}"]`);
+      if (span) span.textContent = s && s.state === "route" ? `· ${t("bus_far", { dist: fmtDist(s.left) })}` : s && s.state === "depot" ? `· ${t("bus_depot")}` : "";
+      if (!s || s.state !== "route") { if (b.marker) b.marker.remove(); return; }
+      if (!b.marker) {
+        b.marker = L.marker(s.ll, { keyboard: false, interactive: false, zIndexOffset: 900, icon: L.divIcon({
+          className: "bus-pin", iconSize: [34, 34], iconAnchor: [17, 17],
+          html: `<span class="bus-dot" style="--lc:${b.color};--lt:${b.texto}"><span class="bus-arrow"></span>${BUS_ICON}</span>` }) });
+      }
+      b.marker.setLatLng(s.ll);
+      if (!map.hasLayer(b.marker)) b.marker.addTo(map);
+      const arrow = b.marker.getElement() && b.marker.getElement().querySelector(".bus-arrow");
+      if (arrow) arrow.style.transform = `rotate(${Math.round(s.bearing)}deg)`;
+    });
+  }
+
+  // Elegir una opción (entra en el historial: el botón Atrás del móvil vuelve a la lista).
+  $("#trip-result").addEventListener("click", (e) => {
+    if (e.target.closest("[data-opt-back]")) { goBack(); return; }
+    const b = e.target.closest("button[data-opt]");
+    if (!b || !lastTrip) return;
+    trip.sel = b.dataset.opt;
+    history.pushState({ d: ((history.state && history.state.d) || 0) + 1, opt: trip.sel }, "", location.href);
+    renderTripResult();
+    drawTrip(true);
+    $("#trip-result").scrollTop = 0;
+  });
 
   map.on("click", (e) => {
     if (!tripOpen()) return;
@@ -1160,8 +1512,7 @@
   document.querySelectorAll("[data-clear]").forEach((b) => b.addEventListener("click", () => {
     const w = b.dataset.clear;
     trip[w] = null;
-    const h = `#ir/${endToken(trip.a)}/${endToken(trip.b)}`.replace(/\/+$/, "");
-    history.replaceState(history.state, "", h);
+    tripReplace();
     $(`#trip-${w}`).value = "";
     renderTripFields();
     computeTrip(false);
@@ -1169,8 +1520,7 @@
   }));
   $("#trip-swap").addEventListener("click", () => {
     [trip.a, trip.b] = [trip.b, trip.a];
-    const h = `#ir/${endToken(trip.a)}/${endToken(trip.b)}`.replace(/\/+$/, "");
-    history.replaceState(history.state, "", h);
+    tripReplace();
     renderTripFields();
     computeTrip(false);
   });
@@ -1268,6 +1618,7 @@
     if (document.hidden) return;
     if (current) loadArrivals(false);
     if (track) fetchTrack();
+    if (tripOpen() && lastTrip && lastTrip.plan && lastTrip.cands.length) { planSearch(); refreshLive(tripSeq); }
   });
 
   // ---------- Idioma: textos fijos y desplegable con banderas ----------
@@ -1299,7 +1650,11 @@
       if (lastArrivals) renderArrivals(lastArrivals);
       showUpdated();
     } else if (active) showLine(active.code, active.from);
-    else if (tripOpen()) { renderTripFields(); computeTrip(false); document.title = `${t("trip_title")} · Próximo Vitrasa`; }
+    else if (tripOpen()) {
+      renderTripFields();
+      if (lastTrip) renderTripResult(); else computeTrip(false);
+      document.title = `${t("trip_title")} · Próximo Vitrasa`;
+    }
     else render();
   }
   $("#lang-btn").addEventListener("click", (e) => { e.stopPropagation(); toggleLangMenu(); });

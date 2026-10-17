@@ -61,6 +61,7 @@ window.PV_I18N = {
       addr_approx: "Posición aproximada",
       near_stop: "cerca de {name}",
       approx_note: "La posición de «{label}» es aproximada: ese portal no está en OpenStreetMap y se ha estimado con los números cercanos.",
+      in_min: "Pasa en {n} min", at_time: "A las {time}", scheduled: "según horario", no_live: "Sin buses en vivo: puede que no pase", arrive_at: "Llega a las {time}", plan_error: "No se pudieron cargar los horarios de los buses; solo se muestra el camino a pie.", plan_none: "No hay buses que te acerquen ahora entre estos puntos.", live_checking: "Comprobando los tiempos en vivo…", plan_note: "Esperas en vivo de Vitrasa cuando hay datos; el resto, según los horarios publicados ({date}).", all_options: "Todas las opciones", step_walk_to: "Anda {dist} hasta {place}", step_change_same: "Cambia de bus en la misma parada", step_change: "Cambia de bus: anda {dist} hasta {place}", step_walk_dest: "Anda {dist} hasta el destino", step_board: "Coge el bus en {stop} (parada {id})", stops_1: "1 parada · {min} min", stops_n: "{n} paradas · {min} min", step_alight: "Bájate en {stop}", step_arrive: "Llegada estimada a las {time}", bus_far: "el bus está a {dist}",
     },
     gl: {
       bus_title: "Próximo bus a {stop}", bus_depot: "Aínda non saíu da cabeceira", bus_none: "Ningún bus desta liña en camiño agora",
@@ -110,6 +111,7 @@ window.PV_I18N = {
       addr_approx: "Posición aproximada",
       near_stop: "preto de {name}",
       approx_note: "A posición de «{label}» é aproximada: ese portal non está en OpenStreetMap e estimouse cos números próximos.",
+      in_min: "Pasa en {n} min", at_time: "Ás {time}", scheduled: "segundo horario", no_live: "Sen buses en vivo: pode que non pase", arrive_at: "Chega ás {time}", plan_error: "Non se puideron cargar os horarios dos buses; só se mostra o camiño a pé.", plan_none: "Non hai buses que te acheguen agora entre estes puntos.", live_checking: "Comprobando os tempos en vivo…", plan_note: "Esperas en vivo de Vitrasa cando hai datos; o resto, segundo os horarios publicados ({date}).", all_options: "Todas as opcións", step_walk_to: "Anda {dist} ata {place}", step_change_same: "Cambia de bus na mesma parada", step_change: "Cambia de bus: anda {dist} ata {place}", step_walk_dest: "Anda {dist} ata o destino", step_board: "Colle o bus en {stop} (parada {id})", stops_1: "1 parada · {min} min", stops_n: "{n} paradas · {min} min", step_alight: "Baixa en {stop}", step_arrive: "Chegada estimada ás {time}", bus_far: "o bus está a {dist}",
     },
     pt: {
       bus_title: "Próximo autocarro para {stop}", bus_depot: "Ainda não saiu do terminal", bus_none: "Nenhum autocarro desta linha a caminho agora",
@@ -159,6 +161,7 @@ window.PV_I18N = {
       addr_approx: "Posição aproximada",
       near_stop: "perto de {name}",
       approx_note: "A posição de «{label}» é aproximada: essa porta não está no OpenStreetMap e foi estimada com os números próximos.",
+      in_min: "Passa em {n} min", at_time: "Às {time}", scheduled: "segundo o horário", no_live: "Sem autocarros em tempo real: pode não passar", arrive_at: "Chega às {time}", plan_error: "Não foi possível carregar os horários dos autocarros; mostra-se apenas o caminho a pé.", plan_none: "Não há autocarros que o aproximem agora entre estes pontos.", live_checking: "A verificar os tempos em tempo real…", plan_note: "Esperas em tempo real da Vitrasa quando há dados; o resto, segundo os horários publicados ({date}).", all_options: "Todas as opções", step_walk_to: "Caminhe {dist} até {place}", step_change_same: "Mude de autocarro na mesma paragem", step_change: "Mude de autocarro: caminhe {dist} até {place}", step_walk_dest: "Caminhe {dist} até ao destino", step_board: "Apanhe o autocarro em {stop} (paragem {id})", stops_1: "1 paragem · {min} min", stops_n: "{n} paragens · {min} min", step_alight: "Saia em {stop}", step_arrive: "Chegada prevista às {time}", bus_far: "o autocarro está a {dist}",
     },
     eu: {
       bus_title: "Hurrengo autobusa: {stop}", bus_depot: "Oraindik ez da lehen geltokitik irten", bus_none: "Ez dago linea honetako autobusik bidean orain",
@@ -208,6 +211,7 @@ window.PV_I18N = {
       addr_approx: "Gutxi gorabeherako kokapena",
       near_stop: "{name} geltokitik gertu",
       approx_note: "«{label}» helbidearen kokapena gutxi gorabeherakoa da: atari hori ez dago OpenStreetMap-en eta inguruko zenbakiekin kalkulatu da.",
+      in_min: "{n} min barru pasatuko da", at_time: "{time}etan", scheduled: "ordutegiaren arabera", no_live: "Ez dago autobusik zuzenean: agian ez da pasatuko", arrive_at: "{time}etan iritsiko zara", plan_error: "Ezin izan dira autobusen ordutegiak kargatu; oinezko bidea bakarrik erakusten da.", plan_none: "Orain ez dago puntu hauen artean hurbiltzen zaituen autobusik.", live_checking: "Denbora errealeko datuak egiaztatzen…", plan_note: "Vitrasaren denbora errealeko itxaronaldiak datuak daudenean; gainerakoa, argitaratutako ordutegien arabera ({date}).", all_options: "Aukera guztiak", step_walk_to: "Oinez {dist} {place} arte", step_change_same: "Aldatu autobusa geltoki berean", step_change: "Aldatu autobusa: oinez {dist} {place} arte", step_walk_dest: "Oinez {dist} helmugaraino", step_board: "Hartu autobusa hemen: {stop} ({id} geltokia)", stops_1: "Geltoki 1 · {min} min", stops_n: "{n} geltoki · {min} min", step_alight: "Jaitsi hemen: {stop}", step_arrive: "Gutxi gorabeherako iritsiera: {time}", bus_far: "autobusa {dist}ra dago",
     },
     ca: {
       bus_title: "Proper bus a {stop}", bus_depot: "Encara no ha sortit de capçalera", bus_none: "Cap bus d'aquesta línia de camí ara",
@@ -257,6 +261,7 @@ window.PV_I18N = {
       addr_approx: "Posició aproximada",
       near_stop: "a prop de {name}",
       approx_note: "La posició de «{label}» és aproximada: aquest portal no és a OpenStreetMap i s'ha estimat amb els números propers.",
+      in_min: "Passa d'aquí a {n} min", at_time: "A les {time}", scheduled: "segons l'horari", no_live: "Cap bus en directe: potser no passa", arrive_at: "Arriba a les {time}", plan_error: "No s'han pogut carregar els horaris dels busos; només es mostra el camí a peu.", plan_none: "Ara no hi ha busos que t'acostin entre aquests punts.", live_checking: "S'estan comprovant els temps en directe…", plan_note: "Esperes en directe de Vitrasa quan n'hi ha dades; la resta, segons els horaris publicats ({date}).", all_options: "Totes les opcions", step_walk_to: "Camina {dist} fins a {place}", step_change_same: "Canvia de bus a la mateixa parada", step_change: "Canvia de bus: camina {dist} fins a {place}", step_walk_dest: "Camina {dist} fins a la destinació", step_board: "Agafa el bus a {stop} (parada {id})", stops_1: "1 parada · {min} min", stops_n: "{n} parades · {min} min", step_alight: "Baixa a {stop}", step_arrive: "Arribada prevista a les {time}", bus_far: "el bus és a {dist}",
     },
     en: {
       bus_title: "Next bus to {stop}", bus_depot: "Hasn't left the first stop yet", bus_none: "No bus on this line on its way right now",
@@ -306,6 +311,7 @@ window.PV_I18N = {
       addr_approx: "Approximate position",
       near_stop: "near {name}",
       approx_note: "The position of “{label}” is approximate: that number isn't in OpenStreetMap, so it was estimated from nearby numbers.",
+      in_min: "Due in {n} min", at_time: "At {time}", scheduled: "timetable", no_live: "No live buses: it may not run", arrive_at: "Arrives {time}", plan_error: "Bus timetables couldn't be loaded; only the walking route is shown.", plan_none: "No buses can get you closer between these points right now.", live_checking: "Checking live times…", plan_note: "Live waiting times from Vitrasa when available; otherwise, from the published timetables ({date}).", all_options: "All options", step_walk_to: "Walk {dist} to {place}", step_change_same: "Change buses at the same stop", step_change: "Change buses: walk {dist} to {place}", step_walk_dest: "Walk {dist} to your destination", step_board: "Board at {stop} (stop {id})", stops_1: "1 stop · {min} min", stops_n: "{n} stops · {min} min", step_alight: "Get off at {stop}", step_arrive: "Estimated arrival {time}", bus_far: "the bus is {dist} away",
     },
     fr: {
       bus_title: "Prochain bus pour {stop}", bus_depot: "N'a pas encore quitté le terminus", bus_none: "Aucun bus de cette ligne en route pour l'instant",
@@ -355,6 +361,7 @@ window.PV_I18N = {
       addr_approx: "Position approximative",
       near_stop: "près de {name}",
       approx_note: "La position de « {label} » est approximative : ce numéro n'est pas dans OpenStreetMap et a été estimé d'après les numéros voisins.",
+      in_min: "Passe dans {n} min", at_time: "À {time}", scheduled: "selon l'horaire", no_live: "Aucun bus en direct : il pourrait ne pas passer", arrive_at: "Arrivée à {time}", plan_error: "Impossible de charger les horaires des bus ; seul le trajet à pied est affiché.", plan_none: "Aucun bus ne vous rapproche entre ces points pour le moment.", live_checking: "Vérification des temps en direct…", plan_note: "Attentes en direct de Vitrasa quand elles sont disponibles ; sinon, selon les horaires publiés ({date}).", all_options: "Toutes les options", step_walk_to: "Marchez {dist} jusqu'à {place}", step_change_same: "Changez de bus au même arrêt", step_change: "Changez de bus : marchez {dist} jusqu'à {place}", step_walk_dest: "Marchez {dist} jusqu'à la destination", step_board: "Montez à {stop} (arrêt {id})", stops_1: "1 arrêt · {min} min", stops_n: "{n} arrêts · {min} min", step_alight: "Descendez à {stop}", step_arrive: "Arrivée estimée à {time}", bus_far: "le bus est à {dist}",
     },
     de: {
       bus_title: "Nächster Bus nach {stop}", bus_depot: "Noch nicht an der Starthaltestelle abgefahren", bus_none: "Gerade kein Bus dieser Linie unterwegs",
@@ -404,6 +411,7 @@ window.PV_I18N = {
       addr_approx: "Ungefähre Position",
       near_stop: "nahe {name}",
       approx_note: "Die Position von „{label}“ ist ungefähr: Diese Hausnummer fehlt in OpenStreetMap und wurde aus benachbarten Nummern geschätzt.",
+      in_min: "Kommt in {n} Min.", at_time: "Um {time}", scheduled: "laut Fahrplan", no_live: "Keine Live-Busse: fährt eventuell nicht", arrive_at: "Ankunft {time}", plan_error: "Die Busfahrpläne konnten nicht geladen werden; nur der Fußweg wird angezeigt.", plan_none: "Zwischen diesen Punkten bringt Sie gerade kein Bus näher.", live_checking: "Live-Zeiten werden geprüft…", plan_note: "Live-Wartezeiten von Vitrasa, wenn verfügbar; sonst laut veröffentlichtem Fahrplan ({date}).", all_options: "Alle Optionen", step_walk_to: "{dist} zu Fuß bis {place}", step_change_same: "An derselben Haltestelle umsteigen", step_change: "Umsteigen: {dist} zu Fuß bis {place}", step_walk_dest: "{dist} zu Fuß bis zum Ziel", step_board: "Einsteigen an {stop} (Haltestelle {id})", stops_1: "1 Haltestelle · {min} Min.", stops_n: "{n} Haltestellen · {min} Min.", step_alight: "Aussteigen an {stop}", step_arrive: "Voraussichtliche Ankunft {time}", bus_far: "der Bus ist {dist} entfernt",
     },
   },
 };

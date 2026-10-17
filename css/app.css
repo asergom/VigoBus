@@ -16,6 +16,7 @@
   --badge-bg: #13222C;
   --badge-fg: #FFFFFF;
   --focus: #1C6FA8;
+  --live: #17834A;       /* tiempos en vivo */
   --shadow: 0 10px 30px rgba(19, 34, 44, .18), 0 2px 6px rgba(19, 34, 44, .10);
 
   --sans: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -33,6 +34,7 @@
     --badge-bg: #E8EDF0;
     --badge-fg: #13222C;
     --focus: #7CC0EE;
+    --live: #5CCB8A;
     --shadow: 0 10px 30px rgba(0, 0, 0, .45);
     color-scheme: dark;
   }
@@ -146,6 +148,54 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .trip-card .eta b { font-size: 36px; }
 .trip-note { margin: 10px 2px 0; color: var(--granite); font-size: 14px; }
 .trip-note a { color: var(--focus); font-weight: 600; }
+/* Opciones de viaje (bus y a pie) */
+.trip-opts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.opt {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 6px 12px; width: 100%;
+  padding: 11px 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface);
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.opt:hover { border-color: color-mix(in srgb, var(--focus) 45%, var(--line)); }
+.opt[aria-current="true"] { border-color: var(--focus); box-shadow: inset 3px 0 0 var(--focus); }
+.chain { display: flex; align-items: center; flex-wrap: wrap; gap: 2px; min-width: 0; }
+.chain .badge { height: 30px; min-width: 40px; font-size: 18px; border-radius: 7px; }
+.chain .chev { width: 14px; height: 14px; flex: none; color: var(--granite); }
+.chain .what { font-weight: 600; font-size: 17px; margin-left: 6px; }
+.walk-chip { display: inline-flex; align-items: flex-end; color: var(--granite); }
+.walk-chip svg { width: 22px; height: 22px; }
+.walk-chip small { font: 600 13px/1 var(--cond); margin: 0 0 2px -2px; }
+.opt .eta b { font-size: 32px; }
+.opt .when { grid-column: 1; color: var(--granite); font-size: 14px; line-height: 1.3; min-width: 0; overflow-wrap: anywhere; }
+.opt .arr { grid-column: 2; color: var(--granite); font-size: 13px; text-align: right; white-space: nowrap; align-self: start; }
+.live { color: var(--live); font-weight: 600; }
+.live::before {
+  content: ""; display: inline-block; width: 7px; height: 7px; margin-right: 5px; vertical-align: 1px;
+  border-radius: 50%; background: currentColor; animation: livepulse 2s ease-in-out infinite;
+}
+@keyframes livepulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .live::before { animation: none; } }
+.warn { color: var(--bus); font-weight: 600; }
+/* Pasos de una opción */
+.opts-back {
+  display: inline-flex; align-items: center; gap: 4px; margin: 0 0 8px -6px; padding: 6px 8px 6px 4px;
+  border: 0; border-radius: 8px; background: none; color: var(--focus); font: 600 15px/1 var(--sans);
+}
+.opts-back svg { width: 18px; height: 18px; }
+.opts-back:hover { background: var(--surface); }
+.opt-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 2px 10px; border-bottom: 1px solid var(--line); }
+.opt-head .eta b { font-size: 32px; }
+.steps { list-style: none; margin: 0; padding: 4px 0 0; }
+.step { position: relative; display: grid; grid-template-columns: 52px 1fr; gap: 12px; padding: 12px 0; }
+.step + .step::before { content: ""; position: absolute; left: 25px; top: -10px; height: 18px; border-left: 3px dotted var(--granite); opacity: .55; }
+.step .ico { display: grid; justify-items: center; align-self: start; }
+.step .ico svg { width: 26px; height: 26px; color: var(--focus); }
+.step .ico .badge { height: 34px; min-width: 48px; font-size: 20px; }
+.step .ico .pin { box-shadow: 0 0 0 2px #fff; }
+.step .txt { min-width: 0; font-weight: 600; font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; }
+.step .txt small { display: block; margin-top: 2px; color: var(--granite); font-size: 14px; font-weight: 500; }
+.step .txt small.dest { color: var(--ink); }
+.step .alight { display: block; margin-top: 6px; font-weight: 600; }
+.step.bus .txt { padding-left: 12px; border-left: 4px solid var(--lc); }
 .trip-pin { filter: drop-shadow(0 1px 2px rgba(19, 34, 44, .5)); }
 .trip-pin .pin { width: 30px; height: 30px; font-size: 17px; box-shadow: 0 0 0 3px #fff; }
 
@@ -308,6 +358,7 @@ button.badge:hover { filter: brightness(1.08); }
 /* Mapa base de OpenStreetMap con sus colores, apenas suavizado para que destaquen las paradas. */
 .leaflet-tile-pane { filter: saturate(.85); }
 .hide-stops .stop-icon { display: none; }
+.dim-stops .stop-icon { opacity: .35 !important; }   /* gana al opacity en línea de Leaflet */
 .stop-icon { filter: drop-shadow(0 1px 2px rgba(19, 34, 44, .45)); }
 .leaflet-marker-icon.stop-icon:hover { z-index: 1000 !important; }
 .me-dot { width: 18px; height: 18px; border-radius: 50%; background: #1C6FA8; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(28, 111, 168, .25); }

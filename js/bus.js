@@ -121,7 +121,16 @@
     return { state: "route", d, left, ...pointAt(loc.shape, d) };
   }
 
-  const api = { decode, prepare, project, stopsAlong, pointAt, locateStop, busAt };
+  // Trozo del trazado entre dos distancias (para dibujar el tramo en bus de un viaje).
+  function slice(sh, d0, d1) {
+    const a = pointAt(sh, d0).ll, b = pointAt(sh, d1).ll;
+    const out = [a];
+    for (let i = 0; i < sh.cum.length; i++) if (sh.cum[i] > d0 && sh.cum[i] < d1) out.push(sh.pts[i]);
+    out.push(b);
+    return out;
+  }
+
+  const api = { decode, prepare, project, stopsAlong, pointAt, locateStop, busAt, slice };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.PV_BUS = api;
 })(typeof window !== "undefined" ? window : this);

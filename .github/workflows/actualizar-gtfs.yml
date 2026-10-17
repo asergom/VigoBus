@@ -1,0 +1,77 @@
+# Actualización semanal de paradas, líneas y horarios con los datos abiertos del Concello de Vigo.
+# Descarga la lista oficial de paradas y el GTFS de Vitrasa, regenera data/paradas.geojson,
+# data/lineas.json y data/viajes.json y, si algo cambia, lo sube a main (GitHub Pages lo publica).
+# Si la descarga falla o los datos parecen incompletos, no se cambia nada.
+name: Actualizar horarios de Vitrasa
+on:
+  schedule:
+    - cron: "17 4 * * 1"      # los lunes a las 04:17 UTC
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: actualizar-gtfs
+  cancel-in-progress: false
+jobs:
+  actualizar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Descargar datos del Concello
+        run: |
+          mkdir -p /tmp/fuentes
+          curl -sSL --fail --retry 3 -m 180 -o /tmp/fuentes/gtfs_vigo.zip https://datos.vigo.org/data/transporte/gtfs_vigo.zip
+          curl -sSL --fail --retry 3 -m 120 -o /tmp/fuentes/paradas.json https://datos.vigo.org/data/transporte/paradas.json
+          unzip -l /tmp/fuentes/gtfs_vigo.zip
+
+      - name: Comprobar que los datos están completos
+        run: |
+          python3 - <<'EOF'
+          import json, zipfile, csv, io, sys
+          paradas = json.load(open("/tmp/fuentes/paradas.json", encoding="utf-8"))
+          actuales = json.load(open("data/oficial/paradas.json", encoding="utf-8"))
+          z = zipfile.ZipFile("/tmp/fuentes/gtfs_vigo.zip")
+          for f in ("trips.txt", "stop_times.txt", "shapes.txt", "routes.txt", "calendar_dates.txt"):
+              if f not in z.namelist():
+                  sys.exit(f"Falta {f} en el GTFS")
+          viajes = sum(1 for _ in csv.DictReader(io.TextIOWrapper(z.open("trips.txt"), encoding="utf-8-sig")))
+          antes = sum(len(p["v"]) // 3 for p in json.load(open("data/viajes.json", encoding="utf-8"))["patrones"])
+          print(f"Paradas: {len(paradas)} (antes {len(actuales)}); viajes en el GTFS: {viajes} (únicos antes: {antes})")
+          if len(paradas) < 0.9 * len(actuales):
+              sys.exit("La lista de paradas parece incompleta")
+          if viajes < 0.7 * antes:
+              sys.exit("El GTFS parece incompleto")
+          EOF
+
+      - name: Regenerar paradas, líneas y horarios
+        run: |
+          cp /tmp/fuentes/paradas.json data/oficial/paradas.json
+          python3 tools/actualizar_paradas.py data/oficial/paradas.json
+          python3 tools/actualizar_lineas.py /tmp/fuentes/gtfs_vigo.zip
+          python3 tools/actualizar_viajes.py /tmp/fuentes/gtfs_vigo.zip
+          node tools/transbordos.js
+          # Comprobación rápida: el planificador carga los datos nuevos.
+          node -e "const p=require('./js/planificador.js').build(require('./data/viajes.json')); if(p.pats.length<100) process.exit(1); console.log(p.pats.length+' recorridos')"
+
+      - name: Subir si hay cambios
+        run: |
+          if git diff --quiet -- data; then echo "Sin cambios"; exit 0; fi
+          # Nueva versión del service worker para que la app instalada descargue los datos nuevos.
+          python3 - <<'EOF'
+          import re
+          s = open("sw.js", encoding="utf-8").read()
+          s = re.sub(r'VERSION = "pv-v(\d+)"', lambda m: f'VERSION = "pv-v{int(m.group(1)) + 1}"', s, count=1)
+          open("sw.js", "w", encoding="utf-8").write(s)
+          EOF
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data sw.js
+          git commit -m "Horarios y paradas de Vitrasa actualizados ($(date -u +%Y-%m-%d))"
+          git push

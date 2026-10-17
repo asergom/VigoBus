@@ -8,7 +8,7 @@ Mapa de las paradas de Vitrasa en Vigo con los próximos buses de cada parada.
 - Disponible en español, galego, português, euskara, català, English, français y Deutsch (textos dentro de la propia web).
 - **Cerca** muestra las paradas más próximas a tu ubicación con la distancia andando. Sin ubicación, muestra las de la zona del mapa.
 - **Favoritas** guarda paradas en el propio dispositivo.
-- **Cómo llegar**: indica desde dónde y hasta dónde quieres ir (una calle con su número, una parada, tu ubicación o un punto del mapa; las direcciones se van proponiendo mientras escribes) y la web calcula la ruta a pie, con distancia y tiempo. La ruta se calcula en el propio dispositivo con una red de calles de OpenStreetMap guardada en la web, sin servicios externos. Desde cada parada, "Cómo llegar aquí" la pone como destino.
+- **Cómo llegar**: indica desde dónde y hasta dónde quieres ir (una calle con su número, una parada, tu ubicación o un punto del mapa; las direcciones se van proponiendo mientras escribes) y la web propone qué buses coger (directos o con un transbordo), cuánto esperar con los tiempos en vivo de Vitrasa, dónde bajarse y a qué hora llegarás, junto con la opción de ir andando. Al abrir una opción se ven los pasos y el bus que viene hacia tu parada moviéndose en el mapa; todo se actualiza cada 30 segundos. Las rutas se calculan en el propio dispositivo con los horarios publicados y una red de calles de OpenStreetMap guardada en la web, sin servicios externos. Desde cada parada, "Cómo llegar aquí" la pone como destino.
 - Cada parada y cada línea tienen enlace propio: `#5660` abre la Gran Vía, 19 y `#linea/C3d` la línea C3d; `#linea/N1/5660` abre la N1 desde la Gran Vía, 19, con su próximo bus. Una ruta también: `#ir/p5660/42.23700,-8.72060` (parada → punto).
 - En el móvil, el panel se desliza hacia abajo para ver el mapa casi entero.
 - Se puede instalar en el móvil como app y funciona sin conexión. Los tiempos de llegada sí necesitan red.
@@ -25,16 +25,20 @@ js/i18n.js              textos de la interfaz en los 8 idiomas y banderas
 js/peaton.js            rutas a pie con la red peatonal propia
 js/direcciones.js       búsqueda de direcciones (calle y número)
 js/bus.js               posición estimada del próximo bus sobre el trazado
+js/planificador.js      planificador de viajes en bus (directos y con un transbordo)
 data/paradas.geojson    1.161 paradas: id (número de Vitrasa), nombre y líneas
 data/oficial/           lista oficial de paradas descargada del Concello
 data/descartadas.csv    paradas de la versión antigua que ya no existen
 data/lineas.json        recorrido, color y paradas de las 44 líneas
+data/viajes.json        horarios y tiempos entre paradas de cada recorrido, y transbordos a pie (del GTFS)
 data/peatonal.json      red peatonal: calles, aceras y caminos de la zona de Vitrasa (OpenStreetMap)
 data/direcciones.json   calles con nombre y números de portal (OpenStreetMap)
 data/osm/vias.json.gz   vías de OpenStreetMap descargadas, de las que sale la red peatonal
 data/osm/direcciones.json.gz   portales de OpenStreetMap descargados
 tools/actualizar_paradas.py   genera paradas.geojson desde la lista oficial
 tools/actualizar_lineas.py    genera lineas.json desde el GTFS oficial
+tools/actualizar_viajes.py    genera viajes.json (horarios) desde el GTFS oficial
+tools/transbordos.js          añade a viajes.json los transbordos a pie entre paradas cercanas
 tools/actualizar_peatonal.py  genera peatonal.json desde las vías de OpenStreetMap
 tools/actualizar_direcciones.py  genera direcciones.json desde las vías y portales de OpenStreetMap
 vendor/leaflet/         Leaflet 1.9.4
@@ -75,9 +79,20 @@ Los recorridos y colores de las líneas salen del GTFS del Concello
 (https://datos.vigo.org/data/transporte/gtfs_vigo.zip). Para actualizarlos:
 
 ```
-python3 tools/actualizar_paradas.py
+python3 tools/actualizar_paradas.py data/oficial/paradas.json
 python3 tools/actualizar_lineas.py ruta/al/gtfs_vigo.zip
+python3 tools/actualizar_viajes.py ruta/al/gtfs_vigo.zip
+node tools/transbordos.js
 ```
+
+Esto lo hace solo cada lunes el GitHub Action `.github/workflows/actualizar-gtfs.yml` (también se
+puede lanzar a mano desde la pestaña Actions): descarga los datos, comprueba que están completos,
+los regenera y, si algo cambia, los sube junto con una nueva versión del service worker.
+
+`actualizar_viajes.py` guarda cada viaje con su hora de salida, su duración y los días de la
+semana en que circula. Los viajes tardan más o menos según la hora (hasta un 25 %), pero el
+reparto del tiempo entre paradas se mantiene, así que se guarda una sola vez por recorrido
+(error frente al horario real: mediana 10 s, p95 83 s). Los festivos usan el horario del domingo.
 
 `actualizar_lineas.py` guarda, por cada línea y sentido, el recorrido principal y los ramales
 necesarios para que la línea pase por todas sus paradas (en el mapa, los ramales se ven con un

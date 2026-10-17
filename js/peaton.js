@@ -253,7 +253,37 @@
       };
     }
 
-    return { route, snap, nodes: N, edges: E, fecha: data.fecha };
+    // Distancias a pie desde un punto a todo lo que hay alrededor, hasta "max" metros por la red.
+    // Devuelve una función que da los metros hasta otro punto (Infinity si queda más lejos).
+    // Se usa para ver qué paradas hay cerca del origen y del destino, y para los transbordos.
+    // La distancia incluye el tramo desde cada punto hasta la calle más cercana.
+    function around(from, max) {
+      const s = snap(from[0], from[1]);
+      if (!s) return () => Infinity;
+      const d = new Map();                       // cruce → metros (solo los alcanzados)
+      const heap = Heap(256);
+      const push = (i, v) => { if (v <= max && v < (d.has(i) ? d.get(i) : Infinity)) { d.set(i, v); heap.push(v, i); } };
+      push(ea[s.e], s.da + s.off);
+      push(eb[s.e], s.db + s.off);
+      while (heap.size) {
+        const u = heap.pop();
+        const du = d.get(u);
+        for (let k = deg[u]; k < deg[u + 1]; k++) {
+          const e = adj[k];
+          push(ea[e] === u ? eb[e] : ea[e], du + elen[e]);
+        }
+      }
+      return (ll, snapped) => {
+        const g = snapped || snap(ll[0], ll[1]);
+        if (!g) return Infinity;
+        let best = Math.min((d.has(ea[g.e]) ? d.get(ea[g.e]) : Infinity) + g.da,
+                            (d.has(eb[g.e]) ? d.get(eb[g.e]) : Infinity) + g.db);
+        if (g.e === s.e) best = Math.min(best, Math.abs(s.da - g.da) + s.off);
+        return best + g.off;
+      };
+    }
+
+    return { route, snap, around, nodes: N, edges: E, fecha: data.fecha };
   }
 
   let pending = null;
