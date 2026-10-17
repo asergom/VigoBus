@@ -14,6 +14,8 @@ window.PV_I18N = {
 
   dict: {
     es: {
+      bus_title: "Próximo bus a {stop}", bus_depot: "Aún no ha salido de cabecera", bus_none: "Ningún bus de esta línea en camino ahora",
+      bus_estimated: "Posición estimada", bus_see: "Ver el bus en el mapa",
       some_trips: "Solo en algunos viajes",
       language: "Idioma", map: "Mapa de paradas", panel: "Paradas", grip: "Ampliar o reducir panel",
       search_label: "Buscar parada o línea", search_ph: "Parada, número o línea",
@@ -61,6 +63,8 @@ window.PV_I18N = {
       approx_note: "La posición de «{label}» es aproximada: ese portal no está en OpenStreetMap y se ha estimado con los números cercanos.",
     },
     gl: {
+      bus_title: "Próximo bus a {stop}", bus_depot: "Aínda non saíu da cabeceira", bus_none: "Ningún bus desta liña en camiño agora",
+      bus_estimated: "Posición estimada", bus_see: "Ver o bus no mapa",
       some_trips: "Só nalgunhas viaxes",
       language: "Idioma", map: "Mapa de paradas", panel: "Paradas", grip: "Ampliar ou reducir o panel",
       search_label: "Buscar parada ou liña", search_ph: "Parada, número ou liña",
@@ -108,6 +112,8 @@ window.PV_I18N = {
       approx_note: "A posición de «{label}» é aproximada: ese portal non está en OpenStreetMap e estimouse cos números próximos.",
     },
     pt: {
+      bus_title: "Próximo autocarro para {stop}", bus_depot: "Ainda não saiu do terminal", bus_none: "Nenhum autocarro desta linha a caminho agora",
+      bus_estimated: "Posição estimada", bus_see: "Ver o autocarro no mapa",
       some_trips: "Só em algumas viagens",
       language: "Idioma", map: "Mapa de paragens", panel: "Paragens", grip: "Expandir ou reduzir o painel",
       search_label: "Procurar paragem ou linha", search_ph: "Paragem, número ou linha",
@@ -155,6 +161,8 @@ window.PV_I18N = {
       approx_note: "A posição de «{label}» é aproximada: essa porta não está no OpenStreetMap e foi estimada com os números próximos.",
     },
     eu: {
+      bus_title: "Hurrengo autobusa: {stop}", bus_depot: "Oraindik ez da lehen geltokitik irten", bus_none: "Ez dago linea honetako autobusik bidean orain",
+      bus_estimated: "Gutxi gorabeherako kokapena", bus_see: "Ikusi autobusa mapan",
       some_trips: "Bidaia batzuetan bakarrik",
       language: "Hizkuntza", map: "Geltokien mapa", panel: "Geltokiak", grip: "Handitu edo txikitu panela",
       search_label: "Bilatu geltokia edo linea", search_ph: "Geltokia, zenbakia edo linea",
@@ -202,6 +210,8 @@ window.PV_I18N = {
       approx_note: "«{label}» helbidearen kokapena gutxi gorabeherakoa da: atari hori ez dago OpenStreetMap-en eta inguruko zenbakiekin kalkulatu da.",
     },
     ca: {
+      bus_title: "Proper bus a {stop}", bus_depot: "Encara no ha sortit de capçalera", bus_none: "Cap bus d'aquesta línia de camí ara",
+      bus_estimated: "Posició estimada", bus_see: "Mostra el bus al mapa",
       some_trips: "Només en alguns viatges",
       language: "Idioma", map: "Mapa de parades", panel: "Parades", grip: "Amplia o redueix el tauler",
       search_label: "Cerca una parada o línia", search_ph: "Parada, número o línia",
@@ -249,6 +259,8 @@ window.PV_I18N = {
       approx_note: "La posició de «{label}» és aproximada: aquest portal no és a OpenStreetMap i s'ha estimat amb els números propers.",
     },
     en: {
+      bus_title: "Next bus to {stop}", bus_depot: "Hasn't left the first stop yet", bus_none: "No bus on this line on its way right now",
+      bus_estimated: "Estimated position", bus_see: "Show the bus on the map",
       some_trips: "Only on some trips",
       language: "Language", map: "Stop map", panel: "Stops", grip: "Expand or collapse panel",
       search_label: "Search for a stop or line", search_ph: "Stop, number or line",
@@ -296,6 +308,8 @@ window.PV_I18N = {
       approx_note: "The position of “{label}” is approximate: that number isn't in OpenStreetMap, so it was estimated from nearby numbers.",
     },
     fr: {
+      bus_title: "Prochain bus pour {stop}", bus_depot: "N'a pas encore quitté le terminus", bus_none: "Aucun bus de cette ligne en route pour l'instant",
+      bus_estimated: "Position estimée", bus_see: "Voir le bus sur la carte",
       some_trips: "Seulement sur certains trajets",
       language: "Langue", map: "Carte des arrêts", panel: "Arrêts", grip: "Agrandir ou réduire le panneau",
       search_label: "Rechercher un arrêt ou une ligne", search_ph: "Arrêt, numéro ou ligne",
@@ -343,6 +357,8 @@ window.PV_I18N = {
       approx_note: "La position de « {label} » est approximative : ce numéro n'est pas dans OpenStreetMap et a été estimé d'après les numéros voisins.",
     },
     de: {
+      bus_title: "Nächster Bus nach {stop}", bus_depot: "Noch nicht an der Starthaltestelle abgefahren", bus_none: "Gerade kein Bus dieser Linie unterwegs",
+      bus_estimated: "Geschätzte Position", bus_see: "Bus auf der Karte zeigen",
       some_trips: "Nur bei einigen Fahrten",
       language: "Sprache", map: "Haltestellenkarte", panel: "Haltestellen", grip: "Bereich vergrößern oder verkleinern",
       search_label: "Haltestelle oder Linie suchen", search_ph: "Haltestelle, Nummer oder Linie",

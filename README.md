@@ -4,11 +4,12 @@ Mapa de las paradas de Vitrasa en Vigo con los próximos buses de cada parada.
 
 - Busca paradas por nombre o número, y líneas por código o nombre.
 - **Líneas**: al elegir una, su recorrido se ilumina en el mapa con el color oficial y sus paradas se tiñen de ese color; el panel muestra las paradas en orden en cada sentido.
+- **Próximo bus en el mapa**: si la línea se abre desde una parada (tocando una llegada o una chapa de línea), se ve el próximo bus de esa línea hacia la parada, con una flecha que indica hacia dónde va, y una tarjeta con los minutos y la distancia. La posición se estima con los metros que da la API del Concello sobre el trazado de la línea, y el bus avanza entre actualizaciones. Si el bus aún no ha salido de cabecera, se avisa en vez de dibujarlo. En la circular C1 se dibuja también cuando termina la vuelta anterior.
 - Disponible en español, galego, português, euskara, català, English, français y Deutsch (textos dentro de la propia web).
 - **Cerca** muestra las paradas más próximas a tu ubicación con la distancia andando. Sin ubicación, muestra las de la zona del mapa.
 - **Favoritas** guarda paradas en el propio dispositivo.
 - **Cómo llegar**: indica desde dónde y hasta dónde quieres ir (una calle con su número, una parada, tu ubicación o un punto del mapa; las direcciones se van proponiendo mientras escribes) y la web calcula la ruta a pie, con distancia y tiempo. La ruta se calcula en el propio dispositivo con una red de calles de OpenStreetMap guardada en la web, sin servicios externos. Desde cada parada, "Cómo llegar aquí" la pone como destino.
-- Cada parada y cada línea tienen enlace propio: `#5660` abre la Gran Vía, 19 y `#linea/C3d` la línea C3d. Una ruta también: `#ir/p5660/42.23700,-8.72060` (parada → punto).
+- Cada parada y cada línea tienen enlace propio: `#5660` abre la Gran Vía, 19 y `#linea/C3d` la línea C3d; `#linea/N1/5660` abre la N1 desde la Gran Vía, 19, con su próximo bus. Una ruta también: `#ir/p5660/42.23700,-8.72060` (parada → punto).
 - En el móvil, el panel se desliza hacia abajo para ver el mapa casi entero.
 - Se puede instalar en el móvil como app y funciona sin conexión. Los tiempos de llegada sí necesitan red.
 
@@ -23,6 +24,7 @@ js/app.js               lógica: mapa, búsqueda, cercanía, favoritas, líneas,
 js/i18n.js              textos de la interfaz en los 8 idiomas y banderas
 js/peaton.js            rutas a pie con la red peatonal propia
 js/direcciones.js       búsqueda de direcciones (calle y número)
+js/bus.js               posición estimada del próximo bus sobre el trazado
 data/paradas.geojson    1.161 paradas: id (número de Vitrasa), nombre y líneas
 data/oficial/           lista oficial de paradas descargada del Concello
 data/descartadas.csv    paradas de la versión antigua que ya no existen

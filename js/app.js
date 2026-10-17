@@ -105,8 +105,8 @@
   let qTimer = null;               // búsqueda pendiente mientras se escribe
   let reqSeq = 0;                 // descarta respuestas de peticiones antiguas
   let lines = null;               // data/lineas.json: recorrido y paradas de cada línea
-  let lineOrigin = null;          // parada desde la que se abrió la línea
-  let active = null;              // línea iluminada: { code, dir }
+  let lineRuta = null;            // destino de la fila de llegadas desde la que se abrió la línea
+  let active = null;              // línea iluminada: { code, dir, stops, from, fromDir }
 
   function loadFavs() {
     try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch { return []; }
@@ -418,9 +418,10 @@
     const h = decodeURIComponent(location.hash.slice(1));
     if (h === "ir" || h.startsWith("ir/")) { showTrip(h); return; }
     if (h.startsWith("linea/")) {
-      const code = h.slice(6);
+      // #linea/18A o #linea/18A/5660 (abierta desde esa parada: se ve el próximo bus hacia ella).
+      const [code, from] = h.slice(6).split("/");
       if (!lines) return;                      // se reintenta al cargar las líneas
-      if (lines[code]) { showLine(code); return; }
+      if (lines[code]) { showLine(code, byId.has(from) ? from : null); return; }
       toast(t("no_line", { code }));
     } else if (h && byId.has(h)) {
       showStop(h); return;
@@ -459,6 +460,7 @@
     if (!active) return;
     const was = active.stops;
     active = null;
+    stopTrack();
     lineGroup.clearLayers();
     selRing.remove();
     updateStopVisibility();
@@ -492,6 +494,14 @@
     L.polyline(pts, { renderer, color: l.color, weight: 6, opacity: 1, interactive: false, lineCap: "round" }).addTo(lineGroup);
   }
 
+  // ¿Se ve este punto en la zona del mapa que no tapa el panel?
+  function inView(ll) {
+    const p = map.latLngToContainerPoint(ll), size = map.getSize(), m = 24;
+    const left = isDesktop() ? panel.getBoundingClientRect().right : 0;
+    const bottom = isDesktop() ? size.y : size.y - Math.max(260, innerHeight * 0.46);
+    return p.x > left + m && p.x < size.x - m && p.y > m && p.y < bottom - m;
+  }
+
   // Encuadra unos puntos en la zona del mapa que no tapa el panel.
   function fitPoints(pts, maxZoom) {
     const r = panel.getBoundingClientRect();
@@ -507,14 +517,14 @@
     fitPoints([d.trazado, ...(d.ramales || [])].flatMap(decodePolyline), 16);
   }
 
-  function showLine(code) {
+  function showLine(code, from = null) {
     leaveStop();
-    const changed = !active || active.code !== code;
+    const changed = !active || active.code !== code || active.from !== from;
     if (changed) {
       clearLine();
-      // Abierta desde una parada: el sentido que pasa por ella.
-      const dirWith = lineOrigin ? lines[code].sentidos.findIndex((d) => d.paradas.includes(lineOrigin) || (d.otras || []).includes(lineOrigin)) : -1;
-      active = { code, dir: Math.max(0, dirWith), stops: new Set() };
+      // Abierta desde una parada: el sentido que pasa por ella (si pasan los dos, el de la fila tocada).
+      const dirWith = from ? dirThrough(lines[code], from, lineRuta) : -1;
+      active = { code, dir: Math.max(0, dirWith), stops: new Set(), from, fromDir: dirWith };
     }
     const l = lines[code];
     showView("line");
@@ -531,14 +541,184 @@
     if (!isDesktop()) panel.dataset.state = "peek";
     drawLine();
     if (changed) {
-      const origin = lineOrigin && byId.get(lineOrigin);
+      const origin = from && byId.get(from);
       // Desde una parada: un poco más alejado que la ficha, pero sin encuadrar la línea entera;
       // el usuario aleja el mapa si quiere verla completa.
       if (origin) { focusOn(origin.ll, LINE_STOPS_ZOOM); selRing.setLatLng(origin.ll).addTo(map); }
       else fitLine();
-    }
-    lineOrigin = null;
+      startTrack();
+    } else drawBus();
+    renderBusCard();
+    lineRuta = null;
   }
+
+  // Sentido de la línea que pasa por una parada; si pasan varios, el que va hacia "ruta".
+  function dirThrough(l, id, ruta) {
+    const idx = l.sentidos.map((d, i) => (d.paradas.includes(id) || (d.otras || []).includes(id) ? i : -1)).filter((i) => i >= 0);
+    if (idx.length > 1 && ruta) {
+      const hit = idx.find((i) => norm(l.sentidos[i].destino) === norm(ruta));
+      if (hit != null) return hit;
+    }
+    return idx.length ? idx[0] : -1;
+  }
+
+  // ---------- Próximo bus hacia la parada ----------
+  // Con la línea abierta desde una parada, se pide cada 30 s la llegada a esa parada y se dibuja
+  // el bus más próximo sobre el trazado: distancia de la parada a lo largo del recorrido menos los
+  // metros que da la API. Entre actualizaciones avanza a su velocidad media (metros / minutos).
+  const BUS = window.PV_BUS;
+  let track = null;   // { stop, code, dir, loc, est, at, state, timer, tick, ctl, marker }
+
+  function stopTrack() {
+    if (!track) return;
+    clearTimeout(track.timer);
+    clearInterval(track.tick);
+    if (track.ctl) track.ctl.abort();
+    if (track.marker) track.marker.remove();
+    track = null;
+    $("#line-bus").hidden = true;
+  }
+
+  function startTrack() {
+    stopTrack();
+    if (!BUS || !active || !active.from || active.fromDir < 0) return;
+    const dir = lines[active.code].sentidos[active.fromDir];
+    const loc = BUS.locateStop(dir, active.from, (id) => (byId.get(id) || {}).ll || [0, 0]);
+    if (!loc) return;
+    track = { stop: active.from, code: active.code, dir: active.fromDir, loc, est: null, at: 0, state: "loading" };
+    // Recién venidos de la ficha de esa parada: se reutilizan sus datos en vez de pedirlos otra vez.
+    const age = lastUpdate ? Date.now() - lastUpdate.getTime() : Infinity;
+    if (lastArrivals && lastArrivalsId === track.stop && age < REFRESH_MS - 5000) {
+      applyEstimates(lastArrivals, lastUpdate.getTime());
+      track.timer = setTimeout(fetchTrack, REFRESH_MS - age);
+    } else fetchTrack();
+    track.tick = setInterval(() => { drawBus(); renderBusCard(); }, 1000);
+  }
+
+  async function fetchTrack() {
+    const tr = track;
+    if (!tr) return;
+    clearTimeout(tr.timer);
+    if (tr.ctl) tr.ctl.abort();
+    const ctl = (tr.ctl = new AbortController());
+    const timeout = setTimeout(() => ctl.abort(), 10000);
+    try {
+      const data = await fetchEstimates(tr.stop, ctl.signal);
+      if (track !== tr) return;
+      applyEstimates(data.estimaciones || [], Date.now());
+    } catch {
+      if (track !== tr || ctl.signal.aborted && tr.ctl !== ctl) return;
+      if (!tr.est) { tr.state = "error"; renderBusCard(); }
+    } finally {
+      clearTimeout(timeout);
+    }
+    if (track === tr) tr.timer = setTimeout(() => { if (!document.hidden) fetchTrack(); }, REFRESH_MS);
+  }
+
+  // Elige el bus más próximo de la línea (y del destino, si en la parada paran los dos sentidos).
+  function applyEstimates(list, at) {
+    const tr = track;
+    const l = lines[tr.code];
+    let mine = list.filter((e) => normLine(e.linea) === tr.code && !isNaN(Number(e.minutos)));
+    const both = l.sentidos.filter((d) => d.paradas.includes(tr.stop) || (d.otras || []).includes(tr.stop)).length > 1;
+    if (both) {
+      const same = mine.filter((e) => norm(String(e.ruta || "")) === norm(l.sentidos[tr.dir].destino));
+      if (same.length) mine = same;
+    }
+    mine.sort((a, b) => Number(a.minutos) - Number(b.minutos));
+    tr.est = mine[0] || null;
+    tr.at = at;
+    tr.state = tr.est ? "ok" : "none";
+    drawBus();
+    renderBusCard();
+    // La primera vez que se sabe dónde va, si queda fuera de la vista se encuadran bus y parada.
+    const b = busNow();
+    if (!tr.framed && b && b.state === "route" && active && active.dir === tr.dir) {
+      tr.framed = true;
+      const s = byId.get(tr.stop);
+      const frame = () => { if (track === tr && s && !inView(b.ll)) fitPoints([b.ll, s.ll], LINE_STOPS_ZOOM); };
+      // Si el mapa aún se está moviendo hacia la parada, se espera a que termine.
+      if (map._animatingZoom || (map._panAnim && map._panAnim._inProgress)) map.once("moveend", frame); else frame();
+    }
+  }
+
+  // Situación del bus ahora mismo (avanza entre actualizaciones).
+  function busNow() {
+    if (!track || !track.est) return null;
+    const min = (Date.now() - track.at) / 60000;
+    return BUS.busAt(track.loc, track.est, min);
+  }
+
+  const BUS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10a2.5 2.5 0 0 1 2.5 2.5v10.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5V6A2.5 2.5 0 0 1 7 3.5z"/><rect x="6" y="17" width="3" height="3" rx="1"/><rect x="15" y="17" width="3" height="3" rx="1"/><rect class="w" x="6.6" y="6.2" width="10.8" height="5" rx="1"/><circle class="w" cx="8" cy="14.4" r="1.1"/><circle class="w" cx="16" cy="14.4" r="1.1"/></svg>';
+
+  function drawBus() {
+    const tr = track;
+    if (!tr) return;
+    const b = busNow();
+    // Solo en el sentido que va hacia la parada y con el bus ya en camino.
+    if (!b || b.state !== "route" || !active || active.dir !== tr.dir) {
+      if (tr.marker) tr.marker.remove();
+      return;
+    }
+    if (!tr.marker) {
+      const l = lines[tr.code];
+      const icon = L.divIcon({
+        className: "bus-pin",
+        html: `<span class="bus-dot" style="--lc:${l.color};--lt:${l.texto}"><span class="bus-arrow"></span>${BUS_ICON}</span>`,
+        iconSize: [34, 34], iconAnchor: [17, 17],
+      });
+      tr.marker = L.marker(b.ll, { icon, keyboard: false, interactive: false, zIndexOffset: 900 });
+    }
+    tr.marker.setLatLng(b.ll);
+    if (!map.hasLayer(tr.marker)) tr.marker.addTo(map);
+    const arrow = tr.marker.getElement() && tr.marker.getElement().querySelector(".bus-arrow");
+    if (arrow) arrow.style.transform = `rotate(${Math.round(b.bearing)}deg)`;
+  }
+
+  function renderBusCard() {
+    const card = $("#line-bus");
+    const tr = track;
+    if (!tr) { card.hidden = true; return; }
+    const l = lines[tr.code];
+    const s = byId.get(tr.stop);
+    const b = busNow();
+    let main, sub = "";
+    if (tr.state === "loading") main = "…";
+    else if (tr.state === "error") main = esc(t("times_error"));
+    else if (tr.state === "none") main = esc(t("bus_none"));
+    else if (b && b.state === "depot") {
+      const m = Math.max(0, Math.round(Number(tr.est.minutos) - (Date.now() - tr.at) / 60000));
+      main = `${esc(t("bus_depot"))}`;
+      sub = `<span class="eta"><b>${m}</b><span>${esc(t("min"))}</span></span>`;
+    } else if (b) {
+      const m = Math.round(Number(tr.est.minutos) - (Date.now() - tr.at) / 60000);
+      main = `${esc(fmtDist(b.left))} · ${esc(t("bus_estimated"))}`;
+      sub = m <= 0 ? `<span class="eta now"><b>${esc(t("arriving"))}</b></span>`
+                   : `<span class="eta"><b>${m}</b><span>${esc(t("min"))}</span></span>`;
+    } else main = esc(t("bus_none"));
+    card.style.setProperty("--lc", l.color);
+    card.style.setProperty("--lt", l.texto);
+    card.innerHTML = `<span class="bus-dot">${BUS_ICON}</span>
+      <span class="what"><b>${esc(t("bus_title", { stop: s ? s.name : tr.stop }))}</b><small>${main}</small></span>${sub}`;
+    card.hidden = false;
+  }
+
+  // Tocar la tarjeta: muestra el bus y la parada en el mapa (volviendo a su sentido si hace falta).
+  $("#line-bus").addEventListener("click", () => {
+    const tr = track;
+    if (!tr) return;
+    if (active.dir !== tr.dir) {
+      active.dir = tr.dir;
+      $("#line-dirs").querySelectorAll("button").forEach((x) => x.setAttribute("aria-selected", Number(x.dataset.dir) === tr.dir));
+      renderLineStops();
+      drawLine();
+      drawBus();
+    }
+    const s = byId.get(tr.stop);
+    const b = busNow();
+    if (b && b.state === "route") fitPoints([b.ll, s.ll], 17);
+    else if (s) focusOn(s.ll, LINE_STOPS_ZOOM);
+  });
 
   function renderLineStops() {
     const l = lines[active.code];
@@ -591,6 +771,20 @@
     ).join("");
   }
 
+  // Pide los próximos buses de una parada a la API del Concello.
+  async function fetchEstimates(id, signal) {
+    const url = `${API_URL}?id=${encodeURIComponent(id)}&ttl=5&tipo=TRANSPORTE-ESTIMACION-PARADA`;
+    const r = await fetch(url, { signal, cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    // La API puede responder en Latin-1 sin avisar: si no es UTF-8 válido, se lee como Windows-1252
+    // para que las tildes y la ñ no salgan como "�".
+    const buf = await r.arrayBuffer();
+    let text;
+    try { text = new TextDecoder("utf-8", { fatal: true }).decode(buf); }
+    catch { text = new TextDecoder("windows-1252").decode(buf); }
+    return JSON.parse(text);
+  }
+
   async function loadArrivals(first) {
     const s = current;
     if (!s) return;
@@ -602,21 +796,13 @@
     if (first) { box.innerHTML = skeleton(); lastUpdate = null; showUpdated(); }
     const timeout = setTimeout(() => ctl.abort(), 10000);
     try {
-      const url = `${API_URL}?id=${encodeURIComponent(s.id)}&ttl=5&tipo=TRANSPORTE-ESTIMACION-PARADA`;
-      const r = await fetch(url, { signal: ctl.signal, cache: "no-store" });
-      if (!r.ok) throw new Error(r.status);
-      // La API puede responder en Latin-1 sin avisar: si no es UTF-8 válido, se lee como Windows-1252
-      // para que las tildes y la ñ no salgan como "�".
-      const buf = await r.arrayBuffer();
-      let text;
-      try { text = new TextDecoder("utf-8", { fatal: true }).decode(buf); }
-      catch { text = new TextDecoder("windows-1252").decode(buf); }
-      const data = JSON.parse(text);
+      const data = await fetchEstimates(s.id, ctl.signal);
       if (seq !== reqSeq) return;
       // El nombre oficial sustituye a los genéricos tipo "Parada 1234".
       const official = data.parada && data.parada[0] && data.parada[0].nombre;
       if (official && /^Parada \d/.test(s.name)) $("#stop-name").textContent = titleCase(official);
       renderArrivals(data.estimaciones || []);
+      lastArrivalsId = s.id;
       lastUpdate = new Date();
       showUpdated();
     } catch (e) {
@@ -635,6 +821,7 @@
 
   let lastUpdate = null;
   let lastArrivals = null;          // para volver a pintar al cambiar de idioma
+  let lastArrivalsId = null;        // parada de esos datos (los reutiliza el bus en el mapa)
   function showUpdated() {
     $("#updated").textContent = lastUpdate
       ? t("updated", { time: lastUpdate.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" }) }) : "";
@@ -669,7 +856,7 @@
       // Toda la fila (número, destino y tiempo) abre la línea en el mapa.
       const known = lines && lines[g.linea];
       const tag = known ? "button" : "div";
-      const attrs = known ? ` type="button" data-line="${esc(g.linea)}" title="${esc(t("see_line", { code: g.linea }))}"` : "";
+      const attrs = known ? ` type="button" data-line="${esc(g.linea)}" data-ruta="${esc(g.ruta)}" title="${esc(t("see_line", { code: g.linea }))}"` : "";
       return `<${tag} class="arrival"${attrs}>
         <span class="badge"${lineStyle(g.linea)}>${esc(g.linea)}</span>
         <span class="route"><b>${esc(g.ruta)}</b>${next}</span>
@@ -1001,9 +1188,9 @@
     const line = e.target.closest("button[data-line]");
     if (line) {
       $("#q").blur();
-      // Si se abre desde una parada, la línea se muestra alrededor de esa parada.
-      lineOrigin = current ? current.id : null;
-      navigate(`linea/${line.dataset.line}`);
+      // Si se abre desde una parada, la línea se muestra alrededor de esa parada y con su próximo bus.
+      lineRuta = line.dataset.ruta || null;
+      navigate(`linea/${line.dataset.line}${current ? `/${current.id}` : ""}`);
       return;
     }
     const dir = e.target.closest("button[data-dir]");
@@ -1012,6 +1199,7 @@
       $("#line-dirs").querySelectorAll("button").forEach((b) => b.setAttribute("aria-selected", b === dir));
       renderLineStops();
       drawLine();
+      drawBus();
     }
   });
   $("#back").addEventListener("click", goBack);
@@ -1076,7 +1264,11 @@
   }, true);
   panel.addEventListener("transitionend", () => map.invalidateSize());
 
-  document.addEventListener("visibilitychange", () => { if (!document.hidden && current) loadArrivals(false); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) return;
+    if (current) loadArrivals(false);
+    if (track) fetchTrack();
+  });
 
   // ---------- Idioma: textos fijos y desplegable con banderas ----------
   function applyStatic() {
@@ -1106,7 +1298,7 @@
       showStop(current.id, { repaint: true });
       if (lastArrivals) renderArrivals(lastArrivals);
       showUpdated();
-    } else if (active) showLine(active.code);
+    } else if (active) showLine(active.code, active.from);
     else if (tripOpen()) { renderTripFields(); computeTrip(false); document.title = `${t("trip_title")} · Próximo Vitrasa`; }
     else render();
   }
