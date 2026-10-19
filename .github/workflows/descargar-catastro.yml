@@ -13,19 +13,21 @@ jobs:
       - uses: actions/checkout@v4
       - name: Descargar
         run: |
-          mkdir -p fuentes/catastro/prueba2
-          cd fuentes/catastro/prueba2
-          B=https://www.catastro.hacienda.gob.es/INSPIRE
-          curl -sSL -m 120 -o atom_BU_36.xml "$B/Buildings/36/ES.SDGC.BU.atom_36.xml" || true
-          curl -sSL -m 120 -o atom_CP_36.xml "$B/CadastralParcels/36/ES.SDGC.CP.atom_36.xml" || true
-          curl -sSL -m 120 -o atom_AD_36_bis.xml "$B/Addresses/36/ES.SDGC.AD.atom_36.xml?x=2" || true
-          # Servicio WFS INSPIRE de direcciones: zona de Avenida das Camelias (Vigo).
-          W=http://ovc.catastro.meh.es/INSPIRE/wfsAD.aspx
-          curl -sSL -m 120 -o wfs_ad_camelias.xml "$W?service=wfs&version=2&request=getfeature&STOREDQUERIE_ID=GetadByBbox&bbox=42.2245,-8.7285,42.2335,-8.7175&srsname=EPSG::4258" || true
-          curl -sSL -m 120 -o wfs_ad_camelias_b.xml "$W?service=wfs&version=2&request=getfeature&STOREDQUERIE_ID=GetadByBbox&bbox=4675000,522000,4676000,523000&srsname=EPSG::25829" || true
-          curl -sSL -m 120 -o wfs_bu_camelias.xml "http://ovc.catastro.meh.es/INSPIRE/wfsBU.aspx?service=wfs&version=2&request=getfeature&STOREDQUERIE_ID=GetBuildingByBbox&bbox=42.2290,-8.7240,42.2300,-8.7230&srsname=EPSG::4258" || true
+          mkdir -p fuentes/catastro/prueba3
+          cd fuentes/catastro/prueba3
+          # Control (Redondela, sí publicado) y Vigo (Avda. das Camelias), con varias sintaxis del WFS.
+          for host in https://ovc.catastro.meh.es http://ovc.catastro.meh.es https://www1.sedecatastro.gob.es; do
+            h=$(echo $host | tr -dc 'a-z0-9')
+            for zona in "red:42.2820,-8.6125,42.2860,-8.6080" "vigo:42.2270,-8.7270,42.2310,-8.7220"; do
+              n=${zona%%:*}; bb=${zona#*:}
+              curl -sSL -m 90 -o "ad_${h}_${n}_a.xml" "$host/INSPIRE/wfsAD.aspx?service=wfs&version=2.0.0&request=GetFeature&typeNames=AD:Address&bbox=$bb,urn:ogc:def:crs:EPSG::4326&srsName=urn:ogc:def:crs:EPSG::4326" || true
+              curl -sSL -m 90 -o "ad_${h}_${n}_b.xml" "$host/INSPIRE/wfsAD.aspx?service=WFS&version=2.0.0&request=GetFeature&typenames=ad:Address&bbox=$bb&srsname=EPSG:4326" || true
+              curl -sSL -m 90 -o "bu_${h}_${n}.xml" "$host/INSPIRE/wfsBU.aspx?service=WFS&version=2.0.0&request=GetFeature&typenames=bu:Building&bbox=$bb&srsname=EPSG:4326" || true
+            done
+            curl -sSL -m 90 -o "cap_${h}_ad.xml" "$host/INSPIRE/wfsAD.aspx?service=WFS&request=GetCapabilities" || true
+          done
           ls -la
-          for f in *.xml; do echo "== $f"; head -c 400 "$f"; echo; done
+          for f in *.xml; do echo "== $f $(wc -c < $f)"; head -c 300 "$f" | tr -d '\r'; echo; done
       - name: Guardar en la rama
         run: |
           git config user.name "github-actions[bot]"
