@@ -388,14 +388,21 @@
     );
   }
 
+  // Lejos de Vigo (más de 25 km del centro): no hay paradas ni calles que usar.
+  const farFromVigo = (ll) => haversine(ll, VIGO) > 25000;
+
   function locate() {
-    // En "Cómo llegar" solo se centra el mapa en tu posición, sin salir de la vista.
-    if (tripOpen()) { getPosition((ll) => focusOn(ll, 16)); return; }
+    // En "Cómo llegar" solo se centra el mapa en tu posición, sin salir de la vista;
+    // si estás lejos de Vigo, se avisa y el mapa no se mueve.
+    if (tripOpen()) {
+      getPosition((ll) => { if (farFromVigo(ll)) toast(t("geo_far_trip")); else focusOn(ll, 16); });
+      return;
+    }
     getPosition(() => {
         if (location.hash) navigate("");
         $("#q").value = "";
         setTab("near");
-        if (haversine(me, VIGO) > 25000) {
+        if (farFromVigo(me)) {
           toast(t("geo_far"));
           const [n] = nearest(me, 1);
           if (n) focusOn(n.s.ll, 14);
@@ -914,7 +921,7 @@
   const pinIcon = (w) => L.divIcon({ className: "trip-pin", html: `<span class="pin pin-${w}">${w.toUpperCase()}</span>`, iconSize: [30, 30], iconAnchor: [15, 15] });
 
   function openTrip(b) {
-    if (!trip.a && me) trip.a = { kind: "me", ll: me };
+    if (!trip.a && me && !farFromVigo(me)) trip.a = { kind: "me", ll: me };
     if (b) trip.b = b;
     navigate(`ir/${endToken(trip.a)}/${endToken(trip.b)}`);
   }
@@ -1504,7 +1511,17 @@
     const sp = e.target.closest("button[data-trip]");
     if (!sp) return;
     if (sp.dataset.trip === "me") {
-      getPosition((ll) => setEnd(w, { kind: "me", ll }));
+      getPosition((ll) => {
+        if (!farFromVigo(ll)) { setEnd(w, { kind: "me", ll }); return; }
+        // Lejos de Vigo: no se usa como origen ni destino y el mapa se queda donde está.
+        const inp = $(`#trip-${w}`);
+        inp.value = endLabel(trip[w]);
+        inp.blur();
+        closeSugg();
+        renderTripFields();
+        setPanel(baseState());
+        toast(t("geo_far_trip"));
+      });
     } else {
       // Elegir en el mapa: el siguiente toque en el mapa marca el punto.
       $(`#trip-${w}`).blur();
