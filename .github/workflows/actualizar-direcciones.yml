@@ -8,6 +8,8 @@ on:
   schedule:
     - cron: "37 3 2 * *"      # el día 2 de cada mes a las 03:37 UTC
   workflow_dispatch:
+  push:
+    branches: [prueba-actualizar]
 permissions:
   contents: write
 concurrency:
