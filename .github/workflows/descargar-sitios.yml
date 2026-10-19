@@ -1,0 +1,64 @@
+# Temporal: descarga los sitios de OpenStreetMap y el relieve (Copernicus DEM) y los guarda en esta rama.
+name: Descargar sitios y relieve
+on:
+  push:
+    branches: [datos-sitios]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  descargar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Sitios de OpenStreetMap (Overpass)
+        run: |
+          mkdir -p fuentes
+          B='42.135,-8.835,42.290,-8.610'
+          Q="[out:json][timeout:300];(
+          nwr[name][amenity~'^(hospital|clinic|doctors|police|townhall|courthouse|university|college|school|library|theatre|cinema|arts_centre|marketplace|bus_station|ferry_terminal|fire_station|post_office|community_centre|conference_centre|exhibition_centre)$']($B);
+          nwr[name][shop~'^(mall|department_store)$']($B);
+          nwr[name][railway=station]($B);
+          nwr[name][aeroway~'^(aerodrome|terminal)$']($B);
+          nwr[name][leisure~'^(stadium|sports_centre|park|marina|water_park)$']($B);
+          nwr[name][natural=beach]($B);
+          nwr[name][tourism~'^(museum|attraction|viewpoint|hotel|gallery|zoo)$']($B);
+          nwr[name][office=government]($B);
+          );out center tags;"
+          for U in https://overpass-api.de/api/interpreter https://overpass.kumi.systems/api/interpreter https://overpass.private.coffee/api/interpreter; do
+            if curl -sS -f --max-time 600 -A "proximovitrasa (github.com/asergom/proximovitrasa)" --data-urlencode "data=$Q" "$U" -o /tmp/sitios.json \
+               && python3 -c "import json; d=json.load(open('/tmp/sitios.json')); assert d['elements']; print(len(d['elements']), 'sitios')"; then
+              break
+            fi
+            sleep 30
+          done
+          gzip -9 -n -c /tmp/sitios.json > fuentes/sitios.json.gz
+      - name: Relieve (Copernicus DEM GLO-30, recortado a la zona)
+        run: |
+          pip install -q rasterio
+          curl -sSL --fail --retry 3 -m 600 -o /tmp/dem.tif https://copernicus-dem-30m.s3.amazonaws.com/Copernicus_DSM_COG_10_N42_00_W009_00_DEM/Copernicus_DSM_COG_10_N42_00_W009_00_DEM.tif
+          python3 - <<'EOF'
+          import rasterio
+          from rasterio.windows import from_bounds
+          with rasterio.open("/tmp/dem.tif") as s:
+              w = from_bounds(-8.86, 42.11, -8.58, 42.31, s.transform)
+              a = s.read(1, window=w)
+              t = s.window_transform(w)
+              p = s.profile
+          p.update(width=a.shape[1], height=a.shape[0], transform=t, compress="deflate", predictor=3, tiled=False)
+          p.pop("blockxsize", None); p.pop("blockysize", None)
+          with rasterio.open("fuentes/dem_vigo.tif", "w", **p) as d:
+              d.write(a, 1)
+          print(a.shape, float(a.min()), float(a.max()))
+          EOF
+          ls -la fuentes
+      - name: Guardar en la rama
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add fuentes
+          git commit -m "Sitios de OSM y relieve descargados"
+          git push origin HEAD:${GITHUB_REF_NAME}
