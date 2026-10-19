@@ -937,8 +937,8 @@
   $("#place-trip").addEventListener("click", () => { if (place) openTrip({ kind: "addr", ll: place.ll, label: place.label, approx: place.approx }); });
 
   // ---------- Números de portal en el mapa ----------
-  // Con zoom alto se dibujan los números de portal que el mapa base no trae (los del Concello).
-  // Van en un lienzo propio; solo los que caen en pantalla y sin que se pisen.
+  // Con zoom alto se dibujan todos los números de portal conocidos (aunque el mapa base ya traiga
+  // algunos). Van en un lienzo propio; solo los que caen en pantalla y sin que se pisen entre ellos.
   // Tocar uno abre esa dirección (o, en "Cómo llegar", la elige como origen o destino).
   const NUM_ZOOM = 18;
   map.createPane("nums").style.zIndex = 450;   // encima de los trazados, debajo de las paradas
@@ -972,7 +972,6 @@
       const w = ctx.measureText(pt.n).width + 4, h = 14;
       const box = { x: p.x - w / 2, y: p.y - h / 2, w, h, pt };
       numHits.push(box);
-      if (pt.base) continue;   // ya lo pinta el mapa base: se puede tocar, pero no se repite
       if (boxes.some((o) => box.x < o.x + o.w && o.x < box.x + box.w && box.y < o.y + o.h && o.y < box.y + box.h)) continue;
       boxes.push(box);
       const sel = selKey === `${pt.s.name}, ${pt.n}`;

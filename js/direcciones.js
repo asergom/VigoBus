@@ -35,12 +35,11 @@
 
   function build(data) {
     const all = [];   // todos los portales conocidos, para dibujar sus números en el mapa
-    const streets = data.calles.map(([name, lat, lon, p, base], i) => {
+    const streets = data.calles.map(([name, lat, lon, p], i) => {
       const words = normTxt(name).split(" ").filter(Boolean);
       const core = words.filter((w) => !GEN.has(w));
       const portals = [];
-      const onBase = new Set(base || []);   // números que ya dibuja el mapa base
-      for (let k = 0; k < p.length; k += 3) portals.push({ n: String(p[k]), ll: [(lat + p[k + 1]) / 1e5, (lon + p[k + 2]) / 1e5], base: onBase.has(k / 3) });
+      for (let k = 0; k < p.length; k += 3) portals.push({ n: String(p[k]), ll: [(lat + p[k + 1]) / 1e5, (lon + p[k + 2]) / 1e5] });
       const s = { i, name, ll: [lat / 1e5, lon / 1e5], words, core: core.length ? core : words, portals, norm: words.join(" "), tipo: TIPO[words[0]] || null };
       portals.forEach((pt) => all.push({ ...pt, s }));
       return s;

@@ -13,12 +13,10 @@ Formato de salida:
   {
     "v": 1, "fecha": "AAAA-MM-DD",
     "calles": [
-      [nombre, lat, lon, [num, dlat, dlon, num, dlat, dlon, ...], [k, ...]?],
+      [nombre, lat, lon, [num, dlat, dlon, num, dlat, dlon, ...]],
       ...
     ]
   }
-  El quinto elemento (opcional) lista los portales (k = posición en la lista) cuyo número ya
-  dibuja el mapa base de OpenStreetMap: la capa propia de números no los repite.
   lat/lon: punto central de la calle, en enteros de 1e-5 grados.
   Portales: número tal cual ("19", "19B") y posición relativa al centro (1e-5 grados).
   Calles con el mismo nombre en sitios distintos (p. ej. "Rúa Real" en Vigo y en Redondela)
@@ -40,7 +38,6 @@ CONCELLO = os.path.join(RAIZ, "data/concello/numeracion.csv.gz")
 SALIDA = os.path.join(RAIZ, "data/direcciones.json")
 JUNTAS = 500  # metros: tramos con el mismo nombre a menos de esto son la misma calle
 CERCA = 400  # metros: un portal del Concello va a la calle de OSM con su nombre si está a menos de esto
-YA_PINTADO = 25  # metros: un portal de OSM con el mismo número a menos de esto ya sale en el mapa base
 
 # Prueba de concepto: los portales del Concello se usan solo en la zona de Avenida das Camelias
 # (y en ella sustituyen a los de OSM). Fuera de la zona sigue todo como antes.
@@ -196,7 +193,6 @@ def main():
         portales = json.load(f)["elements"]
     sueltas = defaultdict(list)
     usados = 0
-    pinta_osm = []  # portales de OSM dentro de la zona del Concello: el mapa base ya dibuja su número
     for e in portales:
         t = e.get("tags", {})
         calle, num = t.get("addr:street"), t.get("addr:housenumber", "").strip()
@@ -205,8 +201,7 @@ def main():
         ll = (e["lat"], e["lon"]) if "lat" in e else (e["center"]["lat"], e["center"]["lon"]) if "center" in e else None
         if not ll:
             continue
-        if en_zona(ll):
-            pinta_osm.append((num.upper(), ll))
+        if en_zona(ll):  # en la zona de prueba mandan los portales del Concello
             continue
         if not calle:
             continue
@@ -279,26 +274,21 @@ def main():
     salida = []
     for c in sorted(calles, key=lambda c: c["nombre"]):
         clat, clon = round(c["centro"][0] * 1e5), round(c["centro"][1] * 1e5)
-        visto, plano, ya = set(), [], []
+        visto, plano = set(), []
         orden = lambda p: (int("".join(ch for ch in p[0] if ch.isdigit()) or 0), p[0])
         for n, ll in sorted(c["portales"], key=orden):
             if n.upper() in visto:
                 continue
             visto.add(n.upper())
-            # ¿Lo dibuja ya el mapa base (portal de OSM con el mismo número a pocos metros)?
-            if en_zona(ll) and any(m == n.upper() and dist(ll, q) < YA_PINTADO for m, q in pinta_osm):
-                ya.append(len(plano) // 3)
             plano += [n, round(ll[0] * 1e5) - clat, round(ll[1] * 1e5) - clon]
-        salida.append([c["nombre"], clat, clon, plano] + ([ya] if ya else []))
+        salida.append([c["nombre"], clat, clon, plano])
 
     with open(SALIDA, "w", encoding="utf-8") as f:
         json.dump({"v": 1, "fecha": fecha, "calles": salida}, f, separators=(",", ":"), ensure_ascii=False)
     con = sum(1 for s in salida if s[3])
     tam = os.path.getsize(SALIDA)
     comp = len(gzip.compress(open(SALIDA, "rb").read(), 9))
-    ya = sum(len(s[4]) for s in salida if len(s) > 4)
-    print(f"Calles: {len(salida)} ({con} con portales); portales de OSM: {usados}; del Concello: {del_concello}"
-          f" ({ya} ya los dibuja el mapa base)")
+    print(f"Calles: {len(salida)} ({con} con portales); portales de OSM: {usados}; del Concello: {del_concello}")
     print(f"{SALIDA}: {tam / 1e3:.0f} KB ({comp / 1e3:.0f} KB comprimido)")
 
 
