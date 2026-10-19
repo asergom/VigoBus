@@ -88,7 +88,7 @@ jobs:
           node -e "
           const fs=require('fs');
           const net=require('./js/peaton.js').build(JSON.parse(fs.readFileSync('data/peatonal.json')));
-          const r=net.route([42.2386,-8.7206],[42.2320,-8.7140]); if(!r||r.dist<300||r.dist>2500) throw new Error("ruta a pie rara");
+          const r=net.route([42.2386,-8.7206],[42.2320,-8.7140]); if(!r||r.dist<300||r.dist>2500) throw new Error('ruta a pie rara');
           const d=require('./js/direcciones.js').build(JSON.parse(fs.readFileSync('data/direcciones.json')));
           const s=d.matchStreets('camelias')[0]; if(!s||s.portals.length<100) throw new Error('faltan portales');
           const p=require('./js/planificador.js').build(require('./data/viajes.json')); if(p.pats.length<100) throw new Error('planificador');
