@@ -117,6 +117,25 @@
       <div id="trip-result" class="trip-result" aria-live="polite"></div>
     </section>
 
+    <!-- Dirección (calle y número) elegida en el buscador o tocando un número en el mapa -->
+    <section id="place" class="view" hidden>
+      <div class="stop-head">
+        <button id="place-back" class="icon-btn" type="button" data-i18n-aria="back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="stop-title">
+          <h2 id="place-name"></h2>
+          <p class="stop-meta"><span id="place-meta"></span><span id="place-dist"></span></p>
+        </div>
+      </div>
+      <button id="place-trip" class="place-trip" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 21.2 12 12 21.2 2.8 12z"/><path d="M9.5 14.5v-2.2a1.6 1.6 0 0 1 1.6-1.6h4.4M13.6 8.4l2.3 2.3-2.3 2.3"/></svg>
+        <span data-i18n="trip_here"></span>
+      </button>
+      <p class="group-label" data-i18n="near_stops"></p>
+      <ul id="place-stops" class="stops"></ul>
+    </section>
+
     <!-- Ficha de parada -->
     <section id="stop" class="view" hidden>
       <div class="stop-head">

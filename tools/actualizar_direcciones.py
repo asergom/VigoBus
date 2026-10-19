@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 """Genera data/direcciones.json: calles con nombre y números de portal para buscar direcciones.
 
-Entradas (OpenStreetMap, zona de Vitrasa, formato JSON de Overpass):
-  data/osm/vias.json.gz          vías (de ahí salen las calles con su nombre y posición)
-  data/osm/direcciones.json.gz   portales: nwr["addr:housenumber"], con "out center tags"
+Entradas:
+  data/osm/vias.json.gz          OpenStreetMap: vías (de ahí salen las calles con su nombre y posición)
+  data/osm/direcciones.json.gz   OpenStreetMap: portales, nwr["addr:housenumber"], con "out center tags"
+  data/concello/numeracion.csv.gz  Concello de Vigo: numeración del callejero
+                                 (https://datos.vigo.org/data/transporte/calles-numeracion.csv, licencia ODC-BY)
 
     python3 tools/actualizar_direcciones.py
 
@@ -11,10 +13,12 @@ Formato de salida:
   {
     "v": 1, "fecha": "AAAA-MM-DD",
     "calles": [
-      [nombre, lat, lon, [num, dlat, dlon, num, dlat, dlon, ...]],
+      [nombre, lat, lon, [num, dlat, dlon, num, dlat, dlon, ...], [k, ...]?],
       ...
     ]
   }
+  El quinto elemento (opcional) lista los portales (k = posición en la lista) cuyo número ya
+  dibuja el mapa base de OpenStreetMap: la capa propia de números no los repite.
   lat/lon: punto central de la calle, en enteros de 1e-5 grados.
   Portales: número tal cual ("19", "19B") y posición relativa al centro (1e-5 grados).
   Calles con el mismo nombre en sitios distintos (p. ej. "Rúa Real" en Vigo y en Redondela)
@@ -22,6 +26,7 @@ Formato de salida:
 
 Datos © colaboradores de OpenStreetMap, licencia ODbL.
 """
+import csv
 import gzip
 import json
 import math
@@ -31,8 +36,59 @@ from collections import defaultdict
 RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VIAS = os.path.join(RAIZ, "data/osm/vias.json.gz")
 PORTALES = os.path.join(RAIZ, "data/osm/direcciones.json.gz")
+CONCELLO = os.path.join(RAIZ, "data/concello/numeracion.csv.gz")
 SALIDA = os.path.join(RAIZ, "data/direcciones.json")
 JUNTAS = 500  # metros: tramos con el mismo nombre a menos de esto son la misma calle
+CERCA = 400  # metros: un portal del Concello va a la calle de OSM con su nombre si está a menos de esto
+YA_PINTADO = 25  # metros: un portal de OSM con el mismo número a menos de esto ya sale en el mapa base
+
+# Prueba de concepto: los portales del Concello se usan solo en la zona de Avenida das Camelias
+# (y en ella sustituyen a los de OSM). Fuera de la zona sigue todo como antes.
+ZONA = (42.2200, 42.2355, -8.7345, -8.7260)  # lat mín, lat máx, lon mín, lon máx
+
+
+def en_zona(ll):
+    return ZONA[0] <= ll[0] <= ZONA[1] and ZONA[2] <= ll[1] <= ZONA[3]
+
+
+# Tipo de vía del Concello → palabra completa (en gallego, como rotula el Concello).
+TIPOS = {"RUA": "Rúa", "AVDA": "Avenida", "CMÑO": "Camiño", "CTRA": "Estrada", "ESTDA": "Estrada",
+         "TRVA": "Travesía", "BDA": "Baixada", "SBIDA": "Subida", "PRAZA": "Praza", "BARRO": "Barrio",
+         "CXON": "Calexón", "PASEO": "Paseo"}
+MENORES = {"de", "do", "da", "dos", "das", "del", "la", "el", "los", "las", "e", "y", "o", "a", "os", "as"}
+
+
+def nombre_concello(tipo, nombre):
+    """"CARME (DO)" de tipo RUA → "Rúa do Carme"; "Padre Lorenzo (carmelita)" → "Padre Lorenzo (Carmelita)"."""
+    import re
+    nombre = nombre.strip()
+    art = ""
+    m = re.match(r"^(.*?)\s*\((\w+)\)$", nombre)
+    if m and m.group(2).lower() in MENORES:
+        nombre, art = m.group(1), m.group(2).lower()
+    pal = nombre.split()
+    pal = [p.lower() if i and p.lower() in MENORES else ("(" + p[1:2].upper() + p[2:] if p.startswith("(") else p[:1].upper() + p[1:])
+           for i, p in enumerate(pal)]
+    return " ".join(([TIPOS[tipo]] if tipo in TIPOS else []) + ([art] if art else []) + pal)
+
+
+# Abreviaturas del Concello que no son el principio de la palabra completa.
+ABREV = {"dr": ("doutor", "doctor"), "sta": ("santa",), "sto": ("santo",), "sr": ("señor", "senor"),
+         "pza": ("praza",), "avda": ("avenida",)}
+
+
+def casa_nombre(concello, osm):
+    """¿Es el mismo nombre? Cada palabra del Concello está en el de OSM, igual, como abreviatura
+    (inicial o principio de la palabra) o en ABREV. Sin tipo de vía, artículos ni lo que va entre paréntesis."""
+    import re
+    a = nucleo(re.sub(r"\(.*?\)", " ", concello)).split()
+    b = nucleo(osm).split()
+    if not a:
+        return False
+    for w in a:
+        if not any(v == w or v.startswith(w) or v in ABREV.get(w, ()) for v in b):
+            return False
+    return True
 
 
 def dist(a, b):
@@ -140,13 +196,19 @@ def main():
         portales = json.load(f)["elements"]
     sueltas = defaultdict(list)
     usados = 0
+    pinta_osm = []  # portales de OSM dentro de la zona del Concello: el mapa base ya dibuja su número
     for e in portales:
         t = e.get("tags", {})
         calle, num = t.get("addr:street"), t.get("addr:housenumber", "").strip()
-        if not calle or not num:
+        if not num:
             continue
         ll = (e["lat"], e["lon"]) if "lat" in e else (e["center"]["lat"], e["center"]["lon"]) if "center" in e else None
         if not ll:
+            continue
+        if en_zona(ll):
+            pinta_osm.append((num.upper(), ll))
+            continue
+        if not calle:
             continue
         # "19;21" o "19-21": un portal por número
         for n in num.replace(";", ",").split(","):
@@ -174,23 +236,69 @@ def main():
         else:
             calles.append({"nombre": lst[0][0], "centro": (lat, lon), "portales": [(n, ll) for _, n, ll in lst]})
 
+    # Portales del Concello de Vigo (solo dentro de la zona de prueba): a la calle de OSM con el
+    # mismo nombre más cercana (a menos de CERCA metros); si no hay ninguna, se crea con su nombre.
+    del_concello = 0
+    sin_calle = defaultdict(list)
+    posibles = {}
+    margen = CERCA / 111000
+
+    def cerca_zona(c):
+        return any(ZONA[0] - margen <= p[0] <= ZONA[1] + margen and ZONA[2] - margen * 1.4 <= p[1] <= ZONA[3] + margen * 1.4
+                   for tr in c["tramos"] for p in tr)
+    with gzip.open(CONCELLO, "rt", encoding="utf-8") as f:
+        for r in csv.DictReader(f):
+            num = r["num"].strip()
+            if not num:
+                continue
+            ll = (float(r["lat"]), float(r["lon"]))
+            if not en_zona(ll):
+                continue
+            nombre = nombre_concello(r["tipovia"], r["nombre"])
+            if nombre not in posibles:
+                # Calles de OSM cerca de la zona con un nombre que casa (primero las de nombre idéntico).
+                exactas = [c for c in pornucleo.get(nucleo(nombre), []) if "tramos" in c and cerca_zona(c)]
+                posibles[nombre] = exactas or [c for c in calles if "tramos" in c and cerca_zona(c)
+                                               and casa_nombre(nombre, c["nombre"])]
+            cands = []
+            for c in posibles[nombre]:
+                d = min(dist(ll, p) for tr in c["tramos"] for p in tr)
+                if d < CERCA:
+                    cands.append((d, id(c), c))
+            if cands:
+                min(cands)[2]["portales"].append((num, ll))
+            else:
+                sin_calle[(r["codvia"], nombre)].append((num, ll))
+            del_concello += 1
+    for (_, nombre), lst in sin_calle.items():
+        lat = sum(ll[0] for _, ll in lst) / len(lst)
+        lon = sum(ll[1] for _, ll in lst) / len(lst)
+        calles.append({"nombre": nombre, "centro": (lat, lon), "portales": lst})
+        print(f"  Calle del Concello sin calle en OSM: {nombre} ({len(lst)} portales)")
+
     salida = []
     for c in sorted(calles, key=lambda c: c["nombre"]):
         clat, clon = round(c["centro"][0] * 1e5), round(c["centro"][1] * 1e5)
-        visto, plano = set(), []
-        for n, ll in sorted(c["portales"], key=lambda p: p[0]):
+        visto, plano, ya = set(), [], []
+        orden = lambda p: (int("".join(ch for ch in p[0] if ch.isdigit()) or 0), p[0])
+        for n, ll in sorted(c["portales"], key=orden):
             if n.upper() in visto:
                 continue
             visto.add(n.upper())
+            # ¿Lo dibuja ya el mapa base (portal de OSM con el mismo número a pocos metros)?
+            if en_zona(ll) and any(m == n.upper() and dist(ll, q) < YA_PINTADO for m, q in pinta_osm):
+                ya.append(len(plano) // 3)
             plano += [n, round(ll[0] * 1e5) - clat, round(ll[1] * 1e5) - clon]
-        salida.append([c["nombre"], clat, clon, plano])
+        salida.append([c["nombre"], clat, clon, plano] + ([ya] if ya else []))
 
     with open(SALIDA, "w", encoding="utf-8") as f:
         json.dump({"v": 1, "fecha": fecha, "calles": salida}, f, separators=(",", ":"), ensure_ascii=False)
     con = sum(1 for s in salida if s[3])
     tam = os.path.getsize(SALIDA)
     comp = len(gzip.compress(open(SALIDA, "rb").read(), 9))
-    print(f"Calles: {len(salida)} ({con} con portales); portales usados: {usados}")
+    ya = sum(len(s[4]) for s in salida if len(s) > 4)
+    print(f"Calles: {len(salida)} ({con} con portales); portales de OSM: {usados}; del Concello: {del_concello}"
+          f" ({ya} ya los dibuja el mapa base)")
     print(f"{SALIDA}: {tam / 1e3:.0f} KB ({comp / 1e3:.0f} KB comprimido)")
 
 

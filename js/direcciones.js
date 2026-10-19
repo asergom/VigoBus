@@ -1,5 +1,6 @@
-/* Próximo Vitrasa: búsqueda de direcciones (calle y número) con datos de OpenStreetMap.
-   data/direcciones.json se descarga una vez, solo al abrir "Cómo llegar".
+/* Próximo Vitrasa: búsqueda de direcciones (calle y número): calles de OpenStreetMap y portales de
+   OpenStreetMap y del Concello de Vigo. data/direcciones.json se descarga una vez, al primer uso
+   (buscar una calle, abrir "Cómo llegar" o acercar el mapa hasta ver los números).
    Si un portal no está en OpenStreetMap, su posición se estima entre los números conocidos
    del mismo lado de la calle; si la calle no tiene ninguno, se usa su punto central. */
 (function (root) {
@@ -33,13 +34,37 @@
   }
 
   function build(data) {
-    const streets = data.calles.map(([name, lat, lon, p], i) => {
+    const all = [];   // todos los portales conocidos, para dibujar sus números en el mapa
+    const streets = data.calles.map(([name, lat, lon, p, base], i) => {
       const words = normTxt(name).split(" ").filter(Boolean);
       const core = words.filter((w) => !GEN.has(w));
       const portals = [];
-      for (let k = 0; k < p.length; k += 3) portals.push({ n: String(p[k]), ll: [(lat + p[k + 1]) / 1e5, (lon + p[k + 2]) / 1e5] });
-      return { i, name, ll: [lat / 1e5, lon / 1e5], words, core: core.length ? core : words, portals, norm: words.join(" "), tipo: TIPO[words[0]] || null };
+      const onBase = new Set(base || []);   // números que ya dibuja el mapa base
+      for (let k = 0; k < p.length; k += 3) portals.push({ n: String(p[k]), ll: [(lat + p[k + 1]) / 1e5, (lon + p[k + 2]) / 1e5], base: onBase.has(k / 3) });
+      const s = { i, name, ll: [lat / 1e5, lon / 1e5], words, core: core.length ? core : words, portals, norm: words.join(" "), tipo: TIPO[words[0]] || null };
+      portals.forEach((pt) => all.push({ ...pt, s }));
+      return s;
     });
+
+    // Portales en una cuadrícula (celdas de ~200 m) para encontrar rápido los que se ven en el mapa.
+    const CELL = 0.002;
+    const grid = new Map();
+    for (const pt of all) {
+      const k = `${Math.floor(pt.ll[0] / CELL)}:${Math.floor(pt.ll[1] / CELL)}`;
+      if (!grid.has(k)) grid.set(k, []);
+      grid.get(k).push(pt);
+    }
+    function portalsIn(south, west, north, east) {
+      const out = [];
+      for (let a = Math.floor(south / CELL); a <= Math.floor(north / CELL); a++) {
+        for (let b = Math.floor(west / CELL); b <= Math.floor(east / CELL); b++) {
+          for (const pt of grid.get(`${a}:${b}`) || []) {
+            if (pt.ll[0] >= south && pt.ll[0] <= north && pt.ll[1] >= west && pt.ll[1] <= east) out.push(pt);
+          }
+        }
+      }
+      return out;
+    }
     const count = new Map();
     streets.forEach((s) => count.set(s.norm, (count.get(s.norm) || 0) + 1));
     streets.forEach((s) => { s.dup = count.get(s.norm) > 1; });
@@ -100,7 +125,7 @@
         .sort((a, b) => parseInt(a, 10) - parseInt(b, 10) || a.localeCompare(b)).slice(0, limit);
     }
 
-    return { streets, parse, matchStreets, resolve, numbersStarting, fecha: data.fecha };
+    return { streets, parse, matchStreets, resolve, numbersStarting, portalsIn, fecha: data.fecha };
   }
 
   let pending = null;

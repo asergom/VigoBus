@@ -128,6 +128,7 @@
     maxZoom: 19, referrerPolicy: "strict-origin-when-cross-origin",
     attribution: '© <a href="https://www.openstreetmap.org/copyright">Colaboradores de OpenStreetMap</a>',
   }).addTo(map);
+  map.attributionControl.addAttribution('Portales: <a href="https://datos.vigo.org/">Concello de Vigo</a>');
 
   // Abierta como archivo (file://) no hay web de origen y OpenStreetMap bloquea el mapa.
   if (location.protocol === "file:") {
@@ -171,6 +172,7 @@
     const route = !!active || tripRouteOn;
     map.getContainer().classList.toggle("hide-stops", route && map.getZoom() < LINE_STOPS_ZOOM);
     map.getContainer().classList.toggle("dim-stops", tripRouteOn);
+    drawNums();   // los números de portal se ocultan con una línea o un viaje dibujados
   }
 
   map.on("zoomend", () => {
@@ -319,15 +321,27 @@
         (tokens.length && tokens.every((tk) => norm(lines[code].nombre).includes(tk)) && compact.length >= 3);
     });
     const shown = res.slice(0, 60);
+    // Direcciones (calle y número), a partir de 3 letras; el diccionario se descarga la primera vez.
+    const addr = [];
+    if (/\p{L}.*\p{L}.*\p{L}/u.test(q)) {
+      if (!dirData) ensureDir().then(() => { if ($("#q").value.trim() === q && mode === "search") renderSearch(q); }).catch(() => {});
+      else {
+        const p = dirData.parse(q);
+        const found = dirData.matchStreets(p.street, p.num ? 3 : 4);
+        found.forEach((st) => addr.push(addrItem(st, p.num, tokens)));
+        if (p.num && found[0]) dirData.numbersStarting(found[0], p.num, 3).forEach((n) => addr.push(addrItem(found[0], n, tokens)));
+      }
+    }
     const items = [];
     if (lineRes.length) {
       items.push(groupHead(t("res_lines")));
       lineRes.forEach((code) => items.push(lineItem(code, highlight(lines[code].nombre, tokens))));
-      if (shown.length) items.push(groupHead(t("res_stops")));
     }
+    if (addr.length) items.push(groupHead(t("res_addr")), ...addr);
+    if ((lineRes.length || addr.length) && shown.length) items.push(groupHead(t("res_stops")));
     shown.forEach((s) => items.push(stopItem(s, { nameHtml: highlight(s.name, tokens), dist: me ? haversine(me, s.ll) : null })));
     fillList(items,
-      res.length || lineRes.length ? (res.length > shown.length ? t("many", { n: res.length }) : "") : t("no_results", { q }));
+      res.length || lineRes.length || addr.length ? (res.length > shown.length ? t("many", { n: res.length }) : "") : t("no_results", { q }));
   }
 
   function lineItem(code, nameHtml) {
@@ -429,6 +443,7 @@
     if (!stops.length) return;
     const h = decodeURIComponent(location.hash.slice(1));
     if (h === "ir" || h.startsWith("ir/")) { showTrip(h); return; }
+    if (h.startsWith("dir/") && showPlace(h.slice(4))) return;
     if (h.startsWith("linea/")) {
       // #linea/18A o #linea/18A/5660 (abierta desde esa parada: se ve el próximo bus hacia ella).
       const [code, from] = h.slice(6).split("/");
@@ -445,9 +460,10 @@
   addEventListener("popstate", route);
 
   function showView(id) {
-    ["home", "line", "stop", "trip"].forEach((v) => ($(`#${v}`).hidden = v !== id));
+    ["home", "line", "stop", "trip", "place"].forEach((v) => ($(`#${v}`).hidden = v !== id));
     panel.dataset.view = id;
     if (id !== "trip") leaveTrip();
+    if (id !== "place") leavePlace();
   }
 
   function leaveStop() {
@@ -876,6 +892,114 @@
       </${tag}>`;
     }).join("");
   }
+
+  // ---------- Dirección (calle y número) ----------
+  // En la dirección web: #dir/<lat,lon>~<Calle, número>[~a] ("~a": posición aproximada).
+  const PIN_SVG = '<svg viewBox="0 0 34 44" aria-hidden="true"><path d="M17 42s-14-13.2-14-24.5a14 14 0 0 1 28 0C31 28.8 17 42 17 42z" fill="#D3202F" stroke="#fff" stroke-width="2.5"/><circle cx="17" cy="17.5" r="5" fill="#fff"/></svg>';
+  const placeIcon = L.divIcon({ className: "place-pin", html: PIN_SVG, iconSize: [34, 44], iconAnchor: [17, 42] });
+  let placeMarker = null;
+  let place = null;   // { ll, label, approx }
+
+  const placeToken = (p) => `dir/${fmtLL(p.ll)}~${encodeURIComponent(p.label)}${p.approx ? "~a" : ""}`;
+  function openPlace(p, { replace = false } = {}) { navigate(placeToken(p), { replace }); }
+
+  function showPlace(tok) {
+    const parts = location.hash.slice(1).split("/").slice(1).join("/").split("~").map((x) => { try { return decodeURIComponent(x); } catch { return x; } });
+    const m = (parts[0] || "").match(/^(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$/);
+    if (!m || !parts[1]) return false;
+    leaveStop();
+    clearLine();
+    const next = { ll: [Number(m[1]), Number(m[2])], label: parts[1], approx: parts[2] === "a" };
+    const same = place && placeToken(place) === placeToken(next);   // p. ej., al cambiar de idioma
+    showView("place");
+    place = next;
+    document.title = `${place.label} · Próximo Vitrasa`;
+    $("#place-name").textContent = place.label;
+    $("#place-meta").textContent = place.approx ? t("addr_approx") : /\d/.test(place.label) ? t("addr_exact") : t("addr_whole");
+    $("#place-dist").textContent = me ? ` · ${fmtDist(haversine(me, place.ll))}` : "";
+    $("#place-stops").replaceChildren(...nearest(place.ll, 6).map(({ s, d }) => stopItem(s, { dist: d, sub: t("walk", { n: walkMin(d * 1.25) }) })));
+    if (!placeMarker) placeMarker = L.marker(place.ll, { icon: placeIcon, keyboard: false, interactive: false, zIndexOffset: 1200 });
+    placeMarker.setLatLng(place.ll).addTo(map);
+    if (!same) {
+      if (!isDesktop()) panel.dataset.state = "stop";
+      focusOn(place.ll, Math.max(map.getZoom(), NUM_ZOOM));
+    }
+    drawNums();
+    return true;
+  }
+  function leavePlace() {
+    if (!place) return;
+    place = null;
+    if (placeMarker) placeMarker.remove();
+    drawNums();
+  }
+  $("#place-back").addEventListener("click", goBack);
+  $("#place-trip").addEventListener("click", () => { if (place) openTrip({ kind: "addr", ll: place.ll, label: place.label, approx: place.approx }); });
+
+  // ---------- Números de portal en el mapa ----------
+  // Con zoom alto se dibujan los números de portal que el mapa base no trae (los del Concello).
+  // Van en un lienzo propio; solo los que caen en pantalla y sin que se pisen.
+  // Tocar uno abre esa dirección (o, en "Cómo llegar", la elige como origen o destino).
+  const NUM_ZOOM = 18;
+  map.createPane("nums").style.zIndex = 450;   // encima de los trazados, debajo de las paradas
+  map.getPane("nums").style.pointerEvents = "none";
+  const numCanvas = L.DomUtil.create("canvas", "num-canvas", map.getPane("nums"));
+  let numHits = [];   // { x, y, w, h, pt } en coordenadas del mapa (contenedor)
+  const numsOn = () => map.getZoom() >= NUM_ZOOM && !tripRouteOn && !active;
+
+  function drawNums() {
+    numHits = [];
+    const ctx = numCanvas.getContext("2d");
+    const size = map.getSize(), dpr = window.devicePixelRatio || 1;
+    if (numCanvas.width !== size.x * dpr || numCanvas.height !== size.y * dpr) {
+      numCanvas.width = size.x * dpr; numCanvas.height = size.y * dpr;
+      numCanvas.style.width = `${size.x}px`; numCanvas.style.height = `${size.y}px`;
+    }
+    L.DomUtil.setPosition(numCanvas, map.containerPointToLayerPoint([0, 0]));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, size.x, size.y);
+    if (!numsOn()) return;
+    if (!dirData) { ensureDir().then(drawNums).catch(() => {}); return; }
+    const b = map.getBounds().pad(0.05);
+    const pts = dirData.portalsIn(b.getSouth(), b.getWest(), b.getNorth(), b.getEast());
+    ctx.font = `600 ${map.getZoom() >= 19 ? 13 : 12}px Barlow, system-ui, sans-serif`;
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(255,255,255,.95)";
+    const boxes = [];
+    const selKey = place && /\d/.test(place.label) ? place.label : null;
+    for (const pt of pts) {
+      const p = map.latLngToContainerPoint(pt.ll);
+      const w = ctx.measureText(pt.n).width + 4, h = 14;
+      const box = { x: p.x - w / 2, y: p.y - h / 2, w, h, pt };
+      numHits.push(box);
+      if (pt.base) continue;   // ya lo pinta el mapa base: se puede tocar, pero no se repite
+      if (boxes.some((o) => box.x < o.x + o.w && o.x < box.x + box.w && box.y < o.y + o.h && o.y < box.y + box.h)) continue;
+      boxes.push(box);
+      const sel = selKey === `${pt.s.name}, ${pt.n}`;
+      ctx.fillStyle = sel ? "#D3202F" : "#5B4F45";
+      ctx.strokeText(pt.n, p.x, p.y);
+      ctx.fillText(pt.n, p.x, p.y);
+    }
+  }
+  // Durante el zoom animado el lienzo se esconde; se vuelve a dibujar al terminar.
+  map.on("zoomstart", () => { numCanvas.style.visibility = "hidden"; });
+  map.on("moveend zoomend resize", () => { numCanvas.style.visibility = ""; drawNums(); });
+
+  // Portal tocado: el número más cercano al toque (a menos de 16 px).
+  function numAt(cp) {
+    if (!numsOn()) return null;
+    let best = null, bd = 16;
+    for (const b of numHits) {
+      const d = Math.hypot(cp.x - (b.x + b.w / 2), cp.y - (b.y + b.h / 2));
+      if (d < bd) { bd = d; best = b.pt; }
+    }
+    return best;
+  }
+  map.on("click", (e) => {
+    if (tripOpen()) return;   // en "Cómo llegar" lo atiende su propio manejador
+    const pt = numAt(e.containerPoint);
+    if (pt) openPlace({ ll: pt.ll, label: `${pt.s.name}, ${pt.n}`, approx: false }, { replace: panel.dataset.view === "place" });
+  });
 
   // ---------- Cómo llegar (de A a B; por ahora, a pie) ----------
   // Cada extremo es { kind: "stop" | "me" | "map", ll: [lat, lon], id? }. En la dirección: #ir/<A>/<B>,
@@ -1460,7 +1584,10 @@
 
   map.on("click", (e) => {
     if (!tripOpen()) return;
-    setEnd(targetEnd(), { kind: "map", ll: [e.latlng.lat, e.latlng.lng] });
+    // Si se toca un número de portal, se elige esa dirección; si no, el punto del mapa.
+    const pt = numAt(e.containerPoint);
+    if (pt) setEnd(targetEnd(), { kind: "addr", ll: pt.ll, label: `${pt.s.name}, ${pt.n}` });
+    else setEnd(targetEnd(), { kind: "map", ll: [e.latlng.lat, e.latlng.lng] });
   });
 
   ["a", "b"].forEach((w) => {
@@ -1588,7 +1715,25 @@
   $("#panel").addEventListener("click", (e) => {
     const stop = e.target.closest("button[data-id]");
     // Abrir un resultado anula la búsqueda que estaba a punto de ejecutarse.
-    if (stop || e.target.closest("button[data-line]")) clearTimeout(qTimer);
+    if (stop || e.target.closest("button[data-line], button[data-addr]")) clearTimeout(qTimer);
+    // Dirección del buscador: sin número, se completa "Calle, " para escribirlo; con número, se abre.
+    const ad = e.target.closest("#list button[data-addr]");
+    if (ad && dirData) {
+      const st = dirData.streets[Number(ad.dataset.addr)];
+      if (ad.dataset.fill) {
+        const q = $("#q");
+        q.value = `${st.name}, `;
+        q.focus();
+        q.setSelectionRange(q.value.length, q.value.length);
+        render();
+        return;
+      }
+      const num = ad.dataset.num;
+      const r = dirData.resolve(st, num);
+      $("#q").blur();
+      openPlace({ ll: r.ll, label: num ? `${st.name}, ${num}` : st.name, approx: !r.exact && !!num });
+      return;
+    }
     if (stop) { $("#q").blur(); navigate(stop.dataset.id); return; }
     const line = e.target.closest("button[data-line]");
     if (line) {
@@ -1633,7 +1778,7 @@
       // Resultados al día con lo escrito antes de abrir el primero.
       clearTimeout(qTimer);
       if (!location.hash) render();
-      const first = $("#list button[data-id], #list button[data-line]");
+      const first = $("#list button[data-id], #list button[data-line], #list button[data-addr]");
       if (first) first.click();
     }
     if (e.key === "Escape") { e.target.value = ""; render(); }
@@ -1705,6 +1850,7 @@
       if (lastArrivals) renderArrivals(lastArrivals);
       showUpdated();
     } else if (active) showLine(active.code, active.from);
+    else if (place) { document.title = "Próximo Vitrasa"; showPlace(); }
     else if (tripOpen()) {
       renderTripFields();
       if (lastTrip) renderTripResult(); else computeTrip(false);

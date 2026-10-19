@@ -100,6 +100,25 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 
 .view { display: flex; flex-direction: column; min-height: 0; flex: 1; margin-top: 12px; }
 
+/* ---------- Dirección (calle y número) ---------- */
+.place-trip {
+  display: flex; align-items: center; justify-content: center; gap: 8px; flex: none;
+  height: 46px; margin-top: 12px; border: 0; border-radius: 12px; background: var(--ink); color: var(--paper);
+  font: 700 18px/1 var(--cond); letter-spacing: .02em;
+}
+.place-trip svg { width: 22px; height: 22px; }
+.place-trip:hover { filter: brightness(1.15); }
+.group-label { margin: 16px 0 0; padding-bottom: 6px; font-size: 14px; font-weight: 600; color: var(--granite); border-bottom: 1px solid var(--line); flex: none; }
+.place-pin { filter: drop-shadow(0 2px 3px rgba(19, 34, 44, .45)); }
+.place-pin svg { display: block; width: 34px; height: 44px; }
+/* Números de portal dibujados sobre el mapa (zoom alto) */
+.num-label {
+  font: 600 12px/1 var(--sans); color: #4A3E33; white-space: nowrap; cursor: pointer;
+  text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 3px #fff;
+}
+.num-label.sel { color: #D3202F; font-weight: 700; }
+.hide-nums .num-label { display: none; }
+
 /* ---------- Cómo llegar ---------- */
 .trip-btn {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
