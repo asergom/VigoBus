@@ -1,0 +1,1300 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<feed xmlns="http://www.w3.org/2005/Atom" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:georss="http://www.georss.org/georss"  xmlns:inspire_dls = "http://inspire.ec.europa.eu/schemas/inspire_dls/1.0" xml:lang="en"> 
+    <!-- feed title -->
+    <title>Download service of Addresses. Territorial Office 36 - Pontevedra</title>
+    <!-- feed subtitle -->
+    <subtitle>INSPIRE Addresses. Spanish Directorate General for Cadastre</subtitle>
+    <!-- link to download service ISO 19139 metadata  -->
+    <link href="http://www.catastro.hacienda.gob.es/INSPIRE/Addresses/ES.SDGC.AD.DownloadServ.MD.xml" rel="describedby" type="application/vnd.iso.19139+xml"/>
+    <!-- self-referencing link to this feed -->
+    <link href="http://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/ES.SDGC.AD.atom_36.xml" rel="self" type="application/atom+xml" hreflang="en" title="This document"/>
+    <link href="http://www.catastro.hacienda.gob.es/" rel="alternate" type="text/html" hreflang="en" title="Cadastral web page"/>
+    <!-- identifier -->
+    <id>http://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/ES.SDGC.AD.atom_36.xml</id>
+    <!-- rights, access restrictions -->
+    <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+    <!-- date/time of last update of feed-->
+    <updated>2026-08-21T00:00:00Z</updated>
+    <!-- author info -->
+    <author>
+        <name>productosyservicios</name>
+        <email>productosyservicios@catastro.hacienda.gob.es</email>
+    </author>
+    <!-- pre-defined dataset -->
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36009-A CANIZA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36009-A CANIZA/A.ES.SDGC.AD.36009.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36009-A CANIZA/A.ES.SDGC.AD.36009.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36017-A ESTRADA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36017-A ESTRADA/A.ES.SDGC.AD.36017.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36017-A ESTRADA/A.ES.SDGC.AD.36017.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36023-A GUARDA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36023-A GUARDA/A.ES.SDGC.AD.36023.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36023-A GUARDA/A.ES.SDGC.AD.36023.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36062-A ILLA DE AROUSA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36062-A ILLA DE AROUSA/A.ES.SDGC.AD.36062.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36062-A ILLA DE AROUSA/A.ES.SDGC.AD.36062.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36025-A LAMA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36025-A LAMA/A.ES.SDGC.AD.36025.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36025-A LAMA/A.ES.SDGC.AD.36025.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36020-AGOLADA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36020-AGOLADA/A.ES.SDGC.AD.36020.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36020-AGOLADA/A.ES.SDGC.AD.36020.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36001-ARBO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36001-ARBO/A.ES.SDGC.AD.36001.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36001-ARBO/A.ES.SDGC.AD.36001.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36034-AS NEVES addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36034-AS NEVES/A.ES.SDGC.AD.36034.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36034-AS NEVES/A.ES.SDGC.AD.36034.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36002-BARRO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36002-BARRO/A.ES.SDGC.AD.36002.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36002-BARRO/A.ES.SDGC.AD.36002.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36004-BUEU addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36004-BUEU/A.ES.SDGC.AD.36004.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36004-BUEU/A.ES.SDGC.AD.36004.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36005-CALDAS DE REIS addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36005-CALDAS DE REIS/A.ES.SDGC.AD.36005.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36005-CALDAS DE REIS/A.ES.SDGC.AD.36005.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36006-CAMBADOS addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36006-CAMBADOS/A.ES.SDGC.AD.36006.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36006-CAMBADOS/A.ES.SDGC.AD.36006.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36008-CANGAS DE MORRAZO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36008-CANGAS DE MORRAZO/A.ES.SDGC.AD.36008.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36008-CANGAS DE MORRAZO/A.ES.SDGC.AD.36008.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36010-CATOIRA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36010-CATOIRA/A.ES.SDGC.AD.36010.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36010-CATOIRA/A.ES.SDGC.AD.36010.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36011-CERDEDO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36011-CERDEDO/A.ES.SDGC.AD.36011.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36011-CERDEDO/A.ES.SDGC.AD.36011.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36012-COTOBADE addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36012-COTOBADE/A.ES.SDGC.AD.36012.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36012-COTOBADE/A.ES.SDGC.AD.36012.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36013-COVELO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36013-COVELO/A.ES.SDGC.AD.36013.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36013-COVELO/A.ES.SDGC.AD.36013.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36014-CRECENTE addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36014-CRECENTE/A.ES.SDGC.AD.36014.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36014-CRECENTE/A.ES.SDGC.AD.36014.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36015-CUNTIS addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36015-CUNTIS/A.ES.SDGC.AD.36015.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36015-CUNTIS/A.ES.SDGC.AD.36015.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36016-DOZON addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36016-DOZON/A.ES.SDGC.AD.36016.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36016-DOZON/A.ES.SDGC.AD.36016.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36018-FORCAREI addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36018-FORCAREI/A.ES.SDGC.AD.36018.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36018-FORCAREI/A.ES.SDGC.AD.36018.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36019-FORNELOS DE MONTES addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36019-FORNELOS DE MONTES/A.ES.SDGC.AD.36019.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36019-FORNELOS DE MONTES/A.ES.SDGC.AD.36019.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36024-LALIN addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36024-LALIN/A.ES.SDGC.AD.36024.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36024-LALIN/A.ES.SDGC.AD.36024.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36026-MARIN addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36026-MARIN/A.ES.SDGC.AD.36026.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36026-MARIN/A.ES.SDGC.AD.36026.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36027-MEAÑO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36027-MEAÑO/A.ES.SDGC.AD.36027.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36027-MEAÑO/A.ES.SDGC.AD.36027.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36028-MEIS addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36028-MEIS/A.ES.SDGC.AD.36028.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36028-MEIS/A.ES.SDGC.AD.36028.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36029-MOAÑA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36029-MOAÑA/A.ES.SDGC.AD.36029.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36029-MOAÑA/A.ES.SDGC.AD.36029.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36030-MONDARIZ addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36030-MONDARIZ/A.ES.SDGC.AD.36030.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36030-MONDARIZ/A.ES.SDGC.AD.36030.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36031-MONDARIZ BALNEARIO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36031-MONDARIZ BALNEARIO/A.ES.SDGC.AD.36031.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36031-MONDARIZ BALNEARIO/A.ES.SDGC.AD.36031.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36032-MORAÑA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36032-MORAÑA/A.ES.SDGC.AD.36032.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36032-MORAÑA/A.ES.SDGC.AD.36032.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36033-MOS addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36033-MOS/A.ES.SDGC.AD.36033.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36033-MOS/A.ES.SDGC.AD.36033.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36007-O CAMPO LAMEIRO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36007-O CAMPO LAMEIRO/A.ES.SDGC.AD.36007.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36007-O CAMPO LAMEIRO/A.ES.SDGC.AD.36007.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36022-O GROVE addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36022-O GROVE/A.ES.SDGC.AD.36022.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36022-O GROVE/A.ES.SDGC.AD.36022.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36039-O PORRIÑO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36039-O PORRIÑO/A.ES.SDGC.AD.36039.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36039-O PORRIÑO/A.ES.SDGC.AD.36039.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36048-O ROSAL addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36048-O ROSAL/A.ES.SDGC.AD.36048.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36048-O ROSAL/A.ES.SDGC.AD.36048.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36036-OIA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36036-OIA/A.ES.SDGC.AD.36036.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36036-OIA/A.ES.SDGC.AD.36036.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36037-PAZOS DE BORBEN addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36037-PAZOS DE BORBEN/A.ES.SDGC.AD.36037.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36037-PAZOS DE BORBEN/A.ES.SDGC.AD.36037.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36041-POIO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36041-POIO/A.ES.SDGC.AD.36041.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36041-POIO/A.ES.SDGC.AD.36041.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36043-PONTE CALDELAS addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36043-PONTE CALDELAS/A.ES.SDGC.AD.36043.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36043-PONTE CALDELAS/A.ES.SDGC.AD.36043.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36042-PONTEAREAS addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36042-PONTEAREAS/A.ES.SDGC.AD.36042.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36042-PONTEAREAS/A.ES.SDGC.AD.36042.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36044-PONTECESURES addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36044-PONTECESURES/A.ES.SDGC.AD.36044.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36044-PONTECESURES/A.ES.SDGC.AD.36044.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36900-PONTEVEDRA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36900-PONTEVEDRA/A.ES.SDGC.AD.36900.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36900-PONTEVEDRA/A.ES.SDGC.AD.36900.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36040-PORTAS addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36040-PORTAS/A.ES.SDGC.AD.36040.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36040-PORTAS/A.ES.SDGC.AD.36040.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36045-REDONDELA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36045-REDONDELA/A.ES.SDGC.AD.36045.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36045-REDONDELA/A.ES.SDGC.AD.36045.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36046-RIBADUMIA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36046-RIBADUMIA/A.ES.SDGC.AD.36046.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36046-RIBADUMIA/A.ES.SDGC.AD.36046.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36047-RODEIRO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36047-RODEIRO/A.ES.SDGC.AD.36047.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36047-RODEIRO/A.ES.SDGC.AD.36047.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36049-SALCEDA DE CASELAS addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36049-SALCEDA DE CASELAS/A.ES.SDGC.AD.36049.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36049-SALCEDA DE CASELAS/A.ES.SDGC.AD.36049.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36050-SALVATERRA DE MIÑO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36050-SALVATERRA DE MIÑO/A.ES.SDGC.AD.36050.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36050-SALVATERRA DE MIÑO/A.ES.SDGC.AD.36050.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36051-SANXENXO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36051-SANXENXO/A.ES.SDGC.AD.36051.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36051-SANXENXO/A.ES.SDGC.AD.36051.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36052-SILLEDA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36052-SILLEDA/A.ES.SDGC.AD.36052.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36052-SILLEDA/A.ES.SDGC.AD.36052.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36053-SOUTOMAIOR addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36053-SOUTOMAIOR/A.ES.SDGC.AD.36053.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36053-SOUTOMAIOR/A.ES.SDGC.AD.36053.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36054-TOMIÑO addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36054-TOMIÑO/A.ES.SDGC.AD.36054.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36054-TOMIÑO/A.ES.SDGC.AD.36054.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36055-TUI addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36055-TUI/A.ES.SDGC.AD.36055.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36055-TUI/A.ES.SDGC.AD.36055.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36056-VALGA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36056-VALGA/A.ES.SDGC.AD.36056.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36056-VALGA/A.ES.SDGC.AD.36056.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36059-VILA DE CRUCES addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36059-VILA DE CRUCES/A.ES.SDGC.AD.36059.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36059-VILA DE CRUCES/A.ES.SDGC.AD.36059.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36058-VILABOA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36058-VILABOA/A.ES.SDGC.AD.36058.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36058-VILABOA/A.ES.SDGC.AD.36058.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36060-VILAGARCIA DE AROUSA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36060-VILAGARCIA DE AROUSA/A.ES.SDGC.AD.36060.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36060-VILAGARCIA DE AROUSA/A.ES.SDGC.AD.36060.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+    <entry>
+		<!-- title for pre-defined dataset -->
+		<title> 36061-VILANOVA DE AROUSA addresses</title>
+		<!-- Spatial Dataset Unique Resourse Identifier for this dataset-->
+		<inspire_dls:spatial_dataset_identifier_code>AD</inspire_dls:spatial_dataset_identifier_code>
+		<inspire_dls:spatial_dataset_identifier_namespace>SDGC</inspire_dls:spatial_dataset_identifier_namespace>
+		<content type="xhtml" xml:lang="en">
+		  <div xmlns="http://www.w3.org/1999/xhtml">
+		  </div>
+		</content>
+        <link rel="enclosure" href="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36061-VILANOVA DE AROUSA/A.ES.SDGC.AD.36061.zip" type="application/atom+xml" hreflang="en" />
+        <!-- identifier for pre-defined dataset -->
+        <id>https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/36061-VILANOVA DE AROUSA/A.ES.SDGC.AD.36061.zip</id>
+        <!-- rights, access info for pre-defined dataset -->
+        <rights>This service can be used free of charge in every instance,  as long as that the D. G. of the Cadastre (Ministry of Finance)  is mentioned as author and owner of the information</rights>
+        <!-- last date/time pre-defined dataset was updated -->
+        <updated>2026-08-21T00:00:00Z</updated>
+        <!-- optional GeoRSS-Simple bounding box of the pre-defined dataset. Must be lat lon -->
+        <georss:polygon>0 0 0 0 0 0 0 0 0 0</georss:polygon>
+        <!-- INSPIRE Spatial Object Types contained in the pre-defined dataset -->
+        <category term="http://www.opengis.net/def/crs/EPSG/0/25829"  label="ETRS89"/>
+    </entry>
+</feed>
