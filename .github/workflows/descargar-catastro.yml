@@ -1,0 +1,34 @@
+# Workflow TEMPORAL (rama datos-catastro): descarga las direcciones INSPIRE del Catastro
+# de Vigo, Redondela, Mos y O Porriño y las guarda en fuentes/catastro/ de esta rama.
+name: Descargar direcciones del Catastro (temporal)
+on:
+  push:
+    branches: [datos-catastro]
+    paths: [.github/workflows/descargar-catastro.yml]
+permissions:
+  contents: write
+jobs:
+  descargar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Descargar
+        run: |
+          mkdir -p fuentes/catastro
+          for m in 36057-VIGO 36045-REDONDELA 36033-MOS 36039-PORRINO_O; do
+            cod=${m%%-*}
+            url="https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/$m/A.ES.SDGC.AD.$cod.zip"
+            echo "== $url"
+            curl -sSL --fail --retry 3 -m 300 -o fuentes/catastro/AD.$cod.zip "$url" || echo "FALLO $m"
+          done
+          # Índice ATOM de la provincia, por si algún nombre de carpeta no coincide.
+          curl -sSL --fail -m 120 -o fuentes/catastro/atom_36.xml https://www.catastro.hacienda.gob.es/INSPIRE/Addresses/36/ES.SDGC.AD.atom_36.xml || echo "sin atom"
+          ls -la fuentes/catastro
+          for f in fuentes/catastro/*.zip; do unzip -l "$f" || true; done
+      - name: Guardar en la rama
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add fuentes
+          git commit -m "Direcciones del Catastro descargadas ($(date -u +%Y-%m-%d))" || exit 0
+          git push
