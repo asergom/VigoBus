@@ -4,8 +4,15 @@
 Entradas:
   data/osm/vias.json.gz          OpenStreetMap: vías (de ahí salen las calles con su nombre y posición)
   data/osm/direcciones.json.gz   OpenStreetMap: portales, nwr["addr:housenumber"], con "out center tags"
-  data/concello/numeracion.csv.gz  Concello de Vigo: numeración del callejero
+  data/concello/numeracion.csv.gz  Concello de Vigo: numeración del callejero (portales de Vigo)
                                  (https://datos.vigo.org/data/transporte/calles-numeracion.csv, licencia ODC-BY)
+  data/catastro/portales.csv.gz  Catastro: portales de Redondela, Mos y O Porriño (tools/catastro_portales.py, CC-BY 4.0)
+  data/paradas.geojson           paradas: solo se guardan los portales a menos de MAX_PARADA de alguna
+
+Calles: de OpenStreetMap. Portales: del Concello (Vigo) y del Catastro (municipios vecinos); los de
+OpenStreetMap solo donde no hay ninguno de esos dos (zonas sin datos oficiales). Cada portal oficial va a
+la calle de OSM con el mismo nombre más cercana (a menos de CERCA metros); si no hay ninguna, se crea una
+calle con el nombre oficial y sin trazado (su punto central es el de sus portales).
 
     python3 tools/actualizar_direcciones.py
 
@@ -35,43 +42,62 @@ RAIZ = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VIAS = os.path.join(RAIZ, "data/osm/vias.json.gz")
 PORTALES = os.path.join(RAIZ, "data/osm/direcciones.json.gz")
 CONCELLO = os.path.join(RAIZ, "data/concello/numeracion.csv.gz")
+CATASTRO = os.path.join(RAIZ, "data/catastro/portales.csv.gz")
+PARADAS = os.path.join(RAIZ, "data/paradas.geojson")
 SALIDA = os.path.join(RAIZ, "data/direcciones.json")
 JUNTAS = 500  # metros: tramos con el mismo nombre a menos de esto son la misma calle
-CERCA = 400  # metros: un portal del Concello va a la calle de OSM con su nombre si está a menos de esto
+CERCA = 400  # metros: un portal oficial va a la calle de OSM con su nombre si está a menos de esto
+MAX_PARADA = 2500  # metros: portales más lejos de cualquier parada no hacen falta
+CELDA = 0.0015  # grados (~150 m): donde hay portales oficiales no se usan los de OSM (celda y vecinas)
 
-# Prueba de concepto: los portales del Concello se usan solo en la zona de Avenida das Camelias
-# (y en ella sustituyen a los de OSM). Fuera de la zona sigue todo como antes.
-ZONA = (42.2200, 42.2355, -8.7345, -8.7260)  # lat mín, lat máx, lon mín, lon máx
-
-
-def en_zona(ll):
-    return ZONA[0] <= ll[0] <= ZONA[1] and ZONA[2] <= ll[1] <= ZONA[3]
-
-
-# Tipo de vía del Concello → palabra completa (en gallego, como rotula el Concello).
+# Tipo de vía del Concello y del Catastro → palabra completa (en gallego, como se rotula).
 TIPOS = {"RUA": "Rúa", "AVDA": "Avenida", "CMÑO": "Camiño", "CTRA": "Estrada", "ESTDA": "Estrada",
          "TRVA": "Travesía", "BDA": "Baixada", "SBIDA": "Subida", "PRAZA": "Praza", "BARRO": "Barrio",
-         "CXON": "Calexón", "PASEO": "Paseo"}
+         "CXON": "Calexón", "PASEO": "Paseo",
+         # Catastro
+         "RU": "Rúa", "CL": "Rúa", "AV": "Avenida", "CM": "Camiño", "LG": "Lugar", "ES": "Estrada", "CR": "Estrada",
+         "PL": "Polígono", "BO": "Barrio", "PS": "Paseo", "TR": "Travesía", "SU": "Subida", "PZ": "Praza",
+         "BJ": "Baixada", "CJ": "Calexón", "GL": "Glorieta", "RD": "Rolda", "AL": "Alameda", "PJ": "Pasaxe"}
+# Lugares y barrios: su nombre es el del núcleo, no el de una calle; no se juntan con calles de OSM.
+SIN_CALLE = {"LG", "BO", "BARRO", "PL"}
 MENORES = {"de", "do", "da", "dos", "das", "del", "la", "el", "los", "las", "e", "y", "o", "a", "os", "as"}
 
 
 def nombre_concello(tipo, nombre):
-    """"CARME (DO)" de tipo RUA → "Rúa do Carme"; "Padre Lorenzo (carmelita)" → "Padre Lorenzo (Carmelita)"."""
+    """"CARME (DO)" de tipo RUA → "Rúa do Carme"; "Padre Lorenzo (carmelita)" → "Padre Lorenzo (Carmelita)";
+    "REDONDELA (DE)-CHAPELA" de tipo AV → "Avenida de Redondela (Chapela)" (tras el guion, la parroquia)."""
     import re
     nombre = nombre.strip()
     art = ""
+    extra = ""
+    if "-" in nombre:
+        base, _, resto = nombre.partition("-")
+        if base.strip() and resto.strip() and not re.search(r"\d", resto):
+            nombre, extra = base.strip(), resto.strip()
     m = re.match(r"^(.*?)\s*\((\w+)\)$", nombre)
     if m and m.group(2).lower() in MENORES:
         nombre, art = m.group(1), m.group(2).lower()
     pal = nombre.split()
-    pal = [p.lower() if i and p.lower() in MENORES else ("(" + p[1:2].upper() + p[2:] if p.startswith("(") else p[:1].upper() + p[1:])
+    if nombre.isupper():  # el Catastro escribe en mayúsculas
+        pal = [p.lower() for p in pal]
+    lugar = tipo in SIN_CALLE  # en un lugar el artículo es parte del nombre: "Lugar A Pereira"
+    if tipo in TIPOS and pal and clave(pal[0]) == clave(TIPOS[tipo]):
+        pal = pal[1:]  # "Camiño Camiño Hermida" → "Camiño Hermida"
+    pal = [p.lower() if i and p.lower() in MENORES and not lugar else ("(" + p[1:2].upper() + p[2:] if p.startswith("(") else p[:1].upper() + p[1:])
            for i, p in enumerate(pal)]
+    if extra:
+        extra = " ".join(w.lower() if i and w.lower() in MENORES else w[:1].upper() + w[1:].lower() for i, w in enumerate(extra.split()))
+        pal.append(f"({extra})")
+    if art and lugar:
+        art = art.capitalize()
     return " ".join(([TIPOS[tipo]] if tipo in TIPOS else []) + ([art] if art else []) + pal)
 
 
 # Abreviaturas del Concello que no son el principio de la palabra completa.
 ABREV = {"dr": ("doutor", "doctor"), "sta": ("santa",), "sto": ("santo",), "sr": ("señor", "senor"),
-         "pza": ("praza",), "avda": ("avenida",)}
+         "pza": ("praza",), "avda": ("avenida",), "mtnez": ("martinez",), "mtez": ("martinez",),
+         "fdez": ("fernandez",), "glez": ("gonzalez",), "rguez": ("rodriguez",), "gral": ("general",),
+         "sn": ("san",), "pdre": ("padre",), "nra": ("nosa", "nuestra"), "sra": ("señora", "senora")}
 
 
 def casa_nombre(concello, osm):
@@ -185,10 +211,87 @@ def main():
                 break
             acc += s
 
-    # Portales: a la calle con su nombre más cercana; si no hay ninguna, se crea con ellos.
+    # ---- Portales oficiales: Concello (Vigo) y Catastro (municipios vecinos) ----
+    paradas = [tuple(reversed(f["geometry"]["coordinates"])) for f in json.load(open(PARADAS, encoding="utf-8"))["features"]]
+    celdas_paradas = defaultdict(list)
+    for q in paradas:
+        celdas_paradas[(int(q[0] / 0.01), int(q[1] / 0.01))].append(q)
+
+    def cerca_de_parada(ll):
+        a, b = int(ll[0] / 0.01), int(ll[1] / 0.01)
+        return any(dist(ll, q) < MAX_PARADA for da in (-3, -2, -1, 0, 1, 2, 3) for db in (-3, -2, -1, 0, 1, 2, 3)
+                   for q in celdas_paradas.get((a + da, b + db), ()))
+
+    grupos_of = defaultdict(list)  # (fuente, codvia) → [(num, ll)]
+    nombres_of = {}
+    lejos = 0
+    for fuente, ruta in (("concello", CONCELLO), ("catastro", CATASTRO)):
+        with gzip.open(ruta, "rt", encoding="utf-8") as f:
+            for r in csv.DictReader(f):
+                num = r["num"].strip()
+                if not num:
+                    continue
+                ll = (float(r["lat"]), float(r["lon"]))
+                if not cerca_de_parada(ll):
+                    lejos += 1
+                    continue
+                k = (fuente, r["codvia"])
+                grupos_of[k].append((num, ll))
+                nombres_of[k] = (r["tipovia"], nombre_concello(r["tipovia"], r["nombre"]))
+    oficiales = sum(len(v) for v in grupos_of.values())
+    cubierto = set()
+    for lst in grupos_of.values():
+        for _, ll in lst:
+            a, b = int(ll[0] / CELDA), int(ll[1] / CELDA)
+            cubierto.update((a + da, b + db) for da in (-1, 0, 1) for db in (-1, 0, 1))
+
+    def flat(a, b):  # distancia aproximada en metros (suficiente a estas escalas)
+        return math.hypot((a[0] - b[0]) * 111320, (a[1] - b[1]) * 82600)
+
+    for c in calles:
+        pts = [p for tr in c["tramos"] for p in tr]
+        c["caja"] = (min(p[0] for p in pts), max(p[0] for p in pts), min(p[1] for p in pts), max(p[1] for p in pts))
+        c["pts"] = pts
+    pornucleo = defaultdict(list)
+    for c in calles:
+        pornucleo[nucleo(c["nombre"])].append(c)
+    m_lat, m_lon = CERCA / 111320, CERCA / 82600
+
+    sin_calle = []
+    asignados = defaultdict(int)  # cómo se casó cada portal oficial
+    for k, lst in grupos_of.items():
+        tipo, nombre = nombres_of[k]
+        caja = (min(ll[0] for _, ll in lst) - m_lat, max(ll[0] for _, ll in lst) + m_lat,
+                min(ll[1] for _, ll in lst) - m_lon, max(ll[1] for _, ll in lst) + m_lon)
+        toca = lambda c: not (c["caja"][1] < caja[0] or c["caja"][0] > caja[1] or c["caja"][3] < caja[2] or c["caja"][2] > caja[3])
+        cands, como = [], ""
+        if tipo not in SIN_CALLE:
+            cands, como = [c for c in pornucleo.get(nucleo(nombre), []) if toca(c)], "nombre"
+            if not cands:
+                cands, como = [c for c in calles if "tramos" in c and toca(c) and casa_nombre(nombre, c["nombre"])], "parecido"
+        sueltos = []
+        for num, ll in lst:
+            mejor = min(((min(flat(ll, p) for p in c["pts"]), id(c), c) for c in cands), default=None)
+            if mejor and mejor[0] < CERCA:
+                mejor[2]["portales"].append((num, ll))
+                asignados[como] += 1
+            else:
+                sueltos.append((num, ll))
+        if sueltos:
+            sin_calle.append((nombre, sueltos))
+            asignados["sin calle"] += len(sueltos)
+    # Portales oficiales sin calle de OSM: una calle con el nombre oficial (si el mismo nombre sale
+    # en sitios separados, una entrada por cada sitio).
+    for nombre, lst in sin_calle:
+        lat = sum(ll[0] for _, ll in lst) / len(lst)
+        lon = sum(ll[1] for _, ll in lst) / len(lst)
+        calles.append({"nombre": nombre, "centro": (lat, lon), "portales": lst})
+
+    # ---- Portales de OpenStreetMap: solo donde no hay datos oficiales ----
     porclave = defaultdict(list)
     for c in calles:
-        porclave[clave(c["nombre"])].append(c)
+        if "tramos" in c:
+            porclave[clave(c["nombre"])].append(c)
     with gzip.open(PORTALES, "rt", encoding="utf-8") as f:
         portales = json.load(f)["elements"]
     sueltas = defaultdict(list)
@@ -196,14 +299,10 @@ def main():
     for e in portales:
         t = e.get("tags", {})
         calle, num = t.get("addr:street"), t.get("addr:housenumber", "").strip()
-        if not num:
+        if not calle or not num:
             continue
         ll = (e["lat"], e["lon"]) if "lat" in e else (e["center"]["lat"], e["center"]["lon"]) if "center" in e else None
-        if not ll:
-            continue
-        if en_zona(ll):  # en la zona de prueba mandan los portales del Concello
-            continue
-        if not calle:
+        if not ll or (int(ll[0] / CELDA), int(ll[1] / CELDA)) in cubierto:
             continue
         # "19;21" o "19-21": un portal por número
         for n in num.replace(";", ",").split(","):
@@ -212,64 +311,21 @@ def main():
                 continue
             cands = porclave.get(clave(calle))
             if cands:
-                c = min(cands, key=lambda c: min(dist(ll, p) for tr in c["tramos"] for p in tr[::max(1, len(tr) // 8)]))
+                c = min(cands, key=lambda c: min(flat(ll, p) for p in c["pts"][::max(1, len(c["pts"]) // 30)]))
                 c["portales"].append((n, ll))
             else:
                 sueltas[clave(calle)].append((calle, n, ll))
             usados += 1
     # Portales con el nombre escrito de otra forma: a la calle con el mismo núcleo si está cerca.
-    pornucleo = defaultdict(list)
-    for c in calles:
-        pornucleo[nucleo(c["nombre"])].append(c)
     for k, lst in sueltas.items():
         lat = sum(p[2][0] for p in lst) / len(lst)
         lon = sum(p[2][1] for p in lst) / len(lst)
         cerca = [c for c in pornucleo.get(nucleo(lst[0][0]), [])
-                 if min(dist((lat, lon), p) for tr in c["tramos"] for p in tr[::max(1, len(tr) // 8)]) < 1000]
+                 if min(flat((lat, lon), p) for p in c["pts"][::max(1, len(c["pts"]) // 30)]) < 1000]
         if cerca:
             cerca[0]["portales"] += [(n, ll) for _, n, ll in lst]
         else:
             calles.append({"nombre": lst[0][0], "centro": (lat, lon), "portales": [(n, ll) for _, n, ll in lst]})
-
-    # Portales del Concello de Vigo (solo dentro de la zona de prueba): a la calle de OSM con el
-    # mismo nombre más cercana (a menos de CERCA metros); si no hay ninguna, se crea con su nombre.
-    del_concello = 0
-    sin_calle = defaultdict(list)
-    posibles = {}
-    margen = CERCA / 111000
-
-    def cerca_zona(c):
-        return any(ZONA[0] - margen <= p[0] <= ZONA[1] + margen and ZONA[2] - margen * 1.4 <= p[1] <= ZONA[3] + margen * 1.4
-                   for tr in c["tramos"] for p in tr)
-    with gzip.open(CONCELLO, "rt", encoding="utf-8") as f:
-        for r in csv.DictReader(f):
-            num = r["num"].strip()
-            if not num:
-                continue
-            ll = (float(r["lat"]), float(r["lon"]))
-            if not en_zona(ll):
-                continue
-            nombre = nombre_concello(r["tipovia"], r["nombre"])
-            if nombre not in posibles:
-                # Calles de OSM cerca de la zona con un nombre que casa (primero las de nombre idéntico).
-                exactas = [c for c in pornucleo.get(nucleo(nombre), []) if "tramos" in c and cerca_zona(c)]
-                posibles[nombre] = exactas or [c for c in calles if "tramos" in c and cerca_zona(c)
-                                               and casa_nombre(nombre, c["nombre"])]
-            cands = []
-            for c in posibles[nombre]:
-                d = min(dist(ll, p) for tr in c["tramos"] for p in tr)
-                if d < CERCA:
-                    cands.append((d, id(c), c))
-            if cands:
-                min(cands)[2]["portales"].append((num, ll))
-            else:
-                sin_calle[(r["codvia"], nombre)].append((num, ll))
-            del_concello += 1
-    for (_, nombre), lst in sin_calle.items():
-        lat = sum(ll[0] for _, ll in lst) / len(lst)
-        lon = sum(ll[1] for _, ll in lst) / len(lst)
-        calles.append({"nombre": nombre, "centro": (lat, lon), "portales": lst})
-        print(f"  Calle del Concello sin calle en OSM: {nombre} ({len(lst)} portales)")
 
     salida = []
     for c in sorted(calles, key=lambda c: c["nombre"]):
@@ -288,7 +344,13 @@ def main():
     con = sum(1 for s in salida if s[3])
     tam = os.path.getsize(SALIDA)
     comp = len(gzip.compress(open(SALIDA, "rb").read(), 9))
-    print(f"Calles: {len(salida)} ({con} con portales); portales de OSM: {usados}; del Concello: {del_concello}")
+    print(f"Portales oficiales: {oficiales} (y {lejos} lejos de las paradas, fuera); casados con OSM por nombre: "
+          f"{asignados['nombre']}, por parecido: {asignados['parecido']}, sin calle: {asignados['sin calle']}")
+    print(f"Calles: {len(salida)} ({con} con portales); portales de OSM usados: {usados}")
+    with open(os.path.join(RAIZ, "data/direcciones-sin-calle.txt"), "w", encoding="utf-8") as f:
+        f.write("# Calles oficiales (Concello/Catastro) sin calle de OSM con el mismo nombre: nombre, portales, lat, lon\n")
+        for nombre, lst in sorted(sin_calle, key=lambda x: -len(x[1])):
+            f.write(f"{nombre}\t{len(lst)}\t{lst[0][1][0]:.5f}\t{lst[0][1][1]:.5f}\n")
     print(f"{SALIDA}: {tam / 1e3:.0f} KB ({comp / 1e3:.0f} KB comprimido)")
 
 

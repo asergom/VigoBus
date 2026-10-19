@@ -1,0 +1,641 @@
+# Calles oficiales (Concello/Catastro) sin calle de OSM con el mismo nombre: nombre, portales, lat, lon
+Rúa San Cristobo	104	42.23511	-8.67183
+Lugar A Pereira (Torneiros)	92	42.15500	-8.64611
+Lugar O Contrasto (Torneiros)	89	42.15986	-8.64511
+Camiño Balbarda	76	42.25089	-8.69417
+Camiño Fontela	74	42.19451	-8.78609
+Barrio Salgueira Grupo Sindical	72	42.22257	-8.71907
+Barrio Lourido	70	42.22509	-8.71739
+Baixada Moo	64	42.19120	-8.73247
+Camiño Couto (Coruxo)	62	42.19683	-8.78201
+Rúa Carapucha	60	42.20135	-8.73244
+Lugar O Outeiro (Pontellas)	59	42.14068	-8.64965
+Travesía Espiñeiro 1	58	42.25214	-8.70302
+Camiño Centieira	56	42.20628	-8.72099
+Camiño Fonte (Lavadores)	56	42.22099	-8.70202
+Estrada Escola da Sobreira	55	42.16405	-8.71593
+Camiño Meixueiro	55	42.22282	-8.68242
+Lugar A Bouza (Pontellas)	54	42.14334	-8.65259
+Camiño Brea Muiñeira	53	42.23011	-8.68642
+Lugar A Costeira (Mosende)	53	42.13839	-8.66536
+Rúa Molais	50	42.22966	-8.65369
+Estrada Madrid	49	42.20960	-8.69868
+Camiño Laxes (Coruxo)	49	42.19004	-8.77819
+Lugar A Abelenda (Pontellas)	49	42.14984	-8.65810
+Rúa Carlos Maside (Pintor)	46	42.22141	-8.76084
+Rúa Arqutectos Castro y Alonso	45	42.22196	-8.75561
+Camiño Gandariña	45	42.21785	-8.70022
+Camiño Amariz Loureiro	43	42.18276	-8.80287
+Avenida Buenos Aires	41	42.24977	-8.69557
+Rúa Casal de Arriba	40	42.23630	-8.68974
+Baixada Roteas	39	42.25741	-8.68171
+Rúa Babio	39	42.19258	-8.71499
+Camiño Abade	39	42.18748	-8.77676
+Camiño Hermida	38	42.18716	-8.79365
+Camiño Toural de Adentro	38	42.24658	-8.69973
+Lugar Figueiras (Mosende)	36	42.13591	-8.66024
+Estrada Rande (Cedeira)	36	42.28882	-8.64397
+Barrio Illa Toralla	35	42.20057	-8.80082
+Camiño Sixtro	35	42.18948	-8.79490
+Estrada Alto Barreiro (Santiaguiño)	35	42.21323	-8.60950
+Travesía Guixar 1	34	42.24889	-8.70484
+Rúa Portoloureiro	34	42.20876	-8.72012
+Rúa Marcelo Curras	33	42.22227	-8.72343
+Rúa Francisco Rey Rivero (Musico)	33	42.21766	-8.71974
+Rúa Francisco de Sales (Paisaxista)	33	42.21710	-8.72010
+Camiño Pasales	33	42.19601	-8.72083
+Lugar A Cantoña (Pontellas)	33	42.14059	-8.65920
+Camiño Lagarella	32	42.19511	-8.72908
+Camiño Mideiros	32	42.22713	-8.70354
+Camiño Romalla	32	42.23647	-8.69133
+Rúa Ferradura	32	42.23771	-8.68943
+Rúa Uruguay	32	42.23668	-8.71960
+Lugar A Arrotea (Pontellas)	32	42.14404	-8.64689
+Camiño Ferreiras	31	42.20501	-8.69074
+Rúa Xeme	30	42.20514	-8.69834
+Rúa Riveiro	30	42.22310	-8.67226
+Camiño Piñeiro (Lavadores)	30	42.21874	-8.69586
+Baixada Hermida	29	42.18622	-8.78834
+Travesía Foxos 1	29	42.24821	-8.70217
+Rúa Arines	29	42.22908	-8.72397
+Camiño Novelos	29	42.20517	-8.68651
+Camiño Esteriz	28	42.17946	-8.79688
+Rúa Lombeiro	27	42.18794	-8.69923
+Travesía Ponte Romano	27	42.21255	-8.73416
+Camiño Marquesa (Valadares)	27	42.18064	-8.72188
+Camiño Barreira	27	42.19689	-8.69588
+Rúa Cavada	26	42.20002	-8.69594
+Camiño Portaleiras	25	42.18330	-8.70144
+Camiño Cocho (Bembrive)	25	42.19707	-8.68823
+Baixada Gandara	25	42.19461	-8.77101
+Rúa Castañal (Beade)	25	42.18825	-8.70226
+Rúa Arriba	25	42.22029	-8.75131
+Lugar A Igrexa (Pontellas)	25	42.13849	-8.64946
+Lugar Casal Do Vello (Torneiros)	25	42.14873	-8.65060
+Estrada Seixiños	24	42.19537	-8.69637
+Camiño Devesa (Sardoma)	24	42.21698	-8.71289
+Rúa Sarabio	23	42.22024	-8.69554
+Rúa Xesteira	23	42.20557	-8.69803
+Praza San Mauro	23	42.20042	-8.73925
+Rúa Pouleira (Beade)	23	42.19740	-8.69613
+Rúa Paraguay	23	42.23321	-8.71690
+Camiño Igrexa (Valadares)	23	42.18246	-8.72520
+Rúa Fuchiños	22	42.19165	-8.80057
+Rúa Monte Calvario	22	42.20472	-8.68737
+Camiño Outeiro (Matama)	22	42.19712	-8.73090
+Camiño Carballeira (Sampaio)	22	42.23363	-8.69230
+Camiño Melcas	22	42.18693	-8.77902
+Rúa Cortuñas	21	42.22448	-8.70143
+Camiño Fabas	21	42.17444	-8.70315
+Estrada San Cibran	21	42.18953	-8.67906
+Rúa Balde	21	42.20143	-8.70275
+Camiño Bouza Fria	21	42.18799	-8.67910
+Rúa Dr Gonzalo Morant (Chapela)	21	42.26653	-8.67390
+Travesía Guixar 4	20	42.24943	-8.70311
+Rúa Enrique Xalueiro (Gaiteiro)	20	42.21859	-8.71735
+Camiño Bertolos	20	42.17838	-8.73192
+Travesía Bouzas Servicio Portuario	20	42.22732	-8.75337
+Camiño Casmarcelo	20	42.20039	-8.70072
+Estrada Zamans	20	42.15623	-8.71751
+Camiño Coba (Sardoma)	20	42.20990	-8.70388
+Lugar A Levada (Mosende)	20	42.13285	-8.65811
+Camiño Lameiro	19	42.19180	-8.70883
+Rúa Senra	19	42.19735	-8.68238
+Travesía Guixar 2	19	42.24899	-8.70436
+Rúa Vizcaya	19	42.23269	-8.70444
+Rúa Mestre Alfredo Gzlez Fdez	19	42.22237	-8.65638
+Estrada Gandara	19	42.16014	-8.70731
+Barrio Finca Doña Concha	18	42.22244	-8.71862
+Rúa Volta	18	42.23789	-8.69018
+Rúa Dr. Anton Beiras	18	42.23531	-8.70602
+Camiño Topete	18	42.19129	-8.75594
+Estrada Venda	18	42.19224	-8.71275
+Camiño Pena	18	42.18664	-8.69978
+Camiño Alén	18	42.19270	-8.70297
+Camiño de Eiragrande (Louredo)	18	42.21990	-8.60292
+Camiño Bosque de Cabanas (Trasmañ)	18	42.28279	-8.65904
+Barrio Cura	17	42.23535	-8.72919
+Travesía Purificacion Saavedra 2	17	42.24830	-8.70003
+Camiño Revolta Interior	17	42.20041	-8.73093
+Camiño Taberna	17	42.18695	-8.77741
+Camiño Dornelas	17	42.19428	-8.70042
+Rúa Espedras	17	42.20296	-8.68396
+Rúa Medico D. Jose Mato	17	42.21934	-8.73441
+Camiño Quinta (Valadares)	17	42.17830	-8.72261
+Camiño Escola Andersen	17	42.16350	-8.71998
+Camiño da Iglesia (Torroso)	17	42.20396	-8.62020
+Travesía Salgueira 2	16	42.22455	-8.71657
+Camiño Goaldino	16	42.18009	-8.69772
+Barrio Peinador	16	42.21981	-8.63683
+Camiño Laranxo (Beade)	16	42.19031	-8.70556
+Rúa Beillesa	16	42.22918	-8.65371
+Rúa Escalinata	16	42.23551	-8.69384
+Rúa Maceiriñas	16	42.23564	-8.66209
+Lugar Rebullon	16	42.20512	-8.66195
+Camiño das Cerdeiriñas (Louredo)	16	42.22300	-8.60562
+Camiño Bouzos	15	42.18743	-8.76789
+Travesía Numancia 3	15	42.23267	-8.70486
+Rúa Toural Interior	15	42.24726	-8.69945
+Camiño Ceboleira Interior	15	42.22649	-8.70102
+Camiño Cu da Viña	15	42.19480	-8.70116
+Camiño San Correa	15	42.19818	-8.69681
+Camiño Monte (Sampaio)	15	42.23956	-8.69022
+Camiño Barrouco	15	42.23739	-8.68324
+Camiño Couto (Candean (Cabral))	15	42.23666	-8.65140
+Rúa Leiriña	15	42.23630	-8.64232
+Camiño Anguía	15	42.19784	-8.69747
+Camiño dos Olmos (Chapela)	15	42.26860	-8.66535
+Camiño do Luceiro (Chapela)	15	42.26112	-8.67185
+Barrio Santa Clara	14	42.22640	-8.67558
+Camiño Esparramán	14	42.20461	-8.67284
+Estrada Herville	14	42.15496	-8.67399
+Rúa Rosario Hernandez Dieguez "a Calesa"	14	42.24263	-8.70099
+Rúa Cruz Blanca	14	42.23090	-8.70370
+Rúa Codo	14	42.23588	-8.69289
+Rúa Senra de Arriba	14	42.17964	-8.80202
+Rúa Interior	14	42.23904	-8.68902
+Camiño Treistas	14	42.20423	-8.70800
+Camiño Panasco	14	42.22883	-8.69734
+Camiño Pedra	14	42.20017	-8.69986
+Camiño Eira Vella	14	42.20898	-8.75305
+Camiño Corcho	14	42.19986	-8.71331
+Rúa Pe do Monte	14	42.23933	-8.69051
+Baixada Castelo	14	42.21287	-8.68951
+Rúa Carballas	14	42.22570	-8.65193
+Camiño Boavista	14	42.18822	-8.69889
+Camiño Covelo	14	42.19596	-8.69850
+Estrada Garrida	14	42.16492	-8.71939
+Camiño Ramon dos Pinos	14	42.19210	-8.71163
+Camiño Alborada	14	42.23380	-8.68487
+Camiño da Corredoura (Guizan)	14	42.21918	-8.61941
+Camiño Coto do Coello (Cedeira)	14	42.28810	-8.64393
+Camiño de Valeiro (Chapela)	14	42.25666	-8.67220
+Estrada Negros (Cabeiro)	14	42.25157	-8.62485
+Rúa Ramon Leand. Alonso Mtnez	13	42.23293	-8.69869
+Rúa Fotografo Luis Ksado	13	42.21830	-8.74173
+Rúa Tanque	13	42.23083	-8.69194
+Camiño Pedreiras	13	42.18697	-8.77293
+Camiño Millada	13	42.19253	-8.70378
+Camiño Ceirons	13	42.21216	-8.68841
+Rúa Dr Carlos Colmeiro Lafore	13	42.23399	-8.71813
+Camiño Eiras	13	42.18239	-8.80150
+Camiño Pardiñeiros de Abaixo	13	42.23502	-8.67755
+Camiño Abeleira	13	42.18983	-8.70509
+Camiño Xestal	13	42.19830	-8.69827
+Camiño Castiñeiras (Bembrive)	13	42.21097	-8.68816
+Camiño Devesa (Valadares)	13	42.16971	-8.70862
+Estrada Gonzalez Ballesta (Alcalde)	13	42.17324	-8.65614
+Estrada Porriño a Gondomar	13	42.15561	-8.66222
+Camiño da Cabadesa (Trasmaño)	13	42.27204	-8.65359
+Camiño Romeo	12	42.19048	-8.70192
+Subida Igrexa	12	42.23366	-8.68985
+Camiño Morrohome	12	42.18675	-8.69800
+Camiño Baixa	12	42.23524	-8.68722
+Travesía Rosais	12	42.24219	-8.69907
+Praza da Tellada	12	42.21845	-8.74021
+Camiño Novo Panasco	12	42.22948	-8.69440
+Camiño Gorguiña	12	42.22994	-8.65315
+Rúa o Porbelo	12	42.22951	-8.68927
+Rúa das Suas Viñas	12	42.22400	-8.69971
+Camiño Laranxo (Valadares)	12	42.17693	-8.72331
+Camiño Sanin (Cabral)	12	42.23647	-8.63997
+Camiño dos Enxidos	12	42.22425	-8.65071
+Camiño Batalla	12	42.19343	-8.70388
+Camiño Carballeira (Bembrive)	12	42.20341	-8.69681
+Camiño Langarangana	12	42.23495	-8.69379
+Barrio Outeiro	12	42.16816	-8.80444
+Camiño Riomao	12	42.19885	-8.69356
+Camiño do Piñeiro (Louredo)	12	42.22627	-8.60515
+Rúa Jose Fdez Lopez (Chapela)	12	42.26851	-8.67141
+Travesía Chouzo 4	11	42.22077	-8.73798
+Camiño Roupeiro	11	42.20187	-8.71076
+Barrio Figueiras	11	42.22481	-8.74768
+Camiño Budiño	11	42.19154	-8.72552
+Camiño de Maria Soa	11	42.23421	-8.64225
+Subida Penedo	11	42.21126	-8.68989
+Camiño Roteas de Arriba	11	42.23954	-8.68160
+Camiño Raposa (Bembrive)	11	42.20490	-8.69908
+Rúa Salvaterra	11	42.22046	-8.74115
+Camiño Caeira	11	42.23871	-8.66872
+Camiño Souto (Bembrive)	11	42.19068	-8.67824
+Camiño Coba (Bembrive (Beade))	11	42.19737	-8.68852
+Rúa dos Casaliños	11	42.21069	-8.76441
+Camiño Cernades	11	42.23378	-8.64644
+Camiño Feira	11	42.20878	-8.67000
+Camiño da Zapateira (Mos)	11	42.21499	-8.60565
+Baixada Praia de Cabanas (Trasmaño)	11	42.28111	-8.66214
+Camiño Pumariños	10	42.20358	-8.68683
+Praza Fdo. Conde Montero (Rios)	10	42.23709	-8.71949
+Camiño Fonte Vella Redomeira	10	42.23600	-8.69969
+Camiño Salvador	10	42.24129	-8.67258
+Camiño Vello a Moo	10	42.19326	-8.72813
+Camiño Portillon	10	42.23859	-8.68991
+Camiño Señeiras	10	42.21075	-8.75141
+Camiño Lamballa	10	42.22184	-8.68678
+Barrio San Pablo Grupo Sindical	10	42.24466	-8.69793
+Rúa Jose de la Peña	10	42.22253	-8.74934
+Rúa Estrada	10	42.22022	-8.74390
+Camiño Pazo (Bembrive)	10	42.20107	-8.67421
+Camiño Outeiro (Beade)	10	42.20080	-8.71472
+Rúa Verderol	10	42.22914	-8.70853
+Subida Costa (Castrelos)	10	42.21440	-8.72589
+Travesía Romil 1	10	42.23166	-8.73007
+Travesía Espiñeiro 2	10	42.25338	-8.70266
+Rúa Carcere Vella	10	42.23957	-8.72606
+Camiño do Sixto (Cela)	10	42.14907	-8.67292
+Camiño de Cortiñas (Louredo)	10	42.21679	-8.60617
+Camiño de Madam (Tameiga)	10	42.18959	-8.65251
+Lugar As Filgueiras (Chenlo)	10	42.12744	-8.67649
+Camiño das Chachiñas (Chapela)	10	42.27265	-8.66102
+Camiño Raiña	9	42.19772	-8.68772
+Rúa Desiderio Pernas (Arqcto.)	9	42.18905	-8.81030
+Camiño Soutoliño	9	42.19658	-8.73388
+Camiño Garabulla	9	42.20521	-8.68695
+Camiño Portelo	9	42.19886	-8.69949
+Camiño Canteira do Ramiso	9	42.19954	-8.71473
+Camiño Moiania	9	42.21816	-8.71180
+Rúa Lavadeiro	9	42.23883	-8.69076
+Camiño Castiñeira	9	42.20821	-8.70123
+Camiño Estreitiño	9	42.20496	-8.72198
+Camiño Souto de Fonte Escura	9	42.23026	-8.67382
+Camiño Suaxeira	9	42.20760	-8.68535
+Rúa Fdo. Lago Olano (Medico)	9	42.22795	-8.70967
+Camiño Costa da Rua	9	42.19230	-8.70724
+Camiño Veiguiña (Cabral)	9	42.22206	-8.66433
+Camiño das Sueiras	9	42.19027	-8.70589
+Praza Argüelles	9	42.23806	-8.72652
+Rúa Suso Vahamonde (Chapela)	9	42.26773	-8.67343
+Camiño Barxa de Arriba	8	42.18770	-8.70415
+Travesía Padre Celso 3	8	42.23849	-8.69953
+Rúa Outeiriño	8	42.19920	-8.69579
+Travesía Lourido	8	42.23530	-8.70864
+Camiño Fonte do Lago	8	42.20793	-8.69269
+Camiño Sospalleiros	8	42.18686	-8.67783
+Camiño Galeota	8	42.17723	-8.70074
+Camiño Cavadas	8	42.23518	-8.68486
+Rúa Privada Moderna	8	42.23094	-8.70783
+Rúa Castilla	8	42.23711	-8.70589
+Camiño da Seña	8	42.20788	-8.75159
+Camiño Nogueira	8	42.20336	-8.72777
+Camiño Calvario	8	42.24129	-8.66562
+Camiño Muiñeiros	8	42.19423	-8.71606
+Camiño Castro	8	42.19211	-8.75513
+Camiño Condiña	8	42.23174	-8.65159
+Camiño as Dores	8	42.23247	-8.65476
+Rúa Carlos Blanco Yañez	8	42.18973	-8.80303
+Camiño da Coviña	8	42.23229	-8.64030
+Camiño Figueiras (Bembrive)	8	42.20296	-8.67608
+Rúa Marcelina Panete (Mestra)	8	42.23174	-8.68249
+Camiño Presas	8	42.18574	-8.69605
+Rúa Ánimas Caeiro	8	42.23059	-8.65536
+Camiño dos Balados (Cela)	8	42.14873	-8.67553
+Avenida Puxeiros (Tameiga)	8	42.20150	-8.65747
+Camiño do Couto (Tameiga)	8	42.19889	-8.65788
+Camiño do Portelo (Torroso)	8	42.21078	-8.61983
+Lugar O Saramagal (Chenlo)	8	42.13183	-8.68367
+Camiño do Castañal (Chapela)	8	42.27001	-8.66754
+Camiño das Figueiras (Trasmaño)	8	42.28076	-8.65953
+Camiño da Abeleira (Chapela)	8	42.26822	-8.66733
+Camiño Loureiro (Chapela)	8	42.26994	-8.66735
+Camiño da Baliza (Chapela)	8	42.26567	-8.67466
+Paseo dos Penedos (Chapela)	8	42.26768	-8.67398
+Camiño do Fonderisco (Vilar Inf)	8	42.23965	-8.62996
+Rúa Hortelana	7	42.22991	-8.71285
+Rúa Perdiz	7	42.22874	-8.70788
+Rúa Pintor Ramon Buch	7	42.21840	-8.74146
+Camiño Rapadouros	7	42.20132	-8.68784
+Camiño Barxiña	7	42.20410	-8.70390
+Travesía Madroa Subida 2	7	42.24269	-8.67128
+Rúa Vanessa Lago Carreira	7	42.23032	-8.70429
+Travesía Horta	7	42.23739	-8.70582
+Camiño Sobreiral	7	42.23184	-8.68081
+Camiño Rapadouros de Arriba	7	42.19924	-8.68643
+Travesía Foxos 2	7	42.24888	-8.70245
+Camiño Torre (Candean)	7	42.23715	-8.66859
+Rúa Campana	7	42.24916	-8.69738
+Camiño Piñeiros	7	42.17137	-8.70783
+Camiño Pousa (Beade)	7	42.18229	-8.69969
+Camiño Serra (Espedrigada)	7	42.21673	-8.73351
+Camiño Gatiñeira	7	42.24008	-8.66870
+Calexón Estreito	7	42.23683	-8.72746
+Camiño Outeiro (Bembrive)	7	42.20074	-8.68534
+Rúa Alfonso X o Sabio	7	42.22165	-8.73026
+Barrio San Eleuterio (Tameiga)	7	42.19413	-8.64847
+Camiño dos Merodes (Guizan)	7	42.21950	-8.62269
+Lugar Cotiño (Dornelas)	7	42.20214	-8.63414
+Lugar O Seixo (Torneiros)	7	42.14459	-8.64690
+Camiño Granxa de Vilar (Vilar Inf)	7	42.23194	-8.61414
+Rúa Joaquin Nogueira Alonso	6	42.23870	-8.72434
+Camiño Cabadiñas	6	42.20810	-8.67807
+Rúa Corta	6	42.23453	-8.69402
+Camiño Canteira	6	42.23809	-8.68559
+Rúa Pez	6	42.23786	-8.72834
+Camiño Curuxeira	6	42.22881	-8.65865
+Rúa Arzobispo Xelmirez	6	42.23264	-8.71899
+Camiño Rosendo	6	42.23536	-8.67481
+Camiño Rosalia	6	42.19355	-8.71652
+Rúa Dr. Gonzalez Sierra	6	42.22143	-8.73161
+Camiño Casas Vellas	6	42.19502	-8.67942
+Camiño Souto (Valadares)	6	42.17148	-8.70883
+Camiño Marzos	6	42.19375	-8.70179
+Camiño Muxo	6	42.20407	-8.69988
+Camiño Besada	6	42.23381	-8.65421
+Camiño Fionde	6	42.20660	-8.69310
+Camiño Devesa de Arriba	6	42.19476	-8.69526
+Camiño Zamuda	6	42.23200	-8.64296
+Camiño Pardiñeiros	6	42.23591	-8.67528
+Rúa Mercedes Ruibal	6	42.17911	-8.80239
+Subida Coto Grande	6	42.21944	-8.65408
+Rúa Irmans Misioneiros dos Enfermos Pobres	6	42.25119	-8.69887
+Camiño Castiñeiro	6	42.19183	-8.71004
+Camiño Cemieiras	6	42.20686	-8.68693
+Camiño Pombal (Beade)	6	42.18649	-8.69569
+Camiño do Piloto (Cela)	6	42.16853	-8.65923
+Camiño do Fondo de Atin (Cela)	6	42.16174	-8.64804
+Camiño da Crica Longa (Pereiras)	6	42.17869	-8.64385
+Camiño da Cachada (Louredo)	6	42.22742	-8.60655
+Lugar Piedraucha	6	42.19341	-8.64664
+Camiño da Iglesia (Dornelas)	6	42.20757	-8.63575
+Camiño da Feira de Puxeiros	6	42.20702	-8.65703
+Camiño a Traida (Chapela)	6	42.26879	-8.66084
+Camiño da Ameixeira (Chapela)	6	42.26821	-8.66988
+Camiño Coutada Grande (Chapela)	6	42.25616	-8.67201
+Camiño da Anduriña (Chapela)	6	42.26373	-8.66575
+Camiño da Driza (Chapela)	6	42.26984	-8.67212
+Travesía Guixar 3	5	42.24937	-8.70417
+Camiño Paio	5	42.20005	-8.67840
+Camiño Redondos	5	42.19365	-8.76538
+Camiño Privado da Veiga	5	42.22839	-8.71249
+Camiño Sumata	5	42.19810	-8.69771
+Camiño Reiriz	5	42.20983	-8.68449
+Baixada Don Martin	5	42.22902	-8.68575
+Camiño Campiño	5	42.20479	-8.72453
+Camiño Cordeira	5	42.22198	-8.70720
+Travesía Churrera	5	42.23077	-8.71275
+Camiño Via	5	42.25221	-8.68599
+Camiño Pugulleiras	5	42.15125	-8.69327
+Camiño Barxa de Abaixo	5	42.18565	-8.70835
+Camiño Cachote	5	42.23152	-8.67411
+Camiño Capela	5	42.18992	-8.68973
+Camiño Lugar de Arriba	5	42.20476	-8.67278
+Rúa Alza (Bade)	5	42.18981	-8.69902
+Camiño Ameirais	5	42.19778	-8.68134
+Lugar Louriño (Torroso)	5	42.20970	-8.61496
+Camiño Abilleira	5	42.21875	-8.60765
+Camiño dos Trigos (Louredo)	5	42.22691	-8.60621
+Lugar Portela	5	42.20916	-8.65775
+Lugar Pardellas	5	42.16783	-8.66197
+Estrada Cabanas (Trasmaño)	5	42.27683	-8.66617
+Camiño da Longarela (Trasmaño)	5	42.26686	-8.64995
+Camiño da Parra (Chapela)	5	42.27010	-8.66882
+Camiño da Mimosa (Chapela)	5	42.26514	-8.66963
+Camiño da Hedra (Chapela)	5	42.27329	-8.66834
+Camiño Xalon	4	42.20371	-8.67819
+Calexón Portela Interior	4	42.22909	-8.69944
+Camiño Lareiral	4	42.23970	-8.66694
+Camiño Palmira	4	42.18250	-8.70050
+Camiño Rialexo	4	42.19137	-8.70586
+Camiño Rapadouros de Abaixo	4	42.19989	-8.68667
+Rúa Praia Cocho	4	42.22413	-8.76955
+Travesía Numancia 5	4	42.23329	-8.70477
+Camiño Hervellido	4	42.18846	-8.70409
+Camiño Lascas	4	42.19321	-8.69653
+Camiño Campo Grande	4	42.18802	-8.70002
+Rúa Trovador Mendiño	4	42.23031	-8.72248
+Camiño do Cabezal	4	42.23364	-8.63231
+Rúa Gzalo. Torrente Ballester	4	42.23232	-8.71031
+Baixada Longarela	4	42.22538	-8.68349
+Camiño Aradas	4	42.20572	-8.67384
+Camiño Candea	4	42.19687	-8.67649
+Subida Barranco	4	42.23721	-8.72623
+Camiño Cocho (Cabral)	4	42.23492	-8.65773
+Camiño Pipin	4	42.21672	-8.66245
+Camiño Pombal (Bembrive)	4	42.20784	-8.67791
+Rúa a Garda	4	42.21465	-8.74805
+Camiño Pombal (Candean)	4	42.23628	-8.66903
+Camiño da Pontella	4	42.22100	-8.65650
+Camiño Cabo	4	42.24017	-8.64349
+Praza Escultor Xoan Piñeiro	4	42.22381	-8.73231
+Rúa Ángeles Alvariño	4	42.17870	-8.80154
+Lugar Sobrans-	4	42.21628	-8.62089
+Lugar Peinador	4	42.22150	-8.63292
+Camiño Pedra da Cruz (Cela)	4	42.16380	-8.67548
+Camiño do Carballo Queimado	4	42.18096	-8.63875
+Lugar Casal (Pereiras)	4	42.17340	-8.64254
+Camiño do Focacho (Pereiras)	4	42.17444	-8.65105
+Lugar Rejenjo	4	42.18892	-8.63976
+Camiño Campo da Iglesia (Pereiras)	4	42.17049	-8.65091
+Camiño de Asebal (Louredo)	4	42.22719	-8.60277
+Lugar Herville	4	42.13543	-8.67830
+Camiño Quiringosta (Mos (da)-mos)	4	42.21462	-8.60524
+Lugar Herville De Ab	4	42.14389	-8.67283
+Rúa Daniel Alonso (Torroso)	4	42.22072	-8.63265
+Camiño dos Corvos (Cela)	4	42.16667	-8.65457
+Lugar Canadelo (Chenlo)	4	42.12816	-8.66907
+Camiño Can Branco (Trasmaño)	4	42.28000	-8.65399
+Lugar Rande (Cedeira)	4	42.28799	-8.64623
+Camiño da Carqueixa (Chapela)	4	42.26095	-8.67553
+Camiño da Fisga (Chapela)	4	42.26522	-8.67448
+Camiño do Laranxo (Chapela)	4	42.26584	-8.67131
+Camiño da Nespereira (Chapela)	4	42.26468	-8.67235
+Camiño da Papuxa (Chapela)	4	42.26313	-8.66537
+Camiño da Nebeda (Chapela)	4	42.27267	-8.66750
+Camiño da Salvea (Chapela)	4	42.27262	-8.66704
+Lugar Cabanas (Trasmaño)	4	42.27931	-8.65342
+Estrada do Galleiro (Vilar Infes)	4	42.23026	-8.61233
+Camiño das Roxas (Vilar Infesta)	4	42.23541	-8.61225
+Camiño do Cusqueiro (Vilar Infe)	4	42.24227	-8.63391
+Rúa Cedro	3	42.22688	-8.71360
+Subida Hermide	3	42.25063	-8.65797
+Camiño Pedregal	3	42.17494	-8.72161
+Camiño dos Piñeirais	3	42.23691	-8.63694
+Rúa Padrón do Couto	3	42.16184	-8.69985
+Rúa Canexa	3	42.23313	-8.68978
+Camiño Remesiña	3	42.19726	-8.67797
+Camiño do Cotiño	3	42.22595	-8.64330
+Camiño Xoanela	3	42.19615	-8.69735
+Camiño Canicouva	3	42.19235	-8.71385
+Rúa Dez de Marzo	3	42.21486	-8.73929
+Camiño Velouro	3	42.19562	-8.69768
+Praza Mosteiro	3	42.20453	-8.68779
+Camiño Cocho do Muiño	3	42.20729	-8.67829
+Calexón San Telmo	3	42.22337	-8.74994
+Camiño Cerdeiras	3	42.18734	-8.67844
+Camiño Troncales	3	42.20641	-8.69798
+Rúa Leonardo da Vinci	3	42.16992	-8.68621
+Camiño Cortiñas (Comesaña)	3	42.20784	-8.75252
+Camiño Puga de Arriba	3	42.20496	-8.67758
+Rúa Cabreiro	3	42.17967	-8.70437
+Camiño da Peixeira	3	42.23697	-8.64022
+Rúa Vivas	3	42.23798	-8.68860
+Camiño Raviso	3	42.21742	-8.70298
+Camiño das Cereixeiras	3	42.23346	-8.64224
+Camiño da Mangueliña	3	42.17861	-8.69937
+Rúa as Avenidas	3	42.24100	-8.72468
+Camiño Baladiñas	3	42.18410	-8.67646
+Rúa Loureiro (Cabral)	3	42.23348	-8.64411
+Camiño Miragaia	3	42.18652	-8.67682
+Rúa Areosa	3	42.23077	-8.72129
+Lugar Pereira	3	42.19093	-8.65728
+Camiño do Zar (Cela)	3	42.16458	-8.65564
+Camiño das Chousas (Cela)	3	42.15011	-8.67482
+Camiño do Rio (Cela)	3	42.16035	-8.65681
+Camiño dos Uchas (Cela)	3	42.17413	-8.65515
+Camiño do Monte do Couto (Cela)	3	42.17097	-8.66383
+Lugar Atin	3	42.16374	-8.65248
+Camiño da Budiela (Pereiras)	3	42.17734	-8.65279
+Camiño do Enxido (Louredo)	3	42.22979	-8.60334
+Camiño Quiringosta Cega (Louredo)	3	42.22573	-8.60497
+Camiño de Arcal (Louredo)	3	42.22435	-8.60471
+Camiño do Viso (Louredo)	3	42.22106	-8.60715
+Camiño Horta da Riba (Sanguiñeda)	3	42.18229	-8.64641
+Camiño de Montecelo (Sanguiñeda)	3	42.17993	-8.64399
+Camiño Eido de San Antonio (Tamei)	3	42.20639	-8.65962
+Camiño Monte de Cabral (Tameiga)	3	42.20928	-8.65528
+Lugar Cerdedelo	3	42.21467	-8.62763
+Camiño dos Cabaleiros (Mos)	3	42.21085	-8.60815
+Lugar Santiaguiño	3	42.17527	-8.64639
+Lugar Riofrio (Chapela)	3	42.27280	-8.66226
+Camiño Can Branco (Cedeira)	3	42.28009	-8.65363
+Camiño do Pousiño (Cedeira)	3	42.28259	-8.65582
+Camiño da Chans (Trasmaño)	3	42.27456	-8.65455
+Camiño do Monte (Trasmaño)	3	42.27731	-8.65384
+Camiño da Coruta (Trasmaño)	3	42.27199	-8.65283
+Camiño do Sendeiro (Chapela)	3	42.27170	-8.66125
+Camiño do Ervedo (Chapela)	3	42.27097	-8.66886
+Camiño do Palangre (Chapela)	3	42.27118	-8.67058
+Lugar Trasmaño (Trasmaño)	3	42.26933	-8.64697
+Rúa Carlos Oroza Fernandez (Poeta)	2	42.23755	-8.72421
+Praza Santa Rita	2	42.22876	-8.71654
+Rúa Candieiro	2	42.23707	-8.70496
+Calexón Chinito	2	42.23852	-8.71492
+Rúa Mestre Mateo	2	42.24012	-8.72617
+Praza Portugal	2	42.23567	-8.71818
+Rúa Mos	2	42.21594	-8.75235
+Praza D.jose Campos Perez (Mestre)	2	42.23032	-8.70122
+Camiño Freires de Arriba	2	42.20508	-8.67455
+Praza Dr Juan Fernandez Casal	2	42.19988	-8.75420
+Camiño Louxada	2	42.21215	-8.70578
+Camiño Fandiñas	2	42.19896	-8.68538
+Rúa Canceleiro Interior	2	42.23727	-8.71457
+Camiño Busto	2	42.24213	-8.65233
+Camiño Vello da Nogueira	2	42.22575	-8.64868
+Camiño Rebolon	2	42.21140	-8.68507
+Camiño Revolta	2	42.21154	-8.68939
+Praza Juan XXIII	2	42.22797	-8.73402
+Camiño Pereiro	2	42.19455	-8.67933
+Camiño do Pisco	2	42.19204	-8.73709
+Praza Porto Pesqueiro Lonxa	2	42.23594	-8.73187
+Camiño Lagoa (Candean)	2	42.23504	-8.66490
+Estrada Vilaverde	2	42.15580	-8.71051
+Lugar Ramilo	2	42.19933	-8.65815
+Estrada de Pardellas (Cela)	2	42.16988	-8.67580
+Camiño da Serra (Pereiras)	2	42.17462	-8.64333
+Camiño da Casanova (Pereiras)	2	42.16935	-8.64298
+Camiño da Arrufana (Louredo)	2	42.23088	-8.60346
+Camiño do Presal (Louredo)	2	42.22831	-8.60412
+Lugar Piñeiro	2	42.17643	-8.63894
+Lugar Casal (Tameiga)	2	42.20143	-8.65139
+Camiño Coto da Riba (Sanguiñeda)	2	42.18306	-8.64346
+Camiño das Pedras (Tameiga)	2	42.20557	-8.65346
+Lugar Rans	2	42.19541	-8.64981
+Camiño da Barrosa (Mos)	2	42.20881	-8.60819
+Camiño da Chinta (Dornelas)	2	42.20997	-8.63862
+Camiño de Bouzos (Dornelas)	2	42.20537	-8.63551
+Camiño do Cementerio (Dornelas)	2	42.20364	-8.62994
+Lugar Fraeira	2	42.22562	-8.61398
+Camiño a Buraca (Chapela)	2	42.25388	-8.66991
+Camiño Coto da Raposa (Cedeira)	2	42.28450	-8.64685
+Camiño Troco (Trasmaño)	2	42.27994	-8.66057
+do Fondiño (Trasmaño)	2	42.27021	-8.65665
+Camiño da Cerdeira (Chapela)	2	42.27259	-8.66624
+Camiño da Dorna (Chapela)	2	42.26664	-8.67294
+Camiño do Fento (Chapela)	2	42.27059	-8.66650
+Camiño das Fontiñas (Cabeiro)	2	42.25368	-8.63420
+Lugar Igrexa (Trasmaño)	2	42.27492	-8.65804
+Camiño da Carrasqueira (Cabeiro)	2	42.24851	-8.62703
+Camiño das Fenteiras (Cabeiro)	2	42.25277	-8.62734
+Camiño da Verruga (Cabeiro)	2	42.25251	-8.63427
+Camiño Roxas Interior (Vilar Infe)	2	42.23497	-8.61177
+Camiño da Cañoteira (Vilar Infe)	2	42.23964	-8.62074
+Camiño dos Carrizas (Vilar Infe)	2	42.23925	-8.61977
+Camiño Pillapiscos (Vilar Infesta)	2	42.24263	-8.60957
+Lugar Igrexa (Vilar Infesta)	2	42.23622	-8.61999
+Travesía Mañucas	1	42.22991	-8.71485
+Calexón Rivera	1	42.22865	-8.69883
+Camiño Outeiro de Cidans	1	42.15787	-8.68474
+Camiño Areeiras	1	42.16330	-8.69525
+Camiño das Tres Cruces	1	42.20899	-8.72123
+Rúa Pateira	1	42.23551	-8.72441
+Camiño Campo da Feira	1	42.20667	-8.70873
+Camiño Pontillon	1	42.21344	-8.70556
+Rúa Nogueira	1	42.22671	-8.71366
+Praza Orencio Perez Glez.(xuiz)	1	42.22195	-8.73538
+Camiño Pousa (Regueiro)	1	42.22486	-8.72920
+Camiño Tixoureiro	1	42.20901	-8.68998
+Rúa Zaragoza	1	42.19335	-8.70004
+Estrada Cidans	1	42.15788	-8.71271
+Camiño dos Arrieiros	1	42.16816	-8.68085
+Camiño Cunchadas	1	42.18960	-8.67930
+Rúa Ecuador	1	42.21739	-8.73469
+Camiño Xoxin	1	42.24657	-8.66087
+Lugar Rexomil	1	42.22489	-8.61841
+Lugar Queimada	1	42.21454	-8.64131
+Lugar Levantada	1	42.19376	-8.64593
+Lugar Camaña	1	42.19408	-8.65852
+Lugar Baxiña (Tameiga)	1	42.18796	-8.65440
+Estrada Puxeiros (Industr. Puxeiro)	1	42.21207	-8.64790
+Lugar Pedreira (Dornelas)	1	42.20248	-8.63328
+Lugar Arufe	1	42.16285	-8.66324
+Camiño da Pereiriña (Cela)	1	42.17465	-8.66033
+Estrada a Tui (Cela)	1	42.15472	-8.67255
+Lugar Casalmorto	1	42.17393	-8.64459
+Lugar Roublin	1	42.17478	-8.64593
+Barrio Vides	1	42.18476	-8.64556
+Camiño da Candosa (Pereiras)	1	42.17809	-8.65496
+Petelos	1	42.17295	-8.64225
+Lugar Balteiro	1	42.17315	-8.64301
+Camiño de Foxes (Pereiras)	1	42.16581	-8.64383
+Camiño dos Santos Reis (Pereira)	1	42.15909	-8.66237
+Lugar Coto	1	42.16707	-8.65973
+Camiño dos Sete Camiños (Louredo)	1	42.22924	-8.60414
+Lugar Ansar	1	42.18144	-8.64276
+Lugar Igrexa (Tameiga)	1	42.20091	-8.64678
+Estrada da Via	1	42.20765	-8.63538
+Camiño de Nogueiras (Tameiga)	1	42.20575	-8.64691
+Camiño do Salgueiral (Tameiga)	1	42.18271	-8.64568
+Camiño do Covelo (Tameiga)	1	42.21995	-8.63468
+Lugar Rio	1	42.19797	-8.63942
+Camiño da Rua (Mos)	1	42.20896	-8.60889
+Lugar Outeiro	1	42.20295	-8.62144
+Camiño da Balada (Mos)	1	42.21526	-8.64157
+Camiño de Cerdedelo (Torroso)	1	42.21063	-8.62560
+Lugar Brea	1	42.20804	-8.63048
+Lugar Carballo Do Monte	1	42.22262	-8.62649
+Lugar Cruceiro	1	42.22246	-8.62373
+Lugar Sobrado	1	42.21184	-8.60569
+Costeira a Chenlo (Mosende)	1	42.13732	-8.66522
+Travesía Estacion	1	42.13391	-8.66140
+Camiño Devesa do Coto (Trasmaño)	1	42.26737	-8.65696
+Rúa A Rabexa (Chapela)	1	42.27318	-8.66806
+Estrada Vigo (Rande)	1	42.28785	-8.64690
+Rúa Cardona B	1	42.26877	-8.67207
+Rúa Suso Vahamonde (Laredo)	1	42.26834	-8.67303
+Camiño do Cano (Cedeira)	1	42.28579	-8.64746
+Camiño da Fenteira (Cedeira)	1	42.27837	-8.64736
+Camiño das Cabadiñas (Trasmaño)	1	42.27044	-8.65652
+Camiño Eido da Vella (Trasmaño)	1	42.27129	-8.64966
+Camiño da Fragua (Trasmaño)	1	42.27264	-8.65121
+Camiño do Buxo (Chapela)	1	42.26877	-8.66785
+Camiño da Correola (Chapela)	1	42.26129	-8.67396
+Camiño do Merlo (Chapela)	1	42.26162	-8.65812
+Camiño da Cuncheira (Chapela)	1	42.27412	-8.66797
+Lugar Angoren (Chapela)	1	42.26917	-8.66609
+Lugar Cidadelle (Chapela)	1	42.26457	-8.66600
+Camiño Monte de Cabeiro (Cabeiro)	1	42.25413	-8.63530
+Camiño Cocho de Cabeiro (Cabeiro)	1	42.25504	-8.63014
+Camiño das Andarizas (Vilar Inf)	1	42.23062	-8.61633
+Camiño dos Valos (Vilar Infesta)	1	42.24200	-8.60933
+Camiño dos Navarros (Vilar Infe)	1	42.23774	-8.61677
+Camiño Forestal (Vilar Infesta)	1	42.24565	-8.63884
+Lugar Millarada (Vilar Infesta)	1	42.24496	-8.62489

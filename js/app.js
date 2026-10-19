@@ -128,7 +128,7 @@
     maxZoom: 19, referrerPolicy: "strict-origin-when-cross-origin",
     attribution: '© <a href="https://www.openstreetmap.org/copyright">Colaboradores de OpenStreetMap</a>',
   }).addTo(map);
-  map.attributionControl.addAttribution('Portales: <a href="https://datos.vigo.org/">Concello de Vigo</a>');
+  map.attributionControl.addAttribution('Portales: <a href="https://datos.vigo.org/">Concello de Vigo</a>, <a href="https://www.sedecatastro.gob.es/">D. G. del Catastro</a>');
 
   // Abierta como archivo (file://) no hay web de origen y OpenStreetMap bloquea el mapa.
   if (location.protocol === "file:") {

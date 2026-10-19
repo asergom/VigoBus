@@ -37,7 +37,9 @@
     const all = [];   // todos los portales conocidos, para dibujar sus números en el mapa
     const streets = data.calles.map(([name, lat, lon, p], i) => {
       const words = normTxt(name).split(" ").filter(Boolean);
-      const core = words.filter((w) => !GEN.has(w));
+      // Lo que va entre paréntesis (la parroquia: "Camiño da Igrexa (Tameiga)") se puede buscar, pero no
+      // cuenta para decidir si el nombre escrito está completo.
+      const core = normTxt(name.replace(/\(.*?\)/g, " ")).split(" ").filter((w) => w && !GEN.has(w));
       const portals = [];
       for (let k = 0; k < p.length; k += 3) portals.push({ n: String(p[k]), ll: [(lat + p[k + 1]) / 1e5, (lon + p[k + 2]) / 1e5] });
       const s = { i, name, ll: [lat / 1e5, lon / 1e5], words, core: core.length ? core : words, portals, norm: words.join(" "), tipo: TIPO[words[0]] || null };
