@@ -13,21 +13,16 @@ jobs:
       - uses: actions/checkout@v4
       - name: Descargar
         run: |
-          mkdir -p fuentes/catastro/prueba3
-          cd fuentes/catastro/prueba3
-          # Control (Redondela, sí publicado) y Vigo (Avda. das Camelias), con varias sintaxis del WFS.
-          for host in https://ovc.catastro.meh.es http://ovc.catastro.meh.es https://www1.sedecatastro.gob.es; do
-            h=$(echo $host | tr -dc 'a-z0-9')
-            for zona in "red:42.2820,-8.6125,42.2860,-8.6080" "vigo:42.2270,-8.7270,42.2310,-8.7220"; do
-              n=${zona%%:*}; bb=${zona#*:}
-              curl -sSL -m 90 -o "ad_${h}_${n}_a.xml" "$host/INSPIRE/wfsAD.aspx?service=wfs&version=2.0.0&request=GetFeature&typeNames=AD:Address&bbox=$bb,urn:ogc:def:crs:EPSG::4326&srsName=urn:ogc:def:crs:EPSG::4326" || true
-              curl -sSL -m 90 -o "ad_${h}_${n}_b.xml" "$host/INSPIRE/wfsAD.aspx?service=WFS&version=2.0.0&request=GetFeature&typenames=ad:Address&bbox=$bb&srsname=EPSG:4326" || true
-              curl -sSL -m 90 -o "bu_${h}_${n}.xml" "$host/INSPIRE/wfsBU.aspx?service=WFS&version=2.0.0&request=GetFeature&typenames=bu:Building&bbox=$bb&srsname=EPSG:4326" || true
-            done
-            curl -sSL -m 90 -o "cap_${h}_ad.xml" "$host/INSPIRE/wfsAD.aspx?service=WFS&request=GetCapabilities" || true
+          mkdir -p fuentes/concello
+          cd fuentes/concello
+          for f in calles-numeracion.geojson calles-numeracion.csv calles.geojson; do
+            curl -sSL --fail --retry 3 -m 300 -o "$f" "https://datos.vigo.org/data/transporte/$f" || echo "FALLO $f"
           done
           ls -la
-          for f in *.xml; do echo "== $f $(wc -c < $f)"; head -c 300 "$f" | tr -d '\r'; echo; done
+          head -c 1500 calles-numeracion.geojson; echo
+          head -5 calles-numeracion.csv
+          gzip -9 -k calles-numeracion.geojson calles.geojson
+          rm -f calles-numeracion.geojson calles.geojson
       - name: Guardar en la rama
         run: |
           git config user.name "github-actions[bot]"
