@@ -10,7 +10,7 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: actualizar-gtfs
+  group: actualizar-datos
   cancel-in-progress: false
 jobs:
   actualizar:
