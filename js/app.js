@@ -922,7 +922,7 @@
     placeMarker.setLatLng(place.ll).addTo(map);
     if (!same) {
       if (!isDesktop()) panel.dataset.state = "stop";
-      focusOn(place.ll, Math.max(map.getZoom(), NUM_ZOOM));
+      focusOn(place.ll, Math.max(map.getZoom(), PLACE_ZOOM));
     }
     drawNums();
     return true;
@@ -940,7 +940,9 @@
   // Con zoom alto se dibujan todos los números de portal conocidos (aunque el mapa base ya traiga
   // algunos). Van en un lienzo propio; solo los que caen en pantalla y sin que se pisen entre ellos.
   // Tocar uno abre esa dirección (o, en "Cómo llegar", la elige como origen o destino).
-  const NUM_ZOOM = 18;
+  // Mismo zoom desde el que el mapa de OpenStreetMap empieza a pintar sus números de portal (17).
+  const NUM_ZOOM = 17;
+  const PLACE_ZOOM = 18;   // al abrir una dirección
   map.createPane("nums").style.zIndex = 450;   // encima de los trazados, debajo de las paradas
   map.getPane("nums").style.pointerEvents = "none";
   const numCanvas = L.DomUtil.create("canvas", "num-canvas", map.getPane("nums"));
@@ -962,7 +964,8 @@
     if (!dirData) { ensureDir().then(drawNums).catch(() => {}); return; }
     const b = map.getBounds().pad(0.05);
     const pts = dirData.portalsIn(b.getSouth(), b.getWest(), b.getNorth(), b.getEast());
-    ctx.font = `600 ${map.getZoom() >= 19 ? 13 : 12}px Barlow, system-ui, sans-serif`;
+    const z = map.getZoom();
+    ctx.font = `600 ${z >= 19 ? 13 : z >= 18 ? 12 : 11}px Barlow, system-ui, sans-serif`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(255,255,255,.95)";
     const boxes = [];
