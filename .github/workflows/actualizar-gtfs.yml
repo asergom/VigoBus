@@ -61,6 +61,7 @@ jobs:
           node -e "const p=require('./js/planificador.js').build(require('./data/viajes.json')); if(p.pats.length<100) process.exit(1); console.log(p.pats.length+' recorridos')"
           # Y da viajes coherentes (con hasta 2 transbordos) con los datos nuevos.
           node tools/probar_planificador.js 150
+          node tools/probar_letreros.js
 
       - name: Subir si hay cambios
         run: |

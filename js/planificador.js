@@ -534,16 +534,23 @@
 
     // ¿Lleva a la parada de bajada un bus en vivo con este letrero, que pasa por la de subida a la
     // hora "when" (Date)? Se miran los viajes del horario de esa línea y sentido con ese letrero que
-    // pasan por la subida a esa hora (±10 min): si todos llegan a la bajada, sí; si ninguno, no; si
-    // unos sí y otros no, no se sabe cuál es ("mixed"). Sin viajes a esa hora, solo por el letrero.
+    // pasan por la subida a esa hora (±20 min): si todos llegan a la bajada, sí; si ninguno, no; si
+    // unos sí y otros no, no se sabe cuál es ("mixed": la web usa entonces el horario). Sin viajes a
+    // esa hora, solo por el letrero.
     // Devuelve "yes", "no", "mixed" o "unknown" (letrero que no aparece en el horario).
     const normTxt = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9ñ ]+/g, " ").replace(/\s+/g, " ").trim();
+    // Ventana para emparejar un bus en vivo con los viajes del horario. Amplia a propósito: un bus
+    // retrasado puede parecerse en hora al viaje siguiente, así que no se desempata por la hora más
+    // cercana (probado: con retrasos de 6 min o más aceptaría buses que no llegan). Con ±20 min no
+    // se acepta ninguno malo con retrasos de hasta 20 min; se pierde el dato en vivo en ~4 % de las
+    // situaciones con un letrero ambiguo (se usa el horario).
+    const MATCH_WINDOW = 1200;
     const goes = (pt, board, alight) => { const a = pt.p.indexOf(board); return a >= 0 && pt.p.indexOf(alight, a + 1) > a; };
     function liveReaches(leg, ruta, when) {
       const r = normTxt(ruta);
       const mine = (pt) => pt.l === leg.line && pt.s === leg.dir && pt.h && pt.h.some((x) => normTxt(x) === r);
-      const near = upcoming(leg.board, when, 600, 600).filter((x) => mine(pats[x.pat]));
+      const near = upcoming(leg.board, when, MATCH_WINDOW, MATCH_WINDOW).filter((x) => mine(pats[x.pat]));
       if (near.length) {
         const ok = near.map((x) => goes(pats[x.pat], leg.board, leg.alight));
         return ok.every(Boolean) ? "yes" : ok.some(Boolean) ? "mixed" : "no";
