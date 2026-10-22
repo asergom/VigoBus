@@ -17,6 +17,7 @@ Formato de salida:
           "f": -1,                      # trazado: -1 el principal, k el ramal k de ese sentido
           "p": [índices de parada],
           "t": [milésimas del viaje],   # en qué fracción del tiempo total se llega a cada parada
+          "h": ["LETRERO", ...],        # letreros de sus viajes (la "ruta" de la API en vivo)
           "v": [dSalida, duración, días, ...] }   # viajes: salida de la 1.ª parada en segundos desde
                                                   # medianoche (en diferencias con el anterior),
                                                   # duración en segundos y días de la semana como
@@ -126,7 +127,7 @@ def main(gtfs_zip):
     for v in viajes:
         linea = norm_linea(rutas[v["route_id"]]["route_short_name"])
         if linea in lineas and dias[v["service_id"]]:
-            info[v["trip_id"]] = (linea, sentido[(linea, v["direction_id"] or "0")], dias[v["service_id"]])
+            info[v["trip_id"]] = (linea, sentido[(linea, v["direction_id"] or "0")], dias[v["service_id"]], v["trip_headsign"].strip())
 
     horas = defaultdict(list)
     for st in leer(z, "stop_times.txt"):
@@ -135,13 +136,17 @@ def main(gtfs_zip):
 
     # Agrupar viajes por línea, sentido y secuencia de paradas.
     grupos = defaultdict(list)
+    letreros = defaultdict(set)   # letreros de los viajes de cada grupo
     for tid, hs in horas.items():
         hs.sort()
         hs = [(s, gtfs_a_parada[g], t) for s, g, t in hs if g in gtfs_a_parada]
         if len(hs) < 2:
             continue
-        linea, s, mask = info[tid]
-        grupos[(linea, s, tuple(p for _, p, _ in hs))].append(([t for *_, t in hs], mask))
+        linea, s, mask, letrero = info[tid]
+        clave = (linea, s, tuple(p for _, p, _ in hs))
+        grupos[clave].append(([t for *_, t in hs], mask))
+        if letrero:
+            letreros[clave].add(letrero)
 
     ids = sorted({p for (_, _, ps) in grupos for p in ps}, key=lambda x: (len(x), x))
     idx = {p: i for i, p in enumerate(ids)}
@@ -185,7 +190,8 @@ def main(gtfs_zip):
         for ts, mask in vs:
             plano += [ts[0] - prev, ts[-1] - ts[0], mask]
             prev = ts[0]
-        patrones.append({"l": linea, "s": s, "f": f_elegida, "p": [idx[p] for p in ps], "t": fr, "v": plano})
+        patrones.append({"l": linea, "s": s, "f": f_elegida, "p": [idx[p] for p in ps], "t": fr, "v": plano,
+                         "h": sorted(letreros[(linea, s, ps)])})
 
     # Paradas donde el GTFS dice que para una línea que la parada no anuncia (o al revés): solo aviso.
     sin_anunciar = sum(1 for pt in patrones for i in pt["p"] if pt["l"] not in lineas_parada.get(ids[i], set()))

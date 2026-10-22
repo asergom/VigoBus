@@ -57,7 +57,7 @@
         mask[k] = p.v[3 * k + 2];
         if (dur[k] > maxDur) maxDur = dur[k];
       }
-      return { n, l: p.l, s: p.s, f: p.f, p: p.p, t: p.t.map((x) => x / 1000), dep, dur, mask, maxDur };
+      return { n, l: p.l, s: p.s, f: p.f, p: p.p, t: p.t.map((x) => x / 1000), dep, dur, mask, maxDur, h: p.h || null };
     });
     // Recorridos que pasan por cada parada: [patrón, posición].
     const at = ids.map(() => []);
