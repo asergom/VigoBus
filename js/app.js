@@ -1546,28 +1546,9 @@
       .then((e) => { clearTimeout(timer); liveCache.set(id, e); return e; });
   }
 
-  // ¿Lleva un viaje con este letrero de la parada de subida a la de bajada? Según los recorridos
-  // del horario de esa línea y sentido que llevan ese letrero: true, false o null si no se sabe
-  // (letrero que no aparece en el horario).
-  const reachCache = new Map();
-  function letreroReaches(plan, leg, ruta) {
-    const r = norm(String(ruta || ""));
-    const k = `${leg.line}|${leg.dir}|${leg.board}|${leg.alight}|${r}`;
-    if (reachCache.has(k)) return reachCache.get(k);
-    let known = false, ok = false;
-    for (const pt of plan.pats) {
-      if (pt.l !== leg.line || pt.s !== leg.dir || !pt.h || !pt.h.some((x) => norm(x) === r)) continue;
-      known = true;
-      const a = pt.p.indexOf(leg.board);
-      if (a >= 0 && pt.p.indexOf(leg.alight, a + 1) > a) { ok = true; break; }
-    }
-    const out = known ? ok : null;
-    reachCache.set(k, out);
-    return out;
-  }
-  // Buses en vivo de la línea y sentido de un tramo, en su parada de subida. Solo los que de verdad
-  // llevan a la parada de bajada: no sirve un bus de otro ramal o que termina antes. Si la API da
-  // buses de la línea pero ninguno sirve, se devuelve null (se usa el horario, sin marcarlo dudoso).
+  // Buses en vivo de la línea y sentido de un tramo, en su parada de subida, que de verdad llevan a la
+  // parada de bajada (ver PV_PLAN.liveReaches). Si la API da buses de la línea pero ninguno sirve, se
+  // devuelve null (se usa el horario, sin marcarlo dudoso).
   function liveFor(plan, leg) {
     const e = liveCache.get(plan.ids[leg.board]);
     if (!e || !e.list) return null;
@@ -1576,7 +1557,12 @@
     const id = plan.ids[leg.board];
     const both = l && l.sentidos.filter((d) => d.paradas.includes(id) || (d.otras || []).includes(id)).length > 1;
     const mine = e.list.filter((x) => normLine(x.linea) === leg.line && (!both || !d || goesTo(d, x.ruta)));
-    const good = mine.filter((x) => letreroReaches(plan, leg, x.ruta) !== false);
+    // Solo los buses que seguro llegan (o de letrero desconocido): ni los de otro ramal o que acaban
+    // antes, ni aquellos en los que a esa hora hay viajes con su letrero que llegan y otros que no.
+    const good = mine.filter((x) => {
+      const r = plan.liveReaches(leg, x.ruta, new Date(e.at + Number(x.minutos) * 60000));
+      return r === "yes" || r === "unknown";
+    });
     if (mine.length && !good.length) return null;
     return good.map((x) => ({ ...x, _at: e.at }));
   }
