@@ -7,7 +7,8 @@
 
   const WALK = 75 / 60;          // metros por segundo a pie (4,5 km/h)
   const TRANSFER = 60;           // margen para cambiar de bus (s)
-  const HORIZON = 4 * 3600;      // se buscan buses que salgan como mucho 4 h después de ahora
+  const HORIZON = 4 * 3600;      // se buscan buses que salgan como mucho 4 h después de ahora…
+  const LONG_HORIZON = 30 * 3600; // …y, si no hay ninguno, hasta el día siguiente (de madrugada)
   // Coste para ordenar opciones: tiempo hasta llegar + castigo por andar y por transbordar.
   const WALK_PENALTY = 0.5;      // cada minuto andando cuenta como 1,5 min
   const TRANSFER_PENALTY = 300;  // un transbordo cuenta como 5 min más
@@ -98,7 +99,13 @@
     // Búsqueda. origins / dests: Map(índice de parada → metros a pie desde A / hasta B).
     // walk: metros andando de A a B (o Infinity). time: Date de salida.
     // maxTransfers: transbordos como máximo (1: directos y con un transbordo; 2: hasta tres buses).
-    function search({ origins, dests, walk = Infinity, time = new Date(), maxTransfers = 1 }) {
+    // Siempre se devuelve al menos la mejor opción en bus si existe alguna (aunque andar sea más
+    // rápido o salga dentro de muchas horas): ver pick().
+    function search(opts) {
+      const out = searchWithin(opts, HORIZON);
+      return out.length ? out : searchWithin(opts, LONG_HORIZON);
+    }
+    function searchWithin({ origins, dests, walk = Infinity, time = new Date(), maxTransfers = 1 }, horizon) {
       const base = new Date(time.getFullYear(), time.getMonth(), time.getDate());
       const now = Math.round((time - base) / 1000);
       const trips = tripsFor(time);
@@ -110,7 +117,9 @@
         lastDest.set(n, Math.max(lastDest.get(n) || 0, k));
       }
       const best = new Map();       // línea(s) → mejor opción
-      let bestArr = walk < Infinity ? now + walk / WALK : Infinity;
+      // Mejor llegada en bus hasta ahora (para podar). No cuenta ir andando: aunque andar sea más
+      // rápido, hay que encontrar las buenas opciones en bus.
+      let bestArr = Infinity;
       const keep = (j) => {
         j.score = j.arr - now + WALK_PENALTY * j.walkM / WALK + TRANSFER_PENALTY * j.transfers;
         const old = best.get(j.key);
@@ -139,7 +148,7 @@
         const tau = now + mo / WALK;
         for (const [n, k] of at[o]) {
           const pt = pats[n], tr = trips(pt);
-          const nt = nextTrip(pt, tr, k, tau, now + HORIZON);
+          const nt = nextTrip(pt, tr, k, tau, now + horizon);
           if (!nt) continue;
           firsts.push({ o, mo, pt, tr, q: nt.q, k });
           // Directo.
@@ -183,7 +192,7 @@
 
       // RAPTOR: la llegada más temprana con 1, 2… buses. Encuentra lo que la enumeración de arriba
       // no ve (más de un transbordo) y, con 0–1 transbordos, a veces una combinación mejor.
-      raptor({ origins, dests, now, trips, rounds: maxTransfers + 1, keep, busLeg,
+      raptor({ origins, dests, now, trips, rounds: maxTransfers + 1, keep, busLeg, horizon,
         limit: () => (bestArr - now) * 1.6 + 600 + now });
 
       // Salir lo más tarde posible en las opciones con transbordo (menos espera en el cambio).
@@ -197,7 +206,7 @@
     // pasan por paradas mejoradas en la anterior y, después, los transbordos a pie (≤300 m).
     // Una parada solo se guarda si mejora su mejor llegada de cualquier ronda anterior.
     // No se vuelve a subir a la misma línea de la que uno se acaba de bajar (como en la enumeración).
-    function raptor({ origins, dests, now, trips, rounds, keep, busLeg, limit }) {
+    function raptor({ origins, dests, now, trips, rounds, keep, busLeg, limit, horizon }) {
       const S = ids.length;
       const best = new Float64Array(S).fill(Infinity);   // mejor llegada a cada parada (todas las rondas)
       let prev = new Float64Array(S).fill(Infinity);     // llegadas de la ronda anterior
@@ -239,7 +248,7 @@
               const ready = prev[s] + (k > 1 ? TRANSFER : 0);
               const curAt = q >= 0 ? tr.dep[q] + pt.t[i] * tr.dur[q] : Infinity;
               if (ready <= curAt) {
-                const nt = nextTrip(pt, tr, i, ready, k > 1 ? ready + MAX_WAIT : now + HORIZON);
+                const nt = nextTrip(pt, tr, i, ready, k > 1 ? ready + MAX_WAIT : now + horizon);
                 if (nt && nt.at < curAt) { q = nt.q; from = i; }
               }
             }
@@ -315,7 +324,13 @@
     // que llegan 10 min más tarde que otra mejor en todo lo demás: la espera real puede cambiarlo.
     function pick(list, now, walk, wide = false) {
       const walkArr = walk < Infinity ? now + walk / WALK : Infinity;
-      list = list.filter((j) => !j.broken && j.arr + WALK_SLACK < walkArr);
+      const all = list.filter((j) => !j.broken);
+      list = all.filter((j) => j.arr + WALK_SLACK < walkArr);
+      // Si ninguna opción en bus compensa frente a andar, se enseña igualmente la mejor (marcada
+      // "slower"); antes de los tiempos en vivo se guardan unas pocas, porque la espera real cambia.
+      if (!list.length && all.length) {
+        return all.sort((a, b) => a.score - b.score).slice(0, wide ? 3 : 1).map((j) => ({ ...j, slower: j.arr >= walkArr }));
+      }
       // Un transbordo para acabar cogiendo una línea que ya se puede coger directamente (y que
       // llega más o menos a la vez) no aporta nada: "15A una parada y luego el H2" frente al H2.
       const lastLine = (j) => j.legs[j.legs.length - 2].line;
@@ -375,7 +390,7 @@
         } else {
           // Sin dato en vivo que sirva: el horario (si la API respondió y no da ningún bus en
           // su horizonte de unos 100 min, el programado se marca como dudoso).
-          const nt = nextTrip(pt, tr, leg.from, ready, ready + HORIZON);
+          const nt = nextTrip(pt, tr, leg.from, ready, Math.max(ready + HORIZON, leg.dep + HORIZON));
           if (!nt) { out.broken = true; return out; }
           leg.dep = nt.at;
           leg.arr = tr.dep[nt.q] + pt.t[leg.to] * tr.dur[nt.q];

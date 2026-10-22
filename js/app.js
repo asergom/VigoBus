@@ -1308,9 +1308,10 @@
     tripBuses = [];
   }
 
+  const WIDE_WALK_STOP = 2500;       // si así no hay ningún bus, se buscan paradas más lejos
   // Paradas alcanzables a pie desde un punto: Map(índice de parada en el plan → metros).
-  function stopsAround(net, plan, ll) {
-    for (const max of [MAX_WALK_STOP, MAX_WALK_STOP * 1.6]) {
+  function stopsAround(net, plan, ll, radii = [MAX_WALK_STOP, MAX_WALK_STOP * 1.6]) {
+    for (const max of radii) {
       const dist = net.around(ll, max);
       const out = new Map();
       for (const s of stops) {
@@ -1387,6 +1388,12 @@
       lastTrip.origins = stopsAround(net, plan, trip.a.ll);
       lastTrip.dests = stopsAround(net, plan, trip.b.ll);
       planSearch();
+      // Siempre debe salir al menos una opción en bus: si no hay ninguna, paradas más lejos.
+      if (!lastTrip.cands.length) {
+        lastTrip.origins = stopsAround(net, plan, trip.a.ll, [WIDE_WALK_STOP]);
+        lastTrip.dests = stopsAround(net, plan, trip.b.ll, [WIDE_WALK_STOP]);
+        planSearch();
+      }
     }
     const st = history.state && history.state.opt;
     trip.sel = st && (st === "walk" || lastTrip.opts.some((o) => o.key === st)) ? st : null;
@@ -1404,7 +1411,7 @@
     const start = tripStart();
     lt.start = start;
     lt.base = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
-    lt.cands = lt.plan.search({ origins: lt.origins, dests: lt.dests, walk: lt.walk ? lt.walk.dist : Infinity, time: start });
+    lt.cands = lt.plan.search({ origins: lt.origins, dests: lt.dests, walk: lt.walk ? lt.walk.dist : Infinity, time: start, maxTransfers: 2 });
     if (!lt.live) lt.opts = lt.plan.choose(lt.cands, start, lt.walk ? lt.walk.dist : Infinity);
   }
 
@@ -1452,10 +1459,14 @@
   // "Pasa en 4 min" (en vivo) / "A las 9:14" (horario).
   function whenHtml(leg) {
     const m = Math.round((leg.dep - nowSec()) / 60);
-    const txt = m <= 0 ? t("arriving") : m < 60 ? t("in_min", { n: m }) : t("at_time", { time: clock(leg.dep) });
+    const txt = m <= 0 ? t("arriving") : m < 60 ? t("in_min", { n: m }) : atTime(leg.dep);
     if (leg.live) return `<span class="live">${esc(txt)}</span>`;
-    return `<span class="sched">${esc(m < 60 && m > 0 ? t("at_time", { time: clock(leg.dep) }) : txt)} · ${esc(t("scheduled"))}</span>`;
+    return `<span class="sched">${esc(m < 60 && m > 0 ? atTime(leg.dep) : txt)} · ${esc(t("scheduled"))}</span>`;
   }
+  // Hora de una salida o llegada, con "mañana" si es del día siguiente.
+  const nextDay = (sec) => sec >= 86400 && new Date(lastTrip.base + sec * 1000).getDate() !== new Date().getDate();
+  const atTime = (sec) => t(nextDay(sec) ? "tomorrow_at" : "at_time", { time: clock(sec) });
+  const arriveAt = (sec) => t(nextDay(sec) ? "arrive_tomorrow" : "arrive_at", { time: clock(sec) });
   function chain(j) {
     const parts = [];
     j.legs.forEach((l) => {
@@ -1495,7 +1506,7 @@
         <span class="chain">${chain(j)}</span>
         <span class="eta">${durHtml(total)}</span>
         <span class="when">${whenHtml(first)} · ${esc(stopName(first.board))}${first.doubtful ? ` <span class="warn">${esc(t("no_live"))}</span>` : ""}</span>
-        <span class="arr">${esc(t("arrive_at", { time: clock(j.arr) }))}</span>
+        <span class="arr">${esc(arriveAt(j.arr))}</span>
       </button></li>`;
     });
     // Ir andando: primero si llega antes que cualquier bus; si no, al final.
@@ -1512,6 +1523,8 @@
     let head = "";
     if (lt.planError) head = `<p class="trip-note">${esc(t("plan_error"))}</p>`;
     else if (!lt.opts.length) head = `<div class="state"><strong>${esc(t("plan_none"))}</strong></div>`;
+    // Andar es más rápido, pero se enseña igualmente la mejor opción en bus.
+    else if (lt.opts.every((o) => o.slower)) head = `<p class="trip-note">${esc(t("walk_faster"))}</p>`;
     if (!items.length) head = `<div class="state"><strong>${esc(t("trip_none"))}</strong></div>`;
     const date = lt.plan ? new Date(`${lt.plan.fecha}T12:00:00`).toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" }) : "";
     const foot = lt.opts.length ? `<p class="trip-note">${lt.live ? "" : `${esc(t("live_checking"))} `}${esc(t("plan_note", { date }))}</p>` : "";
@@ -1556,7 +1569,7 @@
       }
     });
     steps.push(`<li class="step end"><span class="ico"><span class="pin pin-b">B</span></span>
-      <span class="txt">${esc(t("step_arrive", { time: clock(j.arr) }))}</span></li>`);
+      <span class="txt">${esc(t(nextDay(j.arr) ? "step_arrive_tomorrow" : "step_arrive", { time: clock(j.arr) }))}</span></li>`);
     const total = (j.arr - startSec()) / 60;
     return `${back}<div class="opt-head"><span class="chain">${chain(j)}</span><span class="eta">${durHtml(total)}</span></div>
       <ol class="steps">${steps.join("")}</ol>`;
