@@ -248,7 +248,8 @@ def main():
     def flat(a, b):  # distancia aproximada en metros (suficiente a estas escalas)
         return math.hypot((a[0] - b[0]) * 111320, (a[1] - b[1]) * 82600)
 
-    for c in calles:
+    for i, c in enumerate(calles):
+        c["i"] = i  # posición fija para desempatar (nunca id(): cambia en cada ejecución)
         pts = [p for tr in c["tramos"] for p in tr]
         c["caja"] = (min(p[0] for p in pts), max(p[0] for p in pts), min(p[1] for p in pts), max(p[1] for p in pts))
         c["pts"] = pts
@@ -271,7 +272,7 @@ def main():
                 cands, como = [c for c in calles if "tramos" in c and toca(c) and casa_nombre(nombre, c["nombre"])], "parecido"
         sueltos = []
         for num, ll in lst:
-            mejor = min(((min(flat(ll, p) for p in c["pts"]), id(c), c) for c in cands), default=None)
+            mejor = min(((min(flat(ll, p) for p in c["pts"]), c["i"], c) for c in cands), default=None)
             if mejor and mejor[0] < CERCA:
                 mejor[2]["portales"].append((num, ll))
                 asignados[como] += 1
