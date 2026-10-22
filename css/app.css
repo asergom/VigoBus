@@ -366,6 +366,7 @@ button.badge:hover { filter: brightness(1.08); }
 .line-title .badge { flex: none; }
 .line-title h2 { margin: 0; font-size: 22px; }
 .dirs { margin-top: 12px; }
+.line-whole { align-self: flex-start; margin: 8px 0 0; padding: 4px 0; border: 0; background: none; color: var(--focus); font-weight: 600; font-size: 15px; flex: none; }
 .dirs button { height: auto; min-height: 34px; padding: 6px 8px; line-height: 1.15; font-size: 14px; }
 /* Paradas de la línea en orden: trazo vertical del color de la línea con un punto por parada */
 .route-list li { position: relative; }

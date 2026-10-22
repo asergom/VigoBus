@@ -447,10 +447,11 @@
     if (h.startsWith("horario/") && byId.has(h.slice(8))) { showSched(h.slice(8)); return; }
     if (h.startsWith("dir/") && showPlace(h.slice(4))) return;
     if (h.startsWith("linea/")) {
-      // #linea/18A o #linea/18A/5660 (abierta desde esa parada: se ve el próximo bus hacia ella).
-      const [code, from] = h.slice(6).split("/");
+      // #linea/18A, #linea/18A/5660 (abierta desde esa parada: se ve el próximo bus hacia ella) o
+      // #linea/A/14225/<letrero>: solo los viajes con ese letrero, como si fueran una línea aparte.
+      const [code, from, ...rest] = h.slice(6).split("/");
       if (!lines) return;                      // se reintenta al cargar las líneas
-      if (lines[code]) { showLine(code, byId.has(from) ? from : null); return; }
+      if (lines[code]) { showLine(code, byId.has(from) ? from : null, byId.has(from) && rest.length ? rest.join("/") : null); return; }
       toast(t("no_line", { code }));
     } else if (h && byId.has(h)) {
       showStop(h); return;
@@ -503,29 +504,57 @@
     // Solo el sentido elegido: su trazado y sus paradas.
     const prev = active.stops;
     const dir = l.sentidos[active.dir];
-    active.stops = new Set([...dir.paradas, ...(dir.otras || [])]);
+    const v = active.variant && active.variant.main ? active.variant : null;
+    active.stops = new Set(v ? [...v.main, ...v.extra] : [...dir.paradas, ...(dir.otras || [])]);
     updateStopVisibility();
     stops.forEach((s) => {
       const on = active.stops.has(s.id);
       s.marker.setOpacity(on ? 1 : 0.12).setZIndexOffset(on ? 500 : 0);
       if (on || prev.has(s.id)) refreshIcon(s);
     });
-    // Con el próximo bus hacia la parada de un ramal concreto, solo se dibuja su recorrido.
-    const only = track && track.dir === active.dir ? track.only : null;
-    if (only && !only.includes(-1) && only.length === 1) {
-      lineStroke(decodePolyline(dir.ramales[only[0]]), l.color);
+    // Variante: su recorrido pasando por sus paradas (y, más fino, el de sus viajes distintos).
+    if (v) {
+      v.others.forEach((ids) => thinStroke(pathThrough(dir, ids), l.color));
+      lineStroke(pathThrough(dir, v.main), l.color);
       return;
     }
     // Trazado con borde para que se vea sobre cualquier fondo.
     // Ramales (solo algunos viajes): trazo continuo más fino, debajo del recorrido principal.
     (dir.ramales || []).forEach((r, k) => {
-      if (only && !only.includes(k)) return;
       const rp = decodePolyline(r);
       L.polyline(rp, { renderer, color: "#13222C", weight: 7, opacity: 0.25, interactive: false }).addTo(lineGroup);
       L.polyline(rp, { renderer, color: "#FFFFFF", weight: 6, opacity: 1, interactive: false }).addTo(lineGroup);
       L.polyline(rp, { renderer, color: l.color, weight: 3.5, opacity: 0.9, interactive: false, lineCap: "round" }).addTo(lineGroup);
     });
-    if (!only || only.includes(-1)) lineStroke(decodePolyline(dir.trazado), l.color);
+    lineStroke(decodePolyline(dir.trazado), l.color);
+  }
+  function thinStroke(rp, color) {
+    L.polyline(rp, { renderer, color: "#13222C", weight: 7, opacity: 0.25, interactive: false }).addTo(lineGroup);
+    L.polyline(rp, { renderer, color: "#FFFFFF", weight: 6, opacity: 1, interactive: false }).addTo(lineGroup);
+    L.polyline(rp, { renderer, color, weight: 3.5, opacity: 0.9, interactive: false, lineCap: "round" }).addTo(lineGroup);
+  }
+  // Paradas de una variante (los viajes de esa línea y sentido con un letrero), del horario: la
+  // secuencia del recorrido con más viajes que pasa por la parada de origen; las de sus otros
+  // recorridos, aparte ("solo algunos viajes").
+  function loadVariant(act) {
+    PLAN.load().then((plan) => {
+      if (active !== act || !act.variant) return;
+      const r = norm(act.variant.ruta);
+      const fi = plan.index.get(act.from);
+      const pats = plan.pats.filter((pt) => pt.l === act.code && pt.s === act.dir && pt.h && pt.h.some((x) => norm(x) === r))
+        .sort((a, b) => (b.p.includes(fi) - a.p.includes(fi)) || (b.dep.length - a.dep.length));
+      if (!pats.length) return;   // letrero que no está en el horario: la línea entera
+      const ids = (pt) => pt.p.map((i) => plan.ids[i]).filter((id) => byId.has(id));
+      const main = ids(pats[0]);
+      const others = pats.slice(1).map(ids).filter((x) => x.length > 1);
+      const seen = new Set(main);
+      const extra = [];
+      others.forEach((x) => x.forEach((id) => { if (!seen.has(id)) { seen.add(id); extra.push(id); } }));
+      Object.assign(act.variant, { main, extra, others });
+      renderLineStops();
+      drawLine();
+      drawBus();
+    }).catch(() => {});
   }
   function lineStroke(pts, color) {
     L.polyline(pts, { renderer, color: "#13222C", weight: 11, opacity: 0.35, interactive: false }).addTo(lineGroup);
@@ -563,23 +592,28 @@
     fitPoints([d.trazado, ...(d.ramales || [])].flatMap(decodePolyline), 16);
   }
 
-  function showLine(code, from = null) {
+  function showLine(code, from = null, variant = null) {
     leaveStop();
-    const changed = !active || active.code !== code || active.from !== from;
+    const changed = !active || active.code !== code || active.from !== from || (active.variant ? active.variant.ruta : null) !== variant;
     if (changed) {
       clearLine();
       // Abierta desde una parada: el sentido que pasa por ella (si pasan los dos, el de la fila tocada).
-      const dirWith = from ? dirThrough(lines[code], from, lineRuta) : -1;
-      active = { code, dir: Math.max(0, dirWith), stops: new Set(), from, fromDir: dirWith };
+      const dirWith = from ? dirThrough(lines[code], from, variant || lineRuta) : -1;
+      active = { code, dir: Math.max(0, dirWith), stops: new Set(), from, fromDir: dirWith,
+        variant: variant && dirWith >= 0 ? { ruta: variant } : null };
+      if (active.variant) loadVariant(active);
     }
     const l = lines[code];
+    const v = active.variant;
     showView("line");
     const badge = $("#line-badge");
     badge.textContent = code;
     badge.style.setProperty("--lc", l.color);
     badge.style.setProperty("--lt", l.texto);
-    $("#line-name").textContent = l.nombre;
-    $("#line-dirs").hidden = l.sentidos.length < 2;
+    // Variante (un letrero): su destino como título y, en lugar de los sentidos, "ver toda la línea".
+    $("#line-name").textContent = v ? t("towards", { dest: titleCase(v.ruta) }) : l.nombre;
+    $("#line-whole").hidden = !v;
+    $("#line-dirs").hidden = !!v || l.sentidos.length < 2;
     $("#line-dirs").innerHTML = l.sentidos.map((d, i) =>
       `<button role="tab" type="button" data-dir="${i}" aria-selected="${i === active.dir}">${esc(t("towards", { dest: d.destino }))}</button>`).join("");
     renderLineStops();
@@ -675,29 +709,25 @@
     const l = lines[tr.code];
     let mine = list.filter((e) => normLine(e.linea) === tr.code && !isNaN(Number(e.minutos)));
     const both = l.sentidos.filter((d) => d.paradas.includes(tr.stop) || (d.otras || []).includes(tr.stop)).length > 1;
-    if (both) {
+    // Variante: solo los buses con su letrero.
+    const v = active && active.code === tr.code && active.variant;
+    if (v) mine = mine.filter((e) => norm(String(e.ruta || "")) === norm(v.ruta));
+    else if (both) {
       const same = mine.filter((e) => goesTo(l.sentidos[tr.dir], e.ruta));
       if (same.length) mine = same;
     }
     mine.sort((a, b) => Number(a.minutos) - Number(b.minutos));
-    // Si el próximo bus es de un ramal, el mapa dibuja solo ese recorrido y los buses que lo hacen.
+    // Posición del bus: sobre el trazado de su letrero si es un único ramal que pasa por la parada.
     const d = l.sentidos[tr.dir];
     const only = mine[0] ? branchesOf(d, mine[0].ruta) : null;
-    if (only) mine = mine.filter((e) => { const b = branchesOf(d, e.ruta); return !b || b.some((x) => only.includes(x)); });
-    const changed = String(only) !== String(tr.only || null);
-    tr.only = only;
-    // Bus de un solo ramal que pasa por la parada: su posición se calcula sobre ese ramal.
-    if (changed) {
-      tr.loc = tr.baseLoc = tr.baseLoc || tr.loc;
-      if (only && only.length === 1 && only[0] >= 0 && d.ramales[only[0]]) {
-        const sh = BUS.prepare(BUS.decode(d.ramales[only[0]]));
-        const p = BUS.project(sh, byId.get(tr.stop).ll);
-        if (p.off < 60) tr.loc = { shape: sh, along: p.along, off: p.off, branch: only[0] };
-      }
+    tr.loc = tr.baseLoc = tr.baseLoc || tr.loc;
+    if (only && only.length === 1 && only[0] >= 0 && d.ramales[only[0]]) {
+      const sh = BUS.prepare(BUS.decode(d.ramales[only[0]]));
+      const p = BUS.project(sh, byId.get(tr.stop).ll);
+      if (p.off < 60) tr.loc = { shape: sh, along: p.along, off: p.off, branch: only[0] };
     }
     tr.ests = mine;
     tr.est = mine[0] || null;
-    if (changed && active && active.code === tr.code && active.dir === tr.dir) drawLine();
     tr.at = at;
     tr.state = tr.est ? "ok" : "none";
     drawBus();
@@ -759,7 +789,8 @@
   function renderBusCard() {
     const card = $("#line-bus");
     const tr = track;
-    if (!tr) { card.hidden = true; return; }
+    // Solo con el sentido que pasa por la parada a la vista (en el otro, ese bus no viene aquí).
+    if (!tr || !active || active.dir !== tr.dir) { card.hidden = true; return; }
     const l = lines[tr.code];
     const s = byId.get(tr.stop);
     const b = busNow();
@@ -804,11 +835,12 @@
   function renderLineStops() {
     const l = lines[active.code];
     const dir = l.sentidos[active.dir];
+    const v = active.variant && active.variant.main ? active.variant : null;
     const list = $("#line-stops");
     list.style.setProperty("--lc", l.color);
     const item = (s) => stopItem(s, { dist: me ? haversine(me, s.ll) : null, noLines: true });
-    const items = dir.paradas.map((id) => byId.get(id)).filter(Boolean).map(item);
-    const extra = (dir.otras || []).map((id) => byId.get(id)).filter(Boolean);
+    const items = (v ? v.main : dir.paradas).map((id) => byId.get(id)).filter(Boolean).map(item);
+    const extra = (v ? v.extra : dir.otras || []).map((id) => byId.get(id)).filter(Boolean);
     if (extra.length) {
       const head = groupHead(t("some_trips"));
       head.classList.add("branch-head");
@@ -962,7 +994,7 @@
       const linea = normLine(b.linea);
       const ruta = titleCase(String(b.ruta || ""));
       const k = `${linea}|${ruta}`;
-      if (!groups.has(k)) groups.set(k, { linea, ruta, buses: [], dir: s ? liveDir(s.id, linea, b.ruta) : null });
+      if (!groups.has(k)) groups.set(k, { linea, ruta, raw: String(b.ruta || "").trim(), buses: [], dir: s ? liveDir(s.id, linea, b.ruta) : null });
       groups.get(k).buses.push(Number(b.minutos));
     });
     const rows = [];
@@ -971,9 +1003,13 @@
       if (!mins.length) continue;
       if (g.dir != null) covered.add(`${g.linea}|${g.dir}`);
       else if (lines && lines[g.linea]) lines[g.linea].sentidos.forEach((_, i) => covered.add(`${g.linea}|${i}`));
-      const ps = g.dir != null ? passesOf.get(`${g.linea}|${g.dir}`) || [] : [];
+      // Retraso: frente a los viajes del horario con su mismo letrero (si los hay; si no, la línea y sentido).
+      const all = g.dir != null ? passesOf.get(`${g.linea}|${g.dir}`) || [] : [];
+      const rn = norm(g.raw || "");
+      const same = all.filter((p) => { const h = stopPlan.pats[p.pat].h; return h && h.some((x) => norm(x) === rn); });
+      const ps = same.length ? same : all;
       const delay = ps.length ? delayOf(ps, nowS + mins[0] * 60, new Set()) : null;
-      rows.push({ live: true, linea: g.linea, ruta: g.ruta, sortMin: mins[0], mins, delay });
+      rows.push({ live: true, linea: g.linea, ruta: g.ruta, raw: g.raw, sortMin: mins[0], mins, delay });
     }
     // Según horario (19): líneas y sentidos sin ningún bus en vivo, su próximo paso.
     for (const [k, ps] of passesOf) {
@@ -1010,7 +1046,7 @@
       // Toda la fila (número, destino y tiempo) abre la línea en el mapa.
       const known = lines && lines[g.linea];
       const tag = known ? "button" : "div";
-      const attrs = known ? ` type="button" data-line="${esc(g.linea)}" data-ruta="${esc(g.ruta)}" title="${esc(t("see_line", { code: g.linea }))}"` : "";
+      const attrs = known ? ` type="button" data-line="${esc(g.linea)}" data-ruta="${esc(g.ruta)}"${g.raw ? ` data-raw="${esc(g.raw)}"` : ""} title="${esc(t("see_line", { code: g.linea }))}"` : "";
       return `<${tag} class="arrival${g.live ? "" : " is-sched"}"${attrs}>
         <span class="badge"${lineStyle(g.linea)}>${esc(g.linea)}</span>
         <span class="route"><b>${esc(g.ruta)}</b>${sub}</span>
@@ -1151,7 +1187,9 @@
     }
     if (ctx === "line" && active) {
       const l = lines[active.code];
-      return { url: `${base}#linea/${encodeURIComponent(active.code)}${active.from ? `/${active.from}` : ""}`, text: `${t("line_n", { code: active.code })} · ${l.nombre}` };
+      const v = active.from && active.variant ? `/${encodeURIComponent(active.variant.ruta)}` : "";
+      return { url: `${base}#linea/${encodeURIComponent(active.code)}${active.from ? `/${active.from}` : ""}${v}`,
+        text: `${t("line_n", { code: active.code })} · ${active.variant ? t("towards", { dest: titleCase(active.variant.ruta) }) : l.nombre}` };
     }
     if (ctx === "place" && place) return { url: `${base}#${placeToken(place)}`, text: place.label };
     if (ctx === "sched" && sched) {
@@ -1501,7 +1539,6 @@
   const MAX_WALK_STOP = 1000;        // metros a pie como máximo hasta la parada de subida o desde la de bajada
   const liveCache = new Map();       // parada → { at, list | null } (null: sin respuesta)
   const walkCache = new Map();       // tramos a pie ya calculados
-  const patShape = new Map();        // recorrido → { sh, along[] }
   let tripTimer = null, tripTick = null, tripBuses = [];
 
   function stopTripLive() {
@@ -1873,33 +1910,41 @@
   function busPath(leg) {
     const plan = lastTrip.plan;
     const pt = plan.pats[leg.pat];
-    if (!patShape.has(pt.n)) {
-      const dir = lines[pt.l].sentidos[pt.s];
-      const lls = pt.p.map((i) => byId.get(plan.ids[i]).ll);
+    return pathThrough(lines[pt.l].sentidos[pt.s], pt.p.map((i) => plan.ids[i]), leg.from, leg.to, `p${pt.n}`);
+  }
+  // Recorrido de un sentido de línea pasando por una lista de paradas (ids), de la posición "from" a
+  // la "to": cada trozo con el trazado (principal o ramal) que pasa por sus paradas.
+  const pathCache = new Map();
+  function pathThrough(dir, ids, from = 0, to = ids.length - 1, key = null) {
+    const k = key || ids.join(",");
+    if (!pathCache.has(k)) {
+      const lls = ids.map((id) => byId.get(id).ll);
       const shapes = [dir.trazado, ...(dir.ramales || [])].map((enc) => {
         const sh = BUS.prepare(BUS.decode(enc));
         const r = BUS.stopsAlong(sh, lls);
         return { sh, along: r.map((x) => x.along), off: r.map((x) => x.off) };
       });
-      patShape.set(pt.n, { shapes, lls });
+      pathCache.set(k, { shapes, lls });
+      if (pathCache.size > 300) pathCache.delete(pathCache.keys().next().value);
     }
-    const { shapes, lls } = patShape.get(pt.n);
+    const { shapes, lls } = pathCache.get(k);
     const out = [];
-    let k = leg.from;
-    while (k < leg.to) {
+    const leg = { to };
+    let kk = from;
+    while (kk < leg.to) {
       let best = null;
       for (const s of shapes) {
-        let e = k;
+        let e = kk;
         while (e < leg.to && s.off[e] <= ON_SHAPE && s.off[e + 1] <= ON_SHAPE && s.along[e + 1] >= s.along[e]) e++;
-        if (e > k && (!best || e > best.e)) best = { s, e };
+        if (e > kk && (!best || e > best.e)) best = { s, e };
       }
       if (best) {
-        if (!out.length) out.push(lls[k]);   // desde la propia parada
-        out.push(...BUS.slice(best.s.sh, best.s.along[k], best.s.along[best.e]));
-        k = best.e;
+        if (!out.length) out.push(lls[kk]);   // desde la propia parada
+        out.push(...BUS.slice(best.s.sh, best.s.along[kk], best.s.along[best.e]));
+        kk = best.e;
       } else {
-        out.push(lls[k], lls[k + 1]);
-        k++;
+        out.push(lls[kk], lls[kk + 1]);
+        kk++;
       }
     }
     out.push(lls[leg.to]);                   // hasta la propia parada
@@ -2192,7 +2237,9 @@
       $("#q").blur();
       // Si se abre desde una parada, la línea se muestra alrededor de esa parada y con su próximo bus.
       lineRuta = line.dataset.ruta || null;
-      navigate(`linea/${line.dataset.line}${current ? `/${current.id}` : ""}`);
+      // Desde una parada, la fila abre solo los viajes con ese letrero (como una línea aparte).
+      const ruta = current && line.dataset.raw;
+      navigate(`linea/${line.dataset.line}${current ? `/${current.id}` : ""}${ruta ? `/${encodeURIComponent(ruta)}` : ""}`);
       return;
     }
     const dir = e.target.closest("button[data-dir]");
@@ -2202,10 +2249,15 @@
       renderLineStops();
       drawLine();
       drawBus();
+      renderBusCard();
     }
   });
   $("#back").addEventListener("click", goBack);
   $("#line-back").addEventListener("click", goBack);
+  // Desde una variante, la línea completa (con sus dos sentidos y todos sus ramales).
+  $("#line-whole").addEventListener("click", () => {
+    if (active) navigate(`linea/${active.code}${active.from ? `/${active.from}` : ""}`);
+  });
   $("#fav").addEventListener("click", () => {
     if (!current) return;
     const id = current.id;
@@ -2302,7 +2354,7 @@
       showStop(current.id, { repaint: true });
       if (lastArrivals) renderArrivals(lastArrivals);
       showUpdated();
-    } else if (active) showLine(active.code, active.from);
+    } else if (active) showLine(active.code, active.from, active.variant ? active.variant.ruta : null);
     else if (place) { document.title = "Próximo Vitrasa"; showPlace(); }
     else if (!$("#info").hidden) showInfo();
     else if (!$("#sched").hidden && sched) showSched(sched.id);
