@@ -196,8 +196,14 @@ def main(gtfs_zip: str) -> None:
             extra = []
             for f in ramales[clave]:
                 extra += [p for p in paradas_de(f) if p not in ids and p not in extra]
+            destino = titulo(destinos[(clave, forma)].most_common(1)[0][0])
+            # Letreros de los demás viajes de este sentido (la API los da como "ruta"),
+            # sin los que salen también en otro sentido de la línea: no sirven para distinguirlos.
+            propios = {titulo(h) for (k, _), c in destinos.items() if k == clave for h in c if h.strip()}
+            ajenos = {titulo(h) for (k, _), c in destinos.items() if k[0] == linea and k != clave for h in c if h.strip()}
             sentidos.append({
-                "destino": titulo(destinos[(clave, forma)].most_common(1)[0][0]),
+                "destino": destino,
+                "letreros": sorted(propios - ajenos - {destino}),
                 "paradas": ids,
                 "trazado": codificar(simplificar(puntos, TOLERANCIA_M)),
                 # Paradas que solo atienden algunos viajes, y el trazado de esos ramales.

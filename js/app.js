@@ -580,11 +580,19 @@
     lineRuta = null;
   }
 
+  // ¿Va el bus con letrero "ruta" (dato de la API) en este sentido? Cada sentido tiene su
+  // destino principal y otros letreros de algunos viajes ("Xestoso por Hospital"…).
+  function goesTo(d, ruta) {
+    if (!d || !ruta) return false;
+    const r = norm(String(ruta));
+    return norm(d.destino) === r || (d.letreros || []).some((x) => norm(x) === r);
+  }
+
   // Sentido de la línea que pasa por una parada; si pasan varios, el que va hacia "ruta".
   function dirThrough(l, id, ruta) {
     const idx = l.sentidos.map((d, i) => (d.paradas.includes(id) || (d.otras || []).includes(id) ? i : -1)).filter((i) => i >= 0);
     if (idx.length > 1 && ruta) {
-      const hit = idx.find((i) => norm(l.sentidos[i].destino) === norm(ruta));
+      const hit = idx.find((i) => goesTo(l.sentidos[i], ruta));
       if (hit != null) return hit;
     }
     return idx.length ? idx[0] : -1;
@@ -650,7 +658,7 @@
     let mine = list.filter((e) => normLine(e.linea) === tr.code && !isNaN(Number(e.minutos)));
     const both = l.sentidos.filter((d) => d.paradas.includes(tr.stop) || (d.otras || []).includes(tr.stop)).length > 1;
     if (both) {
-      const same = mine.filter((e) => norm(String(e.ruta || "")) === norm(l.sentidos[tr.dir].destino));
+      const same = mine.filter((e) => goesTo(l.sentidos[tr.dir], e.ruta));
       if (same.length) mine = same;
     }
     mine.sort((a, b) => Number(a.minutos) - Number(b.minutos));
@@ -1251,10 +1259,10 @@
     const e = liveCache.get(plan.ids[leg.board]);
     if (!e || !e.list) return null;
     const l = lines[leg.line];
-    const dest = l && l.sentidos[leg.dir] ? norm(l.sentidos[leg.dir].destino) : null;
+    const d = l && l.sentidos[leg.dir];
     const id = plan.ids[leg.board];
     const both = l && l.sentidos.filter((d) => d.paradas.includes(id) || (d.otras || []).includes(id)).length > 1;
-    return e.list.filter((x) => normLine(x.linea) === leg.line && (!both || !dest || norm(String(x.ruta || "")) === dest))
+    return e.list.filter((x) => normLine(x.linea) === leg.line && (!both || !d || goesTo(d, x.ruta)))
       .map((x) => ({ ...x, _at: e.at }));
   }
 
