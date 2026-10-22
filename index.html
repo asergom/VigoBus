@@ -76,6 +76,9 @@
           <span id="line-badge" class="badge"></span>
           <h2 id="line-name"></h2>
         </div>
+        <button class="icon-btn share" type="button" data-share="line" data-i18n-aria="share" data-i18n-title="share">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg>
+        </button>
       </div>
       <div id="line-dirs" class="tabs dirs" role="tablist" data-i18n-aria="direction"></div>
       <!-- Próximo bus hacia la parada desde la que se abrió la línea -->
@@ -90,6 +93,9 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
         </button>
         <h2 class="trip-title" data-i18n="trip_title"></h2>
+        <button class="icon-btn share" type="button" data-share="trip" data-i18n-aria="share" data-i18n-title="share">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg>
+        </button>
       </div>
       <div class="trip-fields">
         <div class="trip-field">
@@ -134,6 +140,9 @@
           <h2 id="place-name"></h2>
           <p class="stop-meta"><span id="place-meta"></span><span id="place-dist"></span></p>
         </div>
+        <button class="icon-btn share" type="button" data-share="place" data-i18n-aria="share" data-i18n-title="share">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg>
+        </button>
       </div>
       <button id="place-trip" class="place-trip" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8 21.2 12 12 21.2 2.8 12z"/><path d="M9.5 14.5v-2.2a1.6 1.6 0 0 1 1.6-1.6h4.4M13.6 8.4l2.3 2.3-2.3 2.3"/></svg>
@@ -168,9 +177,14 @@
           <p class="stop-meta"><span id="stop-id"></span><span id="stop-dist"></span></p>
           <p id="stop-lines" class="lines" data-i18n-aria="lines_here"></p>
         </div>
+        <div class="head-actions">
+        <button class="icon-btn share" type="button" data-share="stop" data-i18n-aria="share" data-i18n-title="share">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg>
+        </button>
         <button id="fav" class="icon-btn fav" type="button" aria-pressed="false">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9L3.5 9.7l5.9-.8z"/></svg>
         </button>
+        </div>
       </div>
 
       <div id="arrivals" class="arrivals" aria-live="polite"></div>

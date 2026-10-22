@@ -944,6 +944,53 @@
   }
   $("#place-back").addEventListener("click", goBack);
 
+  // ---------- Compartir ----------
+  // Enlace a lo que se ve (parada, línea, dirección o trayecto). En el móvil se abre el menú de
+  // compartir del teléfono; en el ordenador (o si no hay menú) se copia el enlace.
+  // "Mi ubicación" nunca va en el enlace: esa parte se deja vacía para quien lo abra.
+  const shareEnd = (p) => (p && p.kind !== "me" ? endToken(p) : "");
+  function shareData(ctx) {
+    const base = location.origin + location.pathname;
+    if (ctx === "stop" && current) {
+      return { url: `${base}#${current.id}`, text: `${current.name} · ${t("stop_n", { id: current.id })}` };
+    }
+    if (ctx === "line" && active) {
+      const l = lines[active.code];
+      return { url: `${base}#linea/${encodeURIComponent(active.code)}${active.from ? `/${active.from}` : ""}`, text: `${t("line_n", { code: active.code })} · ${l.nombre}` };
+    }
+    if (ctx === "place" && place) return { url: `${base}#${placeToken(place)}`, text: place.label };
+    if (ctx === "trip") {
+      const a = shareEnd(trip.a), b = shareEnd(trip.b);
+      if (!a && !b) return null;
+      const la = a ? endLabel(trip.a) : "", lb = b ? endLabel(trip.b) : "";
+      const text = a && b ? `${t("trip_title")}: ${la} → ${lb}` : b ? t("share_to", { to: lb }) : t("share_from", { from: la });
+      return { url: `${base}#${`ir/${a}/${b}`.replace(/\/+$/, "")}`, text };
+    }
+    return null;
+  }
+  function copyText(s) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(s);
+    return new Promise((ok, ko) => {
+      const ta = document.createElement("textarea");
+      ta.value = s; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy") ? ok() : ko(); } catch (e) { ko(e); } finally { ta.remove(); }
+    });
+  }
+  const touchDevice = () => matchMedia("(pointer: coarse)").matches;
+  async function share(ctx) {
+    const d = shareData(ctx);
+    if (!d) return;
+    if (navigator.share && touchDevice()) {
+      try { await navigator.share({ title: "Próximo Vitrasa", text: d.text, url: d.url }); return; }
+      catch (e) { if (e && e.name === "AbortError") return; }   // cerrado por el usuario: nada que hacer
+    }
+    try { await copyText(d.url); toast(t("share_copied")); } catch { toast(t("share_fail")); }
+  }
+  document.querySelectorAll("[data-share]").forEach((b) => b.addEventListener("click", () => share(b.dataset.share)));
+  // El trayecto solo se puede compartir con origen o destino (que no sea "mi ubicación").
+  const updateTripShare = () => ($('[data-share="trip"]').hidden = !shareData("trip"));
+
   // ---------- Información útil ----------
   // Solo enlaces a páginas oficiales de Vitrasa: no se lee ni se interpreta su contenido.
   const VITRASA = "https://www.vitrasa.es";
@@ -1159,6 +1206,7 @@
   function tripPickStop(s) { setEnd(targetEnd(), stopEnd(s)); }
 
   function renderTripFields() {
+    updateTripShare();
     ["a", "b"].forEach((w) => {
       const inp = $(`#trip-${w}`);
       if (document.activeElement !== inp) inp.value = endLabel(trip[w]);

@@ -129,7 +129,10 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .trip-btn svg { width: 20px; height: 20px; }
 .trip-btn:hover { filter: brightness(1.15); }
 .panel[data-view="trip"] .search-row { display: none; }
-.trip-head { grid-template-columns: auto 1fr; align-items: center; }
+.trip-head { grid-template-columns: auto 1fr auto; align-items: center; }
+/* Compartir (y favorita en la ficha de parada) a la derecha del título */
+.head-actions { display: flex; gap: 2px; }
+.share svg { width: 21px; height: 21px; }
 .trip-title { margin: 0; font: 700 24px/1.1 var(--cond); }
 .trip-fields { display: grid; grid-template-columns: 1fr auto; gap: 8px 6px; align-items: center; margin-top: 8px; flex: none; }
 .trip-field { position: relative; grid-column: 1; }
