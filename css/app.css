@@ -481,7 +481,23 @@ button.badge:hover { filter: brightness(1.08); }
 .bus-dot { position: relative; display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--lc); color: var(--lt); }
 .bus-dot svg { width: 20px; height: 20px; fill: currentColor; }
 .bus-dot svg .w { fill: var(--lc); }
-.bus-pin .bus-dot { opacity: .9; box-shadow: 0 0 0 2.5px #fff, 0 0 0 4px rgba(19, 34, 44, .6), 0 2px 6px rgba(19, 34, 44, .4); }
+/* Bus en vivo en el mapa: grande, con anillo marcado, pulso del color de la línea y la espera al lado */
+.bus-pin { overflow: visible; }
+.bus-pin .bus-dot { width: 40px; height: 40px; box-shadow: 0 0 0 3px #fff, 0 0 0 5px rgba(19, 34, 44, .8), 0 3px 10px rgba(19, 34, 44, .45); }
+.bus-pin .bus-dot svg { width: 24px; height: 24px; }
+.bus-pin .bus-dot::after {
+  content: ""; position: absolute; inset: -5px; border-radius: 50%; border: 3px solid var(--lc);
+  animation: bus-pulse 1.8s ease-out infinite; pointer-events: none;
+}
+@keyframes bus-pulse { from { transform: scale(.95); opacity: .85; } to { transform: scale(1.7); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .bus-pin .bus-dot::after { animation: none; opacity: 0; } }
+.bus-eta {
+  position: absolute; left: calc(100% + 8px); top: 50%; transform: translateY(-50%);
+  padding: 4px 7px 3px; border-radius: 7px; background: #13222C; color: #fff;
+  font: 700 16px/1 var(--cond); white-space: nowrap; letter-spacing: .01em;
+  box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(19, 34, 44, .35);
+}
+.bus-eta:empty { display: none; }
 /* Flecha que gira con el rumbo del bus (0° = norte) */
 .bus-arrow { position: absolute; inset: -14px; pointer-events: none; }
 .bus-arrow::before {

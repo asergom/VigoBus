@@ -612,7 +612,7 @@
     clearTimeout(track.timer);
     clearInterval(track.tick);
     if (track.ctl) track.ctl.abort();
-    if (track.marker) track.marker.remove();
+    (track.markers || []).forEach((mk) => mk.remove());
     track = null;
     $("#line-bus").hidden = true;
   }
@@ -664,6 +664,7 @@
       if (same.length) mine = same;
     }
     mine.sort((a, b) => Number(a.minutos) - Number(b.minutos));
+    tr.ests = mine;
     tr.est = mine[0] || null;
     tr.at = at;
     tr.state = tr.est ? "ok" : "none";
@@ -680,37 +681,47 @@
     }
   }
 
-  // Situación del bus ahora mismo (avanza entre actualizaciones).
-  function busNow() {
-    if (!track || !track.est) return null;
+  // Situación de un bus ahora mismo (avanza entre actualizaciones); i = 0, el más próximo.
+  function busNow(i = 0) {
+    const est = track && (track.ests || [])[i];
+    if (!est) return null;
     const min = (Date.now() - track.at) / 60000;
-    return BUS.busAt(track.loc, track.est, min);
+    return BUS.busAt(track.loc, est, min);
   }
 
   const BUS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3.5h10a2.5 2.5 0 0 1 2.5 2.5v10.5a1.5 1.5 0 0 1-1.5 1.5H6a1.5 1.5 0 0 1-1.5-1.5V6A2.5 2.5 0 0 1 7 3.5z"/><rect x="6" y="17" width="3" height="3" rx="1"/><rect x="15" y="17" width="3" height="3" rx="1"/><rect class="w" x="6.6" y="6.2" width="10.8" height="5" rx="1"/><circle class="w" cx="8" cy="14.4" r="1.1"/><circle class="w" cx="16" cy="14.4" r="1.1"/></svg>';
 
+  // Bus en vivo en el mapa: destacado (anillo y pulso del color de la línea) y, a su lado, lo que
+  // le falta para llegar a la parada. Lo usan la línea abierta desde una parada y Cómo llegar.
+  function busMarker(color, texto, ll) {
+    return L.marker(ll, { keyboard: false, interactive: false, zIndexOffset: 900, icon: L.divIcon({
+      className: "bus-pin", iconSize: [40, 40], iconAnchor: [20, 20],
+      html: `<span class="bus-dot" style="--lc:${color};--lt:${texto}"><span class="bus-arrow"></span>${BUS_ICON}</span><span class="bus-eta"></span>`,
+    }) });
+  }
+  function placeBus(marker, s, est, at) {
+    marker.setLatLng(s.ll);
+    if (!map.hasLayer(marker)) marker.addTo(map);
+    const el = marker.getElement();
+    if (!el) return;
+    el.querySelector(".bus-arrow").style.transform = `rotate(${Math.round(s.bearing)}deg)`;
+    const m = Math.round(Number(est.minutos) - (Date.now() - at) / 60000);
+    el.querySelector(".bus-eta").textContent = m <= 0 ? t("arriving") : `${m} ${t("min")}`;
+  }
+
   function drawBus() {
     const tr = track;
     if (!tr) return;
-    const b = busNow();
-    // Solo en el sentido que va hacia la parada y con el bus ya en camino.
-    if (!b || b.state !== "route" || !active || active.dir !== tr.dir) {
-      if (tr.marker) tr.marker.remove();
-      return;
-    }
-    if (!tr.marker) {
-      const l = lines[tr.code];
-      const icon = L.divIcon({
-        className: "bus-pin",
-        html: `<span class="bus-dot" style="--lc:${l.color};--lt:${l.texto}"><span class="bus-arrow"></span>${BUS_ICON}</span>`,
-        iconSize: [34, 34], iconAnchor: [17, 17],
-      });
-      tr.marker = L.marker(b.ll, { icon, keyboard: false, interactive: false, zIndexOffset: 900 });
-    }
-    tr.marker.setLatLng(b.ll);
-    if (!map.hasLayer(tr.marker)) tr.marker.addTo(map);
-    const arrow = tr.marker.getElement() && tr.marker.getElement().querySelector(".bus-arrow");
-    if (arrow) arrow.style.transform = `rotate(${Math.round(b.bearing)}deg)`;
+    tr.markers = tr.markers || [];
+    // Todos los buses que la API da camino de la parada, en el sentido que va hacia ella.
+    (tr.ests || []).forEach((est, i) => {
+      const b = busNow(i);
+      let mk = tr.markers[i];
+      if (!b || b.state !== "route" || !active || active.dir !== tr.dir) { if (mk) mk.remove(); return; }
+      if (!mk) { const l = lines[tr.code]; mk = tr.markers[i] = busMarker(l.color, l.texto, b.ll); }
+      placeBus(mk, b, est, tr.at);
+    });
+    tr.markers.slice((tr.ests || []).length).forEach((mk) => mk.remove());
   }
 
   function renderBusCard() {
@@ -1191,7 +1202,7 @@
   // algunos). Van en un lienzo propio; solo los que caen en pantalla y sin que se pisen entre ellos.
   // Tocar uno abre esa dirección (o, en "Cómo llegar", la elige como origen o destino).
   // Mismo zoom desde el que el mapa de OpenStreetMap empieza a pintar sus números de portal (17).
-  const NUM_ZOOM = 17;
+  const NUM_ZOOM = 18;     // uno más que el mapa base (17), para no cargar tanto la vista
   const PLACE_ZOOM = 18;   // al abrir una dirección
   map.createPane("nums").style.zIndex = 450;   // encima de los trazados, debajo de las paradas
   map.getPane("nums").style.pointerEvents = "none";
@@ -1215,9 +1226,10 @@
     const b = map.getBounds().pad(0.05);
     const pts = dirData.portalsIn(b.getSouth(), b.getWest(), b.getNorth(), b.getEast());
     const z = map.getZoom();
-    ctx.font = `600 ${z >= 19 ? 13 : z >= 18 ? 12 : 11}px Barlow, system-ui, sans-serif`;
+    // Discretos: letra pequeña, color claro y halo fino (el portal elegido, en rojo).
+    ctx.font = `500 ${z >= 19 ? 12 : 11}px Barlow, system-ui, sans-serif`;
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    ctx.lineJoin = "round"; ctx.lineWidth = 3; ctx.strokeStyle = "rgba(255,255,255,.95)";
+    ctx.lineJoin = "round"; ctx.lineWidth = 2; ctx.strokeStyle = "rgba(255,255,255,.75)";
     const boxes = [];
     const selKey = place && /\d/.test(place.label) ? place.label : null;
     for (const pt of pts) {
@@ -1228,7 +1240,7 @@
       if (boxes.some((o) => box.x < o.x + o.w && o.x < box.x + box.w && box.y < o.y + o.h && o.y < box.y + box.h)) continue;
       boxes.push(box);
       const sel = selKey === `${pt.s.name}, ${pt.n}`;
-      ctx.fillStyle = sel ? "#D3202F" : "#5B4F45";
+      ctx.fillStyle = sel ? "#D3202F" : "rgba(91,79,69,.72)";
       ctx.strokeText(pt.n, p.x, p.y);
       ctx.fillText(pt.n, p.x, p.y);
     }
@@ -1889,15 +1901,8 @@
       const span = document.querySelector(`#trip-result .bus-pos[data-bus="${CSS.escape(b.key)}"]`);
       if (span) span.textContent = s && s.state === "route" ? `· ${t("bus_far", { dist: fmtDist(s.left) })}` : s && s.state === "depot" ? `· ${t("bus_depot")}` : "";
       if (!s || s.state !== "route") { if (b.marker) b.marker.remove(); return; }
-      if (!b.marker) {
-        b.marker = L.marker(s.ll, { keyboard: false, interactive: false, zIndexOffset: 900, icon: L.divIcon({
-          className: "bus-pin", iconSize: [34, 34], iconAnchor: [17, 17],
-          html: `<span class="bus-dot" style="--lc:${b.color};--lt:${b.texto}"><span class="bus-arrow"></span>${BUS_ICON}</span>` }) });
-      }
-      b.marker.setLatLng(s.ll);
-      if (!map.hasLayer(b.marker)) b.marker.addTo(map);
-      const arrow = b.marker.getElement() && b.marker.getElement().querySelector(".bus-arrow");
-      if (arrow) arrow.style.transform = `rotate(${Math.round(s.bearing)}deg)`;
+      if (!b.marker) b.marker = busMarker(b.color, b.texto, s.ll);
+      placeBus(b.marker, s, b.est, b.at);
     });
   }
 
