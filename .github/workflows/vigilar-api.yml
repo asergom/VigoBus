@@ -1,0 +1,72 @@
+# Vigilancia diaria de la API de tiempos en vivo (datos.vigo.org).
+# Consulta unas pocas paradas y comprueba con tools/vigilar_api.py que la respuesta mantiene la
+# forma que espera la web y que los letreros casan con data/lineas.json. Si algo ha cambiado,
+# abre un aviso (issue con la etiqueta "vigilancia-api") o lo comenta si ya estaba abierto, y la
+# ejecución termina en error; cuando todo vuelve a estar bien, cierra el aviso. Nunca toca main.
+name: Vigilar la API de Vitrasa
+on:
+  schedule:
+    - cron: "23 9 * * *"      # todos los días a las 09:23 UTC (con buses en servicio)
+  workflow_dispatch:
+  push:                       # también al cambiar la propia vigilancia (sirve de prueba)
+    branches: [main]
+    paths:
+      - tools/vigilar_api.py
+      - .github/workflows/vigilar-api.yml
+permissions:
+  contents: read
+  issues: write
+concurrency:
+  group: vigilar-api
+  cancel-in-progress: true
+jobs:
+  vigilar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Consultar la API en varias paradas
+        run: |
+          mkdir -p /tmp/api
+          for id in 5670 8460 1150 6620 5660; do
+            url="https://datos.vigo.org/vci_api_app/api2.jsp?id=${id}&ttl=5&tipo=TRANSPORTE-ESTIMACION-PARADA"
+            if ! curl -sS --fail --retry 3 --retry-delay 5 -m 30 -o "/tmp/api/${id}.json" "$url" 2> "/tmp/api/${id}.error"; then
+              rm -f "/tmp/api/${id}.json"
+              [ -s "/tmp/api/${id}.error" ] || echo "error de descarga" > "/tmp/api/${id}.error"
+            else
+              rm -f "/tmp/api/${id}.error"
+            fi
+          done
+          ls -l /tmp/api
+
+      - name: Comprobar la respuesta
+        id: revisar
+        run: |
+          if python3 tools/vigilar_api.py /tmp/api; then echo "ok=1" >> "$GITHUB_OUTPUT"; else echo "ok=0" >> "$GITHUB_OUTPUT"; fi
+          cat /tmp/api/informe.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Abrir, comentar o cerrar el aviso
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          abierto=$(gh issue list --label vigilancia-api --state open --json number --jq '.[0].number // empty' 2>/dev/null || true)
+          if [ "${{ steps.revisar.outputs.ok }}" = "1" ]; then
+            if [ -n "$abierto" ]; then
+              gh issue close "$abierto" --comment "Comprobación del $(date -u +%d/%m/%Y): todo vuelve a estar bien."
+            fi
+            exit 0
+          fi
+          {
+            echo "Comprobación automática del $(date -u '+%d/%m/%Y a las %H:%M UTC') ([ver ejecución](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}))."
+            echo
+            cat /tmp/api/informe.md
+            echo
+            echo "Si el problema es un letrero nuevo, suele arreglarse solo con la actualización semanal de horarios (lunes); este aviso se cerrará solo cuando todo vuelva a estar bien."
+          } > /tmp/aviso.md
+          if [ -n "$abierto" ]; then
+            gh issue comment "$abierto" --body-file /tmp/aviso.md
+          else
+            gh label create vigilancia-api --color D3202F --description "Cambios en la API de tiempos en vivo" 2>/dev/null || true
+            gh issue create --title "La API de tiempos en vivo de Vitrasa ha cambiado" --label vigilancia-api --body-file /tmp/aviso.md
+          fi
+          exit 1
