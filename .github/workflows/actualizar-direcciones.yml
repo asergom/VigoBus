@@ -93,6 +93,7 @@ jobs:
           const s=d.matchStreets('camelias')[0]; if(!s||s.portals.length<100) throw new Error('faltan portales');
           const p=require('./js/planificador.js').build(require('./data/viajes.json')); if(p.pats.length<100) throw new Error('planificador');
           console.log('OK: ruta', Math.round(r.dist), 'm;', d.streets.length, 'calles;', p.pats.length, 'recorridos');"
+          node tools/probar_planificador.js 150
 
       - name: Subir si hay cambios
         run: |

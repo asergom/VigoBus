@@ -1,4 +1,4 @@
-/* Próximo Vitrasa: planificador de viajes en bus de A a B (directos y con un transbordo).
+/* Próximo Vitrasa: planificador de viajes en bus de A a B (directos y con uno o más transbordos).
    Usa data/viajes.json (horarios del GTFS) para elegir las opciones y, después, la web corrige la
    espera con los tiempos en vivo de la API (retime). Todo se calcula en el propio dispositivo.
    También funciona en Node (module.exports) para las pruebas. */
@@ -15,6 +15,7 @@
   const WIDE_OPTIONS = 8;
   const CUTOFF = 25 * 60;        // se descartan opciones que cuestan 25 min más que la mejor
   const WALK_SLACK = 5 * 60;     // el bus tiene que ahorrar más de 5 min frente a ir andando
+  const MAX_WAIT = 3600;         // espera máxima en un transbordo
 
   // Festivos con horario de domingo: nacionales, de Galicia y de Vigo (los fijos), más Jueves
   // y Viernes Santo.
@@ -96,7 +97,8 @@
 
     // Búsqueda. origins / dests: Map(índice de parada → metros a pie desde A / hasta B).
     // walk: metros andando de A a B (o Infinity). time: Date de salida.
-    function search({ origins, dests, walk = Infinity, time = new Date() }) {
+    // maxTransfers: transbordos como máximo (1: directos y con un transbordo; 2: hasta tres buses).
+    function search({ origins, dests, walk = Infinity, time = new Date(), maxTransfers = 1 }) {
       const base = new Date(time.getFullYear(), time.getMonth(), time.getDate());
       const now = Math.round((time - base) / 1000);
       const trips = tripsFor(time);
@@ -162,7 +164,7 @@
               const pt2 = pats[n2];
               if (pt2.l === pt.l || !(lastDest.get(n2) > k2)) continue;
               const tr2 = trips(pt2);
-              const nt = nextTrip(pt2, tr2, k2, tau2, tau2 + 3600);
+              const nt = nextTrip(pt2, tr2, k2, tau2, tau2 + MAX_WAIT);
               if (!nt) continue;
               const d = bestDrop(pt2, tr2, nt.q, k2);
               if (!d) continue;
@@ -179,26 +181,131 @@
         }
       }
 
+      // RAPTOR: la llegada más temprana con 1, 2… buses. Encuentra lo que la enumeración de arriba
+      // no ve (más de un transbordo) y, con 0–1 transbordos, a veces una combinación mejor.
+      raptor({ origins, dests, now, trips, rounds: maxTransfers + 1, keep, busLeg,
+        limit: () => (bestArr - now) * 1.6 + 600 + now });
+
       // Salir lo más tarde posible en las opciones con transbordo (menos espera en el cambio).
       for (const j of best.values()) if (j.transfers) laterFirst(j, trips, now);
 
       return pick([...best.values()], now, walk, true);
     }
 
-    // Con transbordo, el primer bus más tardío que aún llega a tiempo al segundo.
+    // RAPTOR (Delling, Pajor y Werneck, 2012), por rondas: en la ronda k se conocen las llegadas
+    // más tempranas a cada parada con k buses. En cada ronda se recorren solo los recorridos que
+    // pasan por paradas mejoradas en la anterior y, después, los transbordos a pie (≤300 m).
+    // Una parada solo se guarda si mejora su mejor llegada de cualquier ronda anterior.
+    // No se vuelve a subir a la misma línea de la que uno se acaba de bajar (como en la enumeración).
+    function raptor({ origins, dests, now, trips, rounds, keep, busLeg, limit }) {
+      const S = ids.length;
+      const best = new Float64Array(S).fill(Infinity);   // mejor llegada a cada parada (todas las rondas)
+      let prev = new Float64Array(S).fill(Infinity);     // llegadas de la ronda anterior
+      let prevLine = new Array(S).fill(null);            // línea con la que se llegó (ronda anterior)
+      const startWalk = new Map();
+      let marked = new Set();
+      for (const [o, mo] of origins) {
+        const tau = now + mo / WALK;
+        if (tau < prev[o]) { prev[o] = best[o] = tau; startWalk.set(o, mo); marked.add(o); }
+      }
+      const R = [];   // por ronda: llegada en bus, de qué viaje, y si se llegó andando desde otra parada
+      for (let k = 1; k <= rounds && marked.size; k++) {
+        const bus = new Float64Array(S).fill(Infinity);
+        const pPat = new Int32Array(S).fill(-1), pQ = new Int32Array(S), pFrom = new Int32Array(S), pTo = new Int32Array(S);
+        const cur = new Float64Array(S).fill(Infinity);   // llegada de esta ronda (en bus o andando)
+        const wFrom = new Int32Array(S).fill(-1), wM = new Float64Array(S);
+        const curLine = new Array(S).fill(null);          // línea del último bus (en bus o andando después)
+        const busLine = new Array(S).fill(null);          // línea del bus con el que se llegó a la parada
+        const cap = limit();
+        // Recorridos que hay que mirar y desde qué posición.
+        const queue = new Map();
+        for (const s of marked) for (const [n, k0] of at[s]) if (!(queue.get(n) <= k0)) queue.set(n, k0);
+        const reached = new Set();
+        for (const [n, k0] of queue) {
+          const pt = pats[n], tr = trips(pt);
+          let q = -1, from = -1;
+          for (let i = k0; i < pt.p.length; i++) {
+            const s = pt.p[i];
+            if (q >= 0) {
+              const arr = tr.dep[q] + pt.t[i] * tr.dur[q];
+              if (arr < best[s] && arr < bus[s] && arr <= cap) {
+                bus[s] = cur[s] = best[s] = arr;
+                pPat[s] = n; pQ[s] = q; pFrom[s] = from; pTo[s] = i; curLine[s] = busLine[s] = pt.l;
+                reached.add(s);
+              }
+            }
+            // ¿Se puede subir aquí a un viaje anterior al que se lleva?
+            if (prev[s] < Infinity && prevLine[s] !== pt.l) {
+              const ready = prev[s] + (k > 1 ? TRANSFER : 0);
+              const curAt = q >= 0 ? tr.dep[q] + pt.t[i] * tr.dur[q] : Infinity;
+              if (ready <= curAt) {
+                const nt = nextTrip(pt, tr, i, ready, k > 1 ? ready + MAX_WAIT : now + HORIZON);
+                if (nt && nt.at < curAt) { q = nt.q; from = i; }
+              }
+            }
+          }
+        }
+        // Transbordos a pie desde las paradas a las que se ha llegado en bus.
+        const next = new Set(reached);
+        for (const s of reached) {
+          for (const [s2, m] of transfers[s]) {
+            if (!m) continue;
+            const a = bus[s] + m / WALK;
+            if (a < best[s2] && a < cur[s2]) { cur[s2] = best[s2] = a; wFrom[s2] = s; wM[s2] = m; curLine[s2] = busLine[s]; next.add(s2); }
+          }
+        }
+        R.push({ bus, pPat, pQ, pFrom, pTo, cur, wFrom, wM });
+        prev = cur;
+        prevLine = curLine;
+        marked = next;
+      }
+
+      // Opciones: llegadas en bus a cada parada de destino, en cada ronda.
+      const legsTo = (k, s) => {   // tramos hasta llegar a s en bus en la ronda k (k desde 1)
+        const r = R[k - 1], pt = pats[r.pPat[s]], tr = trips(pt);
+        const leg = busLeg(pt, tr, r.pQ[s], r.pFrom[s], r.pTo[s]);
+        const b = leg.board;
+        if (k === 1) return [{ type: "walk", m: startWalk.get(b), to: b }, leg];
+        const p = R[k - 2];
+        const before = p.wFrom[b] >= 0 ? p.wFrom[b] : b;
+        const m = p.wFrom[b] >= 0 ? p.wM[b] : 0;
+        return [...legsTo(k - 1, before), { type: "walk", m, from: before, to: b, transfer: true }, leg];
+      };
+      R.forEach((r, i) => {
+        for (const [d, md] of dests) {
+          if (!(r.bus[d] < Infinity)) continue;
+          const legs = legsTo(i + 1, d);
+          const buses = legs.filter((l) => l.type === "bus");
+          legs.push({ type: "walk", m: md, from: d });
+          const walkM = legs.reduce((a, l) => a + (l.type === "walk" ? l.m : 0), 0);
+          keep({ key: buses.map((l) => `${l.line}|${l.dir}`).join(">"), legs, dep: buses[0].dep - legs[0].m / WALK,
+            arr: r.bus[d] + md / WALK, walkM, transfers: i });
+        }
+      });
+    }
+
+    // Con transbordos, cada bus el más tardío que aún llega a tiempo al siguiente (de atrás
+    // hacia delante): menos espera en los cambios, la misma llegada.
     function laterFirst(j, trips, now) {
-      const [w0, l1, w1, l2] = j.legs;
-      const pt = pats[l1.pat], tr = trips(pt);
-      const need = l2.dep - w1.m / WALK - TRANSFER;
-      let pick = null;
-      for (let q = 0; q < tr.dep.length; q++) {
-        const dep = tr.dep[q] + pt.t[l1.from] * tr.dur[q], arr = tr.dep[q] + pt.t[l1.to] * tr.dur[q];
-        if (dep >= now + w0.m / WALK && arr <= need && (!pick || dep > pick.dep)) pick = { q, dep, arr };
+      const legs = j.legs;
+      for (let i = legs.length - 2; i >= 1; i--) {
+        const l1 = legs[i];
+        if (l1.type !== "bus") continue;
+        const nextBus = legs.slice(i + 1).find((l) => l.type === "bus");
+        if (!nextBus) continue;
+        const w1 = legs[i + 1];
+        const need = nextBus.dep - w1.m / WALK - TRANSFER;
+        const prevBus = legs.slice(0, i).reverse().find((l) => l.type === "bus");
+        const ready = prevBus ? prevBus.arr + legs[i - 1].m / WALK + TRANSFER : now + legs[0].m / WALK;
+        const pt = pats[l1.pat], tr = trips(pt);
+        let pick = null;
+        for (let q = 0; q < tr.dep.length; q++) {
+          const dep = tr.dep[q] + pt.t[l1.from] * tr.dur[q], arr = tr.dep[q] + pt.t[l1.to] * tr.dur[q];
+          if (dep >= ready && arr <= need && (!pick || dep > pick.dep)) pick = { q, dep, arr };
+        }
+        if (pick && pick.dep > l1.dep) Object.assign(l1, { dep: pick.dep, arr: pick.arr, tripDep: tr.dep[pick.q], dur: tr.dur[pick.q] });
       }
-      if (pick && pick.dep > l1.dep) {
-        Object.assign(l1, { dep: pick.dep, arr: pick.arr, tripDep: tr.dep[pick.q], dur: tr.dur[pick.q] });
-        j.dep = l1.dep - w0.m / WALK;
-      }
+      j.dep = legs[1].dep - legs[0].m / WALK;
     }
 
     // Elegir las opciones que se enseñan. Se quita una opción si otra sale igual o más tarde,
