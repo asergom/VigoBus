@@ -1314,7 +1314,11 @@
     navigate(`ir/${endToken(trip.a)}/${endToken(trip.b)}`);
   }
 
+  // Profundidad del historial al entrar en "Cómo llegar" (para salir de una vez, ver #trip-back).
+  let tripEntryDepth = null;
   function showTrip(h) {
+    const d = (history.state && history.state.d) || 0;
+    if (panel.dataset.view !== "trip" || tripEntryDepth == null || d < tripEntryDepth) tripEntryDepth = d;
     leaveStop();
     clearLine();
     // Cada parte se decodifica por separado: el nombre de una calle puede llevar "/".
@@ -2098,7 +2102,22 @@
     computeTrip(false);
   });
 
-  $("#trip-back").addEventListener("click", goBack);
+  // Volver (junto al título): sale de "Cómo llegar" al menú principal de una vez, aunque se hayan
+  // visto varios trayectos u opciones seguidos (cada uno queda en el historial del navegador).
+  let toHome = false;
+  $("#trip-back").addEventListener("click", () => {
+    const d = (history.state && history.state.d) || 0;
+    const steps = d - (tripEntryDepth == null ? d : tripEntryDepth) + 1;
+    tripEntryDepth = null;
+    if (steps > 0 && d - steps >= 0) { toHome = true; history.go(-steps); }
+    else navigate("", { replace: true });
+  });
+  // Tras salir, si se ha vuelto a otra pantalla (p. ej. la parada desde la que se abrió), al inicio.
+  addEventListener("popstate", () => {
+    if (!toHome) return;
+    toHome = false;
+    if (location.hash && location.hash !== "#") navigate("", { replace: true });
+  });
   $("#go-trip").addEventListener("click", () => { clearTimeout(qTimer); $("#q").blur(); openTrip(); });
   $("#trip-here").addEventListener("click", () => { if (current) openTrip(stopEnd(current)); });
 
