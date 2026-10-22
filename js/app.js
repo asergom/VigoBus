@@ -443,6 +443,7 @@
     if (!stops.length) return;
     const h = decodeURIComponent(location.hash.slice(1));
     if (h === "ir" || h.startsWith("ir/")) { showTrip(h); return; }
+    if (h === "info") { showInfo(); return; }
     if (h.startsWith("dir/") && showPlace(h.slice(4))) return;
     if (h.startsWith("linea/")) {
       // #linea/18A o #linea/18A/5660 (abierta desde esa parada: se ve el próximo bus hacia ella).
@@ -460,7 +461,7 @@
   addEventListener("popstate", route);
 
   function showView(id) {
-    ["home", "line", "stop", "trip", "place"].forEach((v) => ($(`#${v}`).hidden = v !== id));
+    ["home", "line", "stop", "trip", "place", "info"].forEach((v) => ($(`#${v}`).hidden = v !== id));
     panel.dataset.view = id;
     if (id !== "trip") leaveTrip();
     if (id !== "place") leavePlace();
@@ -942,6 +943,44 @@
     drawNums();
   }
   $("#place-back").addEventListener("click", goBack);
+
+  // ---------- Información útil ----------
+  // Solo enlaces a páginas oficiales de Vitrasa: no se lee ni se interpreta su contenido.
+  const VITRASA = "https://www.vitrasa.es";
+  const INFO_LINKS = [
+    ["info_grp_main", [
+      ["l_alerts", "/avisos"],
+      ["l_lines", "/lineas-y-horarios/todas-las-lineas"],
+      ["l_fares", "/tarifas-y-titulos"],
+      ["l_customer", "/informacion/atencion-al-cliente"],
+      ["l_rules", "/informacion/normas-del-servicio"],
+    ]],
+    ["info_grp_services", [
+      ["l_night", "/informacion/servicios/bus-nocturno"],
+      ["l_airport", "/informacion/serivicios/aeropuerto"],   // así está en vitrasa.es ("serivicios")
+      ["l_hospitals", "/hospitales"],
+      ["l_uni", "/informacion/servicios/lanzaderas-universidad"],
+      ["l_football", "/informacion/servicios/lanzaderas-futbol"],
+      ["l_demand", "/informacion/servicios/paradas-a-demanda"],
+      ["l_access", "/informacion/servicios/accesibilidad"],
+    ]],
+  ];
+  const EXT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+  function renderInfo() {
+    $("#info-list").innerHTML = INFO_LINKS.map(([grp, links]) =>
+      `<li class="group-head">${esc(t(grp))}</li>` + links.map(([k, path]) =>
+        `<li><a class="info-link" href="${VITRASA}${path}" target="_blank" rel="noopener"><span class="name">${esc(t(k))}</span>${EXT_SVG}</a></li>`).join("")).join("");
+  }
+  function showInfo() {
+    leaveStop();
+    clearLine();
+    showView("info");
+    document.title = `${t("info_title")} · Próximo Vitrasa`;
+    renderInfo();
+    if (!isDesktop()) panel.dataset.state = "full";
+  }
+  $("#info-btn").addEventListener("click", () => { if (location.hash !== "#info") navigate("info"); });
+  $("#info-back").addEventListener("click", goBack);
   $("#place-trip").addEventListener("click", () => { if (place) openTrip({ kind: "addr", ll: place.ll, label: place.label, approx: place.approx }); });
 
   // ---------- Números de portal en el mapa ----------
@@ -1837,6 +1876,7 @@
     document.querySelectorAll("[data-i18n]").forEach((el) => (el.textContent = t(el.dataset.i18n)));
     document.querySelectorAll("[data-i18n-ph]").forEach((el) => (el.placeholder = t(el.dataset.i18nPh)));
     document.querySelectorAll("[data-i18n-aria]").forEach((el) => el.setAttribute("aria-label", t(el.dataset.i18nAria)));
+    document.querySelectorAll("[data-i18n-title]").forEach((el) => (el.title = t(el.dataset.i18nTitle)));
     $("#lang-btn .flag").innerHTML = flagSvg(lang);
     $("#lang-code").textContent = lang.toUpperCase();
     $("#lang-menu").innerHTML = I18N.langs.map((l) =>
@@ -1861,6 +1901,7 @@
       showUpdated();
     } else if (active) showLine(active.code, active.from);
     else if (place) { document.title = "Próximo Vitrasa"; showPlace(); }
+    else if (!$("#info").hidden) showInfo();
     else if (tripOpen()) {
       renderTripFields();
       if (lastTrip) renderTripResult(); else computeTrip(false);

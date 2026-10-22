@@ -24,6 +24,13 @@
     <header class="brand">
       <span class="brand-mark" aria-hidden="true"></span>
       <h1>Próximo Vitrasa</h1>
+      <!-- Enlaces a la web oficial de Vitrasa: avisos (cortes y desvíos) e información útil -->
+      <a id="alerts-btn" class="head-btn" href="https://www.vitrasa.es/avisos" target="_blank" rel="noopener" data-i18n-aria="head_alerts" data-i18n-title="head_alerts">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.6 2.6 20h18.8z"/><path d="M12 10v4.6M12 17.4v.2"/></svg>
+      </a>
+      <button id="info-btn" class="head-btn" type="button" data-i18n-aria="head_info" data-i18n-title="head_info">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.6v.2"/></svg>
+      </button>
       <div class="lang">
         <button id="lang-btn" class="lang-btn" type="button" aria-haspopup="listbox" aria-expanded="false" data-i18n-aria="language">
           <svg class="flag" viewBox="0 0 30 20" aria-hidden="true"></svg>
@@ -134,6 +141,20 @@
       </button>
       <p class="group-label" data-i18n="near_stops"></p>
       <ul id="place-stops" class="stops"></ul>
+    </section>
+
+    <!-- Información útil: solo enlaces a las páginas oficiales de Vitrasa -->
+    <section id="info" class="view" hidden>
+      <div class="stop-head">
+        <button id="info-back" class="icon-btn" type="button" data-i18n-aria="back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="stop-title">
+          <h2 data-i18n="info_title"></h2>
+          <p class="stop-meta" data-i18n="info_note"></p>
+        </div>
+      </div>
+      <ul id="info-list" class="stops info-list"></ul>
     </section>
 
     <!-- Ficha de parada -->

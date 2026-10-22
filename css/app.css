@@ -231,7 +231,25 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .trip-pin .pin { width: 30px; height: 30px; font-size: 17px; box-shadow: 0 0 0 3px #fff; }
 
 /* ---------- Selector de idioma ---------- */
-.lang { margin-left: auto; position: relative; }
+.lang { position: relative; }
+/* Avisos e información útil, a la izquierda del idioma */
+.head-btn {
+  display: grid; place-items: center; width: 34px; height: 34px; flex: none;
+  border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink);
+}
+.head-btn svg { width: 19px; height: 19px; }
+#alerts-btn { margin-left: auto; color: var(--bus); }
+.head-btn:hover { border-color: var(--granite); }
+#info .stop-meta { font-size: 14px; }
+/* Enlaces de "Información útil": mismo aspecto que una fila de la lista */
+.stops a.info-link {
+  display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 12px;
+  padding: 13px 16px; border-bottom: 1px solid var(--line); color: inherit; text-decoration: none;
+}
+.stops a.info-link:hover { background: var(--surface); }
+.info-link .name { font-weight: 600; font-size: 17px; line-height: 1.25; }
+.info-link svg { width: 18px; height: 18px; color: var(--granite); }
+@media (min-width: 860px) { .stops a.info-link { padding-left: 20px; padding-right: 20px; } }
 .lang-btn {
   display: flex; align-items: center; gap: 6px; height: 34px; padding: 0 8px 0 6px;
   border: 1px solid var(--line); border-radius: 9px; background: var(--surface); font-weight: 600; font-size: 14px;
