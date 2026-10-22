@@ -168,10 +168,10 @@
   // Con una línea elegida y el mapa alejado, las paradas se ocultan para que se vea bien el recorrido.
   const LINE_STOPS_ZOOM = 15;
   function updateStopVisibility() {
-    // En "Cómo llegar", con un viaje dibujado, las paradas se atenúan (y se ocultan al alejar).
-    const route = !!active || tripRouteOn;
-    map.getContainer().classList.toggle("hide-stops", route && map.getZoom() < LINE_STOPS_ZOOM);
-    map.getContainer().classList.toggle("dim-stops", tripRouteOn);
+    // Con una línea abierta, las paradas se ocultan al alejar. En "Cómo llegar", con un viaje
+    // dibujado, solo se ven las paradas de ese viaje (las dibuja drawTrip con el color de su línea).
+    map.getContainer().classList.toggle("hide-stops", !!active && map.getZoom() < LINE_STOPS_ZOOM);
+    map.getContainer().classList.toggle("trip-stops", tripRouteOn);
     drawNums();   // los números de portal se ocultan con una línea o un viaje dibujados
   }
 
@@ -1907,7 +1907,12 @@
       L.polyline(pts, { renderer, color: "#13222C", weight: 11, opacity: 0.35, interactive: false }).addTo(tripLayer);
       L.polyline(pts, { renderer, color: "#FFFFFF", weight: 9, opacity: 1, interactive: false }).addTo(tripLayer);
       L.polyline(pts, { renderer, color: ln.color, weight: 6, opacity: 1, interactive: false, lineCap: "round" }).addTo(tripLayer);
-      [l.board, l.alight].forEach((i) => L.circleMarker(llOf(i), { renderer, radius: 6, weight: 3.5, color: ln.color, fillColor: "#FFFFFF", fillOpacity: 1, interactive: false }).addTo(tripLayer));
+      // Paradas del tramo: las intermedias, pequeñas; la de subida y la de bajada, más grandes.
+      const pt = plan.pats[l.pat];
+      for (let k = l.from + 1; k < l.to; k++) {
+        L.circleMarker(llOf(pt.p[k]), { renderer, radius: 3.5, weight: 2.5, color: ln.color, fillColor: "#FFFFFF", fillOpacity: 1, interactive: false }).addTo(tripLayer);
+      }
+      [l.board, l.alight].forEach((i) => L.circleMarker(llOf(i), { renderer, radius: 6.5, weight: 4, color: ln.color, fillColor: "#FFFFFF", fillOpacity: 1, interactive: false }).addTo(tripLayer));
       all.push(...pts);
       // Bus en camino hacia la parada de subida (con dato en vivo).
       if (l.live && isFinite(Number(l.live.metros))) {
