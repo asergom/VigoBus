@@ -444,6 +444,7 @@
     const h = decodeURIComponent(location.hash.slice(1));
     if (h === "ir" || h.startsWith("ir/")) { showTrip(h); return; }
     if (h === "info") { showInfo(); return; }
+    if (h.startsWith("horario/") && byId.has(h.slice(8))) { showSched(h.slice(8)); return; }
     if (h.startsWith("dir/") && showPlace(h.slice(4))) return;
     if (h.startsWith("linea/")) {
       // #linea/18A o #linea/18A/5660 (abierta desde esa parada: se ve el próximo bus hacia ella).
@@ -461,7 +462,7 @@
   addEventListener("popstate", route);
 
   function showView(id) {
-    ["home", "line", "stop", "trip", "place", "info"].forEach((v) => ($(`#${v}`).hidden = v !== id));
+    ["home", "line", "stop", "trip", "place", "info", "sched"].forEach((v) => ($(`#${v}`).hidden = v !== id));
     panel.dataset.view = id;
     if (id !== "trip") leaveTrip();
     if (id !== "place") leavePlace();
@@ -793,6 +794,12 @@
     selRing.setLatLng(s.ll).addTo(map);
     focusOn(s.ll);
     loadArrivals(true);
+    // Horarios publicados (para el horario previsto y el retraso): en segundo plano.
+    PLAN.load().then((pl) => {
+      stopPlan = pl;
+      if (current === s && lastArrivalsId === s.id && lastUpdate) renderArrivals(lastArrivals);
+      else if (current === s && arrivalsFailed) renderArrivals(null);
+    }).catch(() => {});
   }
 
   function updateFavBtn() {
@@ -838,16 +845,13 @@
       // El nombre oficial sustituye a los genéricos tipo "Parada 1234".
       const official = data.parada && data.parada[0] && data.parada[0].nombre;
       if (official && /^Parada \d/.test(s.name)) $("#stop-name").textContent = titleCase(official);
-      renderArrivals(data.estimaciones || []);
       lastArrivalsId = s.id;
+      renderArrivals(data.estimaciones || []);
       lastUpdate = new Date();
       showUpdated();
     } catch (e) {
       if (seq !== reqSeq) return;
-      lastArrivals = null;
-      box.innerHTML = `<div class="state"><strong>${esc(t("times_error"))}</strong>
-        ${esc(t("times_error_body", { infobus: "\u0000" })).replace("\u0000",
-          `<a href="${INFOBUS_URL(s.id)}" target="_blank" rel="noopener">Infobus</a>`)}</div>`;
+      renderArrivals(null);   // sin respuesta: aviso y, debajo, el horario previsto
       lastUpdate = null;
       showUpdated();
     } finally {
@@ -864,43 +868,191 @@
       ? t("updated", { time: lastUpdate.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" }) }) : "";
   }
 
+  let stopPlan = null;               // horarios publicados (data/viajes.json), cuando han cargado
+  let arrivalsFailed = false;        // la última consulta de la API falló
+  const SCHED_AHEAD = 90 * 60;       // horario previsto: los pasos de la próxima hora y media
+
+  // Sentido de una línea al que va un bus de la API en esta parada (null si no se sabe).
+  function liveDir(id, linea, ruta) {
+    const l = lines && lines[linea];
+    if (!l) return null;
+    const idx = l.sentidos.map((d, i) => (d.paradas.includes(id) || (d.otras || []).includes(id) ? i : -1)).filter((i) => i >= 0);
+    if (idx.length === 1) return idx[0];
+    const hit = idx.find((i) => goesTo(l.sentidos[i], ruta));
+    return hit == null ? null : hit;
+  }
+
+  // Retraso o adelanto de un bus en vivo frente a su paso programado (20). Solo si el emparejamiento
+  // no tiene duda: pasos de esa línea y sentido separados al menos 15 min y el bus claramente más
+  // cerca de uno de ellos. Devuelve minutos (+ tarde, − antes) o null.
+  function delayOf(passes, expected, used) {
+    let i = -1, best = Infinity;
+    passes.forEach((p, k) => { const d = Math.abs(expected - p.at); if (d < best) { best = d; i = k; } });
+    if (i < 0 || used.has(i)) return null;
+    const gap = Math.min(i > 0 ? passes[i].at - passes[i - 1].at : Infinity, i < passes.length - 1 ? passes[i + 1].at - passes[i].at : Infinity);
+    const diff = expected - passes[i].at;
+    if (gap < 15 * 60 || Math.abs(diff) > Math.min(gap / 2 - 120, 15 * 60)) return null;
+    used.add(i);
+    return Math.round(diff / 60);
+  }
+  const delayHtml = (d) => d == null ? "" : Math.abs(d) <= 1 ? `<small class="ontime">${esc(t("delay_on"))}</small>`
+    : d > 0 ? `<small class="late">${esc(t("delay_late", { n: d }))}</small>` : `<small class="early">${esc(t("delay_early", { n: -d }))}</small>`;
+
+  // list: estimaciones de la API ([] si no da ninguna; null si la consulta falló).
   function renderArrivals(list) {
     lastArrivals = list;
+    arrivalsFailed = list == null;
     const box = $("#arrivals");
-    if (!list.length) {
-      box.innerHTML = `<div class="state"><strong>${esc(t("empty"))}</strong> ${esc(t("empty_body"))}</div>`;
-      return;
-    }
-    // Agrupa por línea y destino; muestra el próximo y el siguiente.
+    const s = current;
+    const now = new Date();
+    const nowS = (now - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 1000;
+    // Horario publicado de esta parada (si ya ha cargado): pasos de hace 30 min a dentro de 3 h.
+    const si = stopPlan && s ? stopPlan.index.get(s.id) : null;
+    const passes = si != null ? stopPlan.upcoming(si, now, 3 * 3600, 30 * 60) : [];
+    const passesOf = new Map();
+    passes.forEach((p) => { const k = `${p.line}|${p.dir}`; if (!passesOf.has(k)) passesOf.set(k, []); passesOf.get(k).push(p); });
+
+    // En vivo: agrupa por línea y destino; el próximo y el siguiente.
     const groups = new Map();
-    list.forEach((b) => {
+    const covered = new Set();   // líneas y sentidos con algún bus en vivo (no se repiten según horario)
+    (list || []).forEach((b) => {
       const linea = normLine(b.linea);
       const ruta = titleCase(String(b.ruta || ""));
       const k = `${linea}|${ruta}`;
-      if (!groups.has(k)) groups.set(k, { linea, ruta, mins: [] });
-      groups.get(k).mins.push(Number(b.minutos));
+      if (!groups.has(k)) groups.set(k, { linea, ruta, buses: [], dir: s ? liveDir(s.id, linea, b.ruta) : null });
+      groups.get(k).buses.push(Number(b.minutos));
     });
-    const rows = [...groups.values()]
-      .map((g) => ({ ...g, mins: g.mins.filter((m) => !isNaN(m)).sort((a, b) => a - b) }))
-      .filter((g) => g.mins.length)
-      .sort((a, b) => a.mins[0] - b.mins[0]);
+    const rows = [];
+    for (const g of groups.values()) {
+      const mins = g.buses.filter((m) => !isNaN(m)).sort((a, b) => a - b);
+      if (!mins.length) continue;
+      if (g.dir != null) covered.add(`${g.linea}|${g.dir}`);
+      else if (lines && lines[g.linea]) lines[g.linea].sentidos.forEach((_, i) => covered.add(`${g.linea}|${i}`));
+      const ps = g.dir != null ? passesOf.get(`${g.linea}|${g.dir}`) || [] : [];
+      const delay = ps.length ? delayOf(ps, nowS + mins[0] * 60, new Set()) : null;
+      rows.push({ live: true, linea: g.linea, ruta: g.ruta, sortMin: mins[0], mins, delay });
+    }
+    // Según horario (19): líneas y sentidos sin ningún bus en vivo, su próximo paso.
+    for (const [k, ps] of passesOf) {
+      if (covered.has(k)) continue;
+      const next = ps.filter((p) => p.at >= nowS - 30 && p.at <= nowS + SCHED_AHEAD);
+      if (!next.length) continue;
+      const [linea, dir] = [next[0].line, next[0].dir];
+      const ln = lines && lines[linea];
+      const ruta = ln && ln.sentidos[dir] ? ln.sentidos[dir].destino : "";
+      rows.push({ live: false, linea, ruta, sortMin: (next[0].at - nowS) / 60, at: next.map((p) => p.at) });
+    }
+    rows.sort((a, b) => a.sortMin - b.sortMin);
 
-    box.innerHTML = rows.map((g) => {
-      const m = g.mins[0];
-      const eta = m <= 0 ? `<span class="eta now"><b>${esc(t("arriving"))}</b></span>`
-                         : `<span class="eta"><b>${m}</b><span>${esc(t("min"))}</span></span>`;
-      const next = g.mins[1] != null ? `<small>${esc(t("next", { n: g.mins[1] }))}</small>` : "";
+    const err = list == null && s ? `<div class="state"><strong>${esc(t("times_error"))}</strong>
+        ${esc(t("times_error_body", { infobus: "\u0000" })).replace("\u0000",
+          `<a href="${INFOBUS_URL(s.id)}" target="_blank" rel="noopener">Infobus</a>`)}</div>` : "";
+    if (!rows.length) {
+      box.innerHTML = err || `<div class="state"><strong>${esc(t("empty"))}</strong> ${esc(t("empty_body"))}</div>`;
+      return;
+    }
+    const onlySched = !rows.some((r) => r.live);
+    const head = err || (onlySched ? `<p class="note">${esc(t("sched_only"))}</p>` : "");
+    box.innerHTML = head + rows.map((g) => {
+      let eta, sub;
+      if (g.live) {
+        const m = g.mins[0];
+        eta = m <= 0 ? `<span class="eta now"><b>${esc(t("arriving"))}</b></span>`
+                     : `<span class="eta"><b>${m}</b><span>${esc(t("min"))}</span></span>`;
+        sub = delayHtml(g.delay) + (g.mins[1] != null ? `<small>${esc(t("next", { n: g.mins[1] }))}</small>` : "");
+      } else {
+        eta = `<span class="eta sched"><b>${esc(hhmm(g.at[0]))}</b></span>`;
+        sub = `<small class="sched-tag">${esc(t("scheduled"))}${g.at[1] != null ? ` · ${esc(t("then_at", { time: hhmm(g.at[1]) }))}` : ""}</small>`;
+      }
       // Toda la fila (número, destino y tiempo) abre la línea en el mapa.
       const known = lines && lines[g.linea];
       const tag = known ? "button" : "div";
       const attrs = known ? ` type="button" data-line="${esc(g.linea)}" data-ruta="${esc(g.ruta)}" title="${esc(t("see_line", { code: g.linea }))}"` : "";
-      return `<${tag} class="arrival"${attrs}>
+      return `<${tag} class="arrival${g.live ? "" : " is-sched"}"${attrs}>
         <span class="badge"${lineStyle(g.linea)}>${esc(g.linea)}</span>
-        <span class="route"><b>${esc(g.ruta)}</b>${next}</span>
+        <span class="route"><b>${esc(g.ruta)}</b>${sub}</span>
         ${eta}
       </${tag}>`;
     }).join("");
   }
+
+  // ---------- Horarios de una parada (12 y 13) ----------
+  // Los publicados por Vitrasa (data/viajes.json): por línea y sentido, primer y último paso,
+  // frecuencia aproximada y todas las horas. Pestañas: laborable, sábado y domingo/festivo.
+  let sched = null;   // { id, day }
+  const HOLI = (d) => PLAN.isHoliday(d);
+  // Tipo de día de hoy: "w" laborable, "6" sábado, "0" domingo o festivo.
+  const todayType = (d = new Date()) => (HOLI(d) || d.getDay() === 0 ? "0" : d.getDay() === 6 ? "6" : "w");
+  // Bit de los viajes de ese tipo de día: el laborable, el de hoy si lo es (y si no, el miércoles).
+  const typeBit = (ty) => (ty === "w" ? 1 << (todayType() === "w" ? new Date().getDay() : 3) : 1 << Number(ty));
+  const hhmm = (sec) => `${String(Math.floor(sec / 3600) % 24).padStart(2, "0")}:${String(Math.floor(sec / 60) % 60).padStart(2, "0")}`;
+  function everyText(times) {
+    // Mediana del tiempo entre pasos de 7 a 21 h (o del día entero, si no hay bastantes).
+    const gaps = (ts) => ts.slice(1).map((x, i) => x - ts[i]).sort((a, b) => a - b);
+    let g = gaps(times.filter((x) => x >= 7 * 3600 && x <= 21 * 3600));
+    if (g.length < 2) g = gaps(times);
+    if (!g.length) return "";
+    const m = Math.max(1, Math.round(g[g.length >> 1] / 60));
+    return m < 60 ? t("every_min", { n: m }) : m % 60 ? t("every_h", { h: Math.floor(m / 60), m: m % 60 }) : t("every_h0", { h: m / 60 });
+  }
+  function showSched(id) {
+    const s = byId.get(id);
+    leaveStop();
+    clearLine();
+    showView("sched");
+    if (!sched || sched.id !== id) sched = { id, day: todayType() };
+    document.title = `${t("sched_title")} · ${s.name} · Próximo Vitrasa`;
+    $("#sched-name").textContent = s.name;
+    $("#sched-meta").textContent = t("stop_n", { id });
+    if (!isDesktop()) panel.dataset.state = "full";
+    selRing.setLatLng(s.ll).addTo(map);
+    renderSched();
+  }
+  function renderSched() {
+    if (!sched) return;
+    document.querySelectorAll("#sched-days [data-day]").forEach((b) => b.setAttribute("aria-selected", b.dataset.day === sched.day));
+    const box = $("#sched-list");
+    box.innerHTML = `<p class="note">${esc(t("sched_loading"))}</p>`;
+    const want = sched.id;
+    Promise.all([PLAN.load(), linesReady]).then(([plan]) => {
+      if (!sched || sched.id !== want || $("#sched").hidden) return;
+      const si = plan.index.get(want);
+      const passes = si == null ? [] : plan.stopPasses(si, typeBit(sched.day));
+      // Líneas y sentidos que pasan por la parada algún día (para decir "no pasa" en los demás).
+      const all = new Map();
+      if (si != null) for (const [n, k] of plan.at[si]) { const pt = plan.pats[n]; if (k < pt.p.length - 1) all.set(`${pt.l}|${pt.s}`, { line: pt.l, dir: pt.s, times: [] }); }
+      passes.forEach((p) => all.get(`${p.line}|${p.dir}`).times.push(p.t));
+      const order = Object.keys(lines || {});
+      const groups = [...all.values()].sort((a, b) => (!a.times.length - !b.times.length) || order.indexOf(a.line) - order.indexOf(b.line) || a.dir - b.dir);
+      const date = new Date(`${plan.fecha}T12:00:00`).toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" });
+      const nowS = (Date.now() - new Date().setHours(0, 0, 0, 0)) / 1000;
+      const isToday = sched.day === todayType();
+      const html = groups.map((g) => {
+        const ln = lines && lines[g.line];
+        const dest = ln && ln.sentidos[g.dir] ? ln.sentidos[g.dir].destino : "";
+        const head = `<span class="badge"${lineStyle(g.line)}>${esc(g.line)}</span>
+          <span class="what"><b>${esc(t("towards", { dest }))}</b>`;
+        if (!g.times.length) return `<div class="sched-line off"><summary>${head}<small>${esc(t("no_service"))}</small></span></summary></div>`;
+        const ts = g.times;
+        const meta = [t("first_last", { first: hhmm(ts[0]), last: hhmm(ts[ts.length - 1]) }), everyText(ts)].filter(Boolean).join(" · ");
+        const hours = new Map();
+        ts.forEach((x) => { const h = Math.floor(x / 3600); if (!hours.has(h)) hours.set(h, []); hours.get(h).push(x); });
+        const rows = [...hours].map(([h, xs]) => `<dt>${String(h % 24).padStart(2, "0")}</dt><dd>${xs.map((x) =>
+          `<span${isToday && x < nowS - 60 ? ' class="past"' : ""}>${String(Math.floor(x / 60) % 60).padStart(2, "0")}</span>`).join(" ")}</dd>`).join("");
+        return `<details class="sched-line"><summary>${head}<small>${esc(meta)}</small></span>${CHEV}</summary><dl class="sched-hours">${rows}</dl></details>`;
+      }).join("");
+      box.innerHTML = (html || `<div class="state"><strong>${esc(t("sched_none"))}</strong></div>`) +
+        `<p class="note">${esc(t("sched_note", { date }))}</p>`;
+    }).catch(() => { if (sched && sched.id === want) box.innerHTML = `<div class="state"><strong>${esc(t("sched_error"))}</strong></div>`; });
+  }
+  $("#sched-days").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-day]");
+    if (!b || !sched || b.dataset.day === sched.day) return;
+    sched.day = b.dataset.day;
+    renderSched();
+  });
+  $("#sched-open").addEventListener("click", () => { if (current) navigate(`horario/${current.id}`); });
+  $("#sched-back").addEventListener("click", goBack);
 
   // ---------- Dirección (calle y número) ----------
   // En la dirección web: #dir/<lat,lon>~<Calle, número>[~a] ("~a": posición aproximada).
@@ -959,6 +1111,10 @@
       return { url: `${base}#linea/${encodeURIComponent(active.code)}${active.from ? `/${active.from}` : ""}`, text: `${t("line_n", { code: active.code })} · ${l.nombre}` };
     }
     if (ctx === "place" && place) return { url: `${base}#${placeToken(place)}`, text: place.label };
+    if (ctx === "sched" && sched) {
+      const s = byId.get(sched.id);
+      return { url: `${base}#horario/${sched.id}`, text: `${t("sched_title")} · ${s.name} · ${t("stop_n", { id: sched.id })}` };
+    }
     if (ctx === "trip") {
       const a = shareEnd(trip.a), b = shareEnd(trip.b);
       if (!a && !b) return null;
@@ -1977,6 +2133,7 @@
     } else if (active) showLine(active.code, active.from);
     else if (place) { document.title = "Próximo Vitrasa"; showPlace(); }
     else if (!$("#info").hidden) showInfo();
+    else if (!$("#sched").hidden && sched) showSched(sched.id);
     else if (tripOpen()) {
       renderTripFields();
       if (lastTrip) renderTripResult(); else computeTrip(false);

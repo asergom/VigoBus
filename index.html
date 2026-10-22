@@ -152,6 +152,28 @@
       <ul id="place-stops" class="stops"></ul>
     </section>
 
+    <!-- Horarios de una parada: los publicados por Vitrasa, por tipo de día -->
+    <section id="sched" class="view" hidden>
+      <div class="stop-head">
+        <button id="sched-back" class="icon-btn" type="button" data-i18n-aria="back">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+        </button>
+        <div class="stop-title">
+          <h2 id="sched-name"></h2>
+          <p class="stop-meta" id="sched-meta"></p>
+        </div>
+        <button class="icon-btn share" type="button" data-share="sched" data-i18n-aria="share" data-i18n-title="share">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5.5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="18.5" r="2.5"/><path d="M8.2 10.8l7.6-4.1M8.2 13.2l7.6 4.1"/></svg>
+        </button>
+      </div>
+      <div id="sched-days" class="tabs" role="tablist">
+        <button role="tab" type="button" data-day="w" data-i18n="day_week"></button>
+        <button role="tab" type="button" data-day="6" data-i18n="day_sat"></button>
+        <button role="tab" type="button" data-day="0" data-i18n="day_sun"></button>
+      </div>
+      <div id="sched-list" class="sched-list" aria-live="polite"></div>
+    </section>
+
     <!-- Información útil: solo enlaces a las páginas oficiales de Vitrasa -->
     <section id="info" class="view" hidden>
       <div class="stop-head">
@@ -193,6 +215,7 @@
         <span id="updated"></span>
         <button id="refresh" type="button" data-i18n="refresh"></button>
         <button id="trip-here" type="button" data-i18n="trip_here"></button>
+        <button id="sched-open" type="button" data-i18n="sched_btn"></button>
         <a id="infobus" target="_blank" rel="noopener" data-i18n="infobus"></a>
       </footer>
     </section>

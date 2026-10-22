@@ -406,7 +406,41 @@
       return out;
     }
 
-    return { ids, index, pats, at, transfers, search, retime, choose, fecha: data.fecha, WALK };
+    // ---------- Horarios de una parada (datos publicados de Vitrasa) ----------
+    // Pasos programados por la parada s (índice) en un tipo de día (bit de dayBit): uno por viaje,
+    // con la hora en segundos desde la medianoche (puede pasar de 24 h en viajes de madrugada).
+    // No cuenta la parada en la que termina el recorrido: ahí no se puede subir.
+    function stopPasses(s, bit) {
+      const out = [];
+      for (const [n, k] of at[s]) {
+        const pt = pats[n];
+        if (k === pt.p.length - 1) continue;
+        for (let q = 0; q < pt.dep.length; q++) {
+          if (pt.mask[q] & bit) out.push({ pat: n, line: pt.l, dir: pt.s, f: pt.f, t: pt.dep[q] + pt.t[k] * pt.dur[q] });
+        }
+      }
+      return out.sort((a, b) => a.t - b.t);
+    }
+    // Próximos pasos por la parada s a partir de "time" (Date), como mucho "horizon" segundos
+    // después (y "back" segundos antes); "at" en segundos desde la medianoche del día de "time".
+    function upcoming(s, time = new Date(), horizon = 3 * 3600, back = 60) {
+      const base = new Date(time.getFullYear(), time.getMonth(), time.getDate());
+      const now = (time - base) / 1000;
+      const trips = tripsFor(time);
+      const out = [];
+      for (const [n, k] of at[s]) {
+        const pt = pats[n];
+        if (k === pt.p.length - 1) continue;
+        const tr = trips(pt);
+        for (let q = 0; q < tr.dep.length; q++) {
+          const a = tr.dep[q] + pt.t[k] * tr.dur[q];
+          if (a >= now - back && a <= now + horizon) out.push({ pat: n, line: pt.l, dir: pt.s, f: pt.f, at: a });
+        }
+      }
+      return out.sort((a, b) => a.at - b.at);
+    }
+
+    return { ids, index, pats, at, transfers, search, retime, choose, stopPasses, upcoming, fecha: data.fecha, WALK };
   }
 
   let pending = null;
