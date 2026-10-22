@@ -122,9 +122,18 @@
       <div class="trip-when" role="group" data-i18n-aria="leave_label">
         <button id="when-now" type="button" aria-pressed="true" data-i18n="leave_now"></button>
         <label class="when-pick">
-          <span data-i18n="leave_at"></span>
+          <select id="when-mode" data-i18n-aria="when_mode">
+            <option value="dep" data-i18n="leave_at"></option>
+            <option value="arr" data-i18n="arrive_by"></option>
+          </select>
           <input id="when-at" type="datetime-local" step="60">
         </label>
+      </div>
+      <!-- Preferencia de ruta: más rápido, menos transbordos o menos a pie -->
+      <div id="trip-pref" class="trip-pref" role="radiogroup" data-i18n-aria="pref_label">
+        <button type="button" role="radio" data-pref="fast" data-i18n="pref_fast"></button>
+        <button type="button" role="radio" data-pref="transfers" data-i18n="pref_transfers"></button>
+        <button type="button" role="radio" data-pref="walk" data-i18n="pref_walk"></button>
       </div>
       <ul id="trip-sugg" class="stops trip-sugg" hidden></ul>
       <div id="trip-result" class="trip-result" aria-live="polite"></div>

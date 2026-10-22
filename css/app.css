@@ -179,8 +179,17 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 }
 #when-now[aria-pressed="true"], .when-pick.on { border-color: var(--focus); color: var(--ink); box-shadow: inset 0 0 0 1px var(--focus); }
 .when-pick { flex: 1; min-width: 0; }
+/* Preferencia de ruta */
+.trip-pref { display: flex; gap: 6px; margin-top: 8px; flex: none; }
+.trip-pref button {
+  flex: 1; min-width: 0; min-height: 32px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 16px;
+  background: var(--surface); color: var(--granite); font: 600 13px/1.15 var(--sans);
+}
+.trip-pref button[aria-checked="true"] { border-color: var(--focus); color: var(--ink); box-shadow: inset 0 0 0 1px var(--focus); }
 .when-pick input { flex: 1; min-width: 0; border: 0; background: none; color: inherit; font: 600 14px/1 var(--sans); padding: 0; }
 .when-pick input:focus { outline: none; }
+.when-pick select { border: 0; background: none; color: inherit; font: inherit; padding: 0 2px 0 0; cursor: pointer; flex: none; max-width: 48%; }
+.when-pick select:focus { outline: none; }
 .when-pick:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
 /* Opciones de viaje (bus y a pie) */
 .trip-opts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }

@@ -1257,7 +1257,7 @@
   // Cada extremo es { kind: "stop" | "me" | "map", ll: [lat, lon], id? }. En la dirección: #ir/<A>/<B>,
   // con "p1234" para una parada y "lat,lon" para un punto. La ruta se calcula en el propio
   // dispositivo con la red peatonal de OpenStreetMap (js/peaton.js), sin servicios externos.
-  const trip = { a: null, b: null, editing: null, picking: null, sel: null, when: null };   // sel: opción abierta; when: salida más tarde (Date) o null = ahora
+  const trip = { a: null, b: null, editing: null, picking: null, sel: null, when: null, whenMode: "dep" };   // sel: opción abierta; when: hora elegida (Date) o null = ahora; whenMode: "dep" salir a esa hora, "arr" llegar a esa hora
   const tripLayer = L.layerGroup().addTo(map);
   const tripPins = {};
   let tripSeq = 0;
@@ -1558,18 +1558,59 @@
     if (lastTrip.cands.length) refreshLive(seq);
   }
 
+  // Preferencia de ruta (11), recordada en este dispositivo.
+  const PREF_KEY = "pv:preferencia";
+  let tripPref = "fast";
+  try { tripPref = ["fast", "transfers", "walk"].includes(localStorage.getItem(PREF_KEY)) ? localStorage.getItem(PREF_KEY) : "fast"; } catch { /* sin almacenamiento */ }
+  function renderPref() {
+    document.querySelectorAll("#trip-pref [data-pref]").forEach((b) => b.setAttribute("aria-checked", b.dataset.pref === tripPref));
+  }
+  $("#trip-pref").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-pref]");
+    if (!b || b.dataset.pref === tripPref) return;
+    tripPref = b.dataset.pref;
+    try { localStorage.setItem(PREF_KEY, tripPref); } catch { /* sin almacenamiento */ }
+    renderPref();
+    trip.sel = null;
+    computeTrip(false);
+  });
+  renderPref();
+
   // Hora de salida: la elegida o, si no hay (o ya pasó), ahora.
-  const tripStart = () => (trip.when && trip.when > new Date() ? trip.when : new Date());
+  const tripStart = () => (trip.when && trip.whenMode !== "arr" && trip.when > new Date() ? trip.when : new Date());
 
   // Busca de nuevo (las opciones del horario, aún sin tiempos en vivo).
   function planSearch() {
     const lt = lastTrip;
-    const start = tripStart();
+    const walk = lt.walk ? lt.walk.dist : Infinity;
+    const q = { origins: lt.origins, dests: lt.dests, walk, maxTransfers: 2, prefer: tripPref };
+    // "Llegar a las" (10): se busca desde 3 h antes (o desde ahora); si no hay forma de llegar a
+    // tiempo, lo antes posible.
+    const arriveBy = arriveMode() ? trip.when : null;
+    lt.arriveBy = null;
+    lt.arriveLate = false;
+    if (arriveBy) {
+      const now = new Date();
+      const start = new Date(Math.max(now.getTime(), arriveBy.getTime() - 3 * 3600000));
+      const cands = lt.plan.search({ ...q, time: now, arriveBy });
+      if (cands.length) {
+        lt.arriveBy = arriveBy;
+        setStart(lt, start);
+        lt.cands = cands;
+      } else lt.arriveLate = true;
+    }
+    if (!lt.arriveBy) {
+      const start = arriveBy ? new Date() : tripStart();
+      setStart(lt, start);
+      lt.cands = lt.plan.search({ ...q, time: start });
+    }
+    if (!lt.live) lt.opts = lt.plan.choose(lt.cands, lt.start, walk);
+  }
+  function setStart(lt, start) {
     lt.start = start;
     lt.base = new Date(start.getFullYear(), start.getMonth(), start.getDate()).getTime();
-    lt.cands = lt.plan.search({ origins: lt.origins, dests: lt.dests, walk: lt.walk ? lt.walk.dist : Infinity, time: start, maxTransfers: 2 });
-    if (!lt.live) lt.opts = lt.plan.choose(lt.cands, start, lt.walk ? lt.walk.dist : Infinity);
   }
+  const arriveMode = () => !!(trip.when && trip.whenMode === "arr");
 
   async function refreshLive(seq) {
     const lt = lastTrip;
@@ -1645,7 +1686,9 @@
   function shownKey() {
     const lt = lastTrip;
     if (trip.sel) return trip.sel;
-    const walkFirst = lt.walk && (!lt.opts[0] || startSec() + walkMin(lt.walk.dist) * 60 <= lt.opts[0].arr);
+    const walkFirst = lt.walk && (!lt.opts[0] || (lt.arriveBy
+      ? (lt.arriveBy - lt.base) / 1000 - walkMin(lt.walk.dist) * 60 >= lt.opts[0].dep
+      : startSec() + walkMin(lt.walk.dist) * 60 <= lt.opts[0].arr));
     return walkFirst || !lt.opts[0] ? "walk" : lt.opts[0].key;
   }
   const busKey = (l) => `${l.line}|${l.board}`;
@@ -1664,32 +1707,39 @@
     }
     const shown = shownKey();
     const cur = (k) => (k === shown ? ' aria-current="true"' : "");
+    const arr = !!lt.arriveBy;
     const items = lt.opts.map((j) => {
       const first = j.legs.find((l) => l.type === "bus");
-      const total = (j.arr - startSec()) / 60;
+      const total = (j.arr - (arr ? j.dep : startSec())) / 60;
+      const leave = arr ? `${esc(t("leave_time", { time: clock(Math.max(j.dep, nowSec())) }))} · ` : "";
+      const late = j.late ? ` <span class="warn">${esc(t("arrive_late_live"))}</span>` : "";
       return `<li><button type="button" class="opt" data-opt="${esc(j.key)}"${cur(j.key)}>
         <span class="chain">${chain(j)}</span>
         <span class="eta">${durHtml(total)}</span>
-        <span class="when">${whenHtml(first)} · ${esc(stopName(first.board))}${first.doubtful ? ` <span class="warn">${esc(t("no_live"))}</span>` : ""}${isTight(j) ? ` <span class="warn">${esc(t("tight_transfer"))}</span>` : ""}</span>
+        <span class="when">${leave}${whenHtml(first)} · ${esc(stopName(first.board))}${late}${first.doubtful ? ` <span class="warn">${esc(t("no_live"))}</span>` : ""}${isTight(j) ? ` <span class="warn">${esc(t("tight_transfer"))}</span>` : ""}</span>
         <span class="arr">${esc(arriveAt(j.arr))}</span>
       </button></li>`;
     });
     // Ir andando: primero si llega antes que cualquier bus; si no, al final.
     if (lt.walk) {
+      const T = arr ? (lt.arriveBy - lt.base) / 1000 : null;
+      const walkDep = arr ? T - walkMinTotal * 60 : startSec();
       const w = `<li><button type="button" class="opt walk" data-opt="walk"${cur("walk")}>
         <span class="chain">${walkChip(lt.walk.dist)}<span class="what">${esc(t("on_foot"))}</span></span>
         <span class="eta">${durHtml(walkMinTotal)}</span>
-        <span class="when">${esc(fmtDist(lt.walk.dist))}</span>
-        <span class="arr">${esc(t("arrive_at", { time: clock(startSec() + walkMinTotal * 60) }))}</span>
+        <span class="when">${arr ? `${esc(t("leave_time", { time: clock(Math.max(walkDep, nowSec())) }))} · ` : ""}${esc(fmtDist(lt.walk.dist))}</span>
+        <span class="arr">${esc(arriveAt(walkDep + walkMinTotal * 60))}</span>
       </button></li>`;
       const firstBus = lt.opts[0];
-      if (!firstBus || startSec() + walkMinTotal * 60 <= firstBus.arr) items.unshift(w); else items.push(w);
+      const walkFirst = !firstBus || (arr ? walkDep >= firstBus.dep : startSec() + walkMinTotal * 60 <= firstBus.arr);
+      if (walkFirst) items.unshift(w); else items.push(w);
     }
     let head = "";
     if (lt.planError) head = `<p class="trip-note">${esc(t("plan_error"))}</p>`;
     else if (!lt.opts.length) head = `<div class="state"><strong>${esc(t("plan_none"))}</strong></div>`;
     // Andar es más rápido, pero se enseña igualmente la mejor opción en bus.
-    else if (lt.opts.every((o) => o.slower)) head = `<p class="trip-note">${esc(t("walk_faster"))}</p>`;
+    else if (lt.opts.every((o) => o.slower)) head = `<p class="trip-note">${esc(t(arr ? "walk_later" : "walk_faster"))}</p>`;
+    if (lt.arriveLate && trip.when) head = `<p class="trip-note warn">${esc(t("arrive_impossible", { time: trip.when.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" }) }))}</p>` + head;
     if (!items.length) head = `<div class="state"><strong>${esc(t("trip_none"))}</strong></div>`;
     const date = lt.plan ? new Date(`${lt.plan.fecha}T12:00:00`).toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" }) : "";
     const foot = lt.opts.length ? `<p class="trip-note">${lt.live ? "" : `${esc(t("live_checking"))} `}${esc(t("plan_note", { date }))}</p>` : "";
@@ -1740,8 +1790,9 @@
     });
     steps.push(`<li class="step end"><span class="ico"><span class="pin pin-b">B</span></span>
       <span class="txt">${esc(t(nextDay(j.arr) ? "step_arrive_tomorrow" : "step_arrive", { time: clock(j.arr) }))}</span></li>`);
-    const total = (j.arr - startSec()) / 60;
-    return `${back}<div class="opt-head"><span class="chain">${chain(j)}</span><span class="eta">${durHtml(total)}</span></div>
+    const total = (j.arr - (lt.arriveBy ? j.dep : startSec())) / 60;
+    const leave = lt.arriveBy ? `<p class="trip-note">${esc(t("leave_time", { time: clock(Math.max(j.dep, nowSec())) }))}${j.late ? ` · <span class="warn">${esc(t("arrive_late_live"))}</span>` : ""}</p>` : "";
+    return `${back}<div class="opt-head"><span class="chain">${chain(j)}</span><span class="eta">${durHtml(total)}</span></div>${leave}
       <ol class="steps">${steps.join("")}</ol>`;
   }
 
@@ -1961,9 +2012,17 @@
     const later = !!trip.when;
     $("#when-now").setAttribute("aria-pressed", !later);
     inp.closest(".when-pick").classList.toggle("on", later);
+    $("#when-mode").value = trip.whenMode === "arr" ? "arr" : "dep";
     if (later) inp.value = localISO(trip.when);
     else if (document.activeElement !== inp) inp.value = "";
   }
+  $("#when-mode").addEventListener("change", (e) => {
+    trip.whenMode = e.target.value;
+    if (!trip.when) { $("#when-at").focus(); return; }   // falta elegir la hora
+    trip.sel = null;
+    tripReplace();
+    computeTrip(false);
+  });
   $("#when-now").addEventListener("click", () => {
     if (!trip.when) return;
     trip.when = null;

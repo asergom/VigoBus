@@ -12,6 +12,12 @@
   // Coste para ordenar opciones: tiempo hasta llegar + castigo por andar y por transbordar.
   const WALK_PENALTY = 0.5;      // cada minuto andando cuenta como 1,5 min
   const TRANSFER_PENALTY = 300;  // un transbordo cuenta como 5 min más
+  // Preferencias de ruta (11): pesos del coste. "fast", la de siempre.
+  const PREFS = {
+    fast: { walk: WALK_PENALTY, transfer: TRANSFER_PENALTY },
+    transfers: { walk: WALK_PENALTY, transfer: 1200 },   // cada transbordo cuenta como 20 min
+    walk: { walk: 2, transfer: TRANSFER_PENALTY },      // cada minuto andando cuenta como 3
+  };
   const MAX_OPTIONS = 5;
   const WIDE_OPTIONS = 8;
   const CUTOFF = 25 * 60;        // se descartan opciones que cuestan 25 min más que la mejor
@@ -102,10 +108,13 @@
     // Siempre se devuelve al menos la mejor opción en bus si existe alguna (aunque andar sea más
     // rápido o salga dentro de muchas horas): ver pick().
     function search(opts) {
+      if (opts.arriveBy) return searchArriveBy(opts);
       const out = searchWithin(opts, HORIZON);
       return out.length ? out : searchWithin(opts, LONG_HORIZON);
     }
-    function searchWithin({ origins, dests, walk = Infinity, time = new Date(), maxTransfers = 1 }, horizon) {
+    // raw: devolver todas las opciones encontradas, sin elegir (para "llegar a las").
+    function searchWithin({ origins, dests, walk = Infinity, time = new Date(), maxTransfers = 1, prefer = "fast" }, horizon, raw = false) {
+      const w = PREFS[prefer] || PREFS.fast;
       const base = new Date(time.getFullYear(), time.getMonth(), time.getDate());
       const now = Math.round((time - base) / 1000);
       const trips = tripsFor(time);
@@ -121,7 +130,8 @@
       // rápido, hay que encontrar las buenas opciones en bus.
       let bestArr = Infinity;
       const keep = (j) => {
-        j.score = j.arr - now + WALK_PENALTY * j.walkM / WALK + TRANSFER_PENALTY * j.transfers;
+        j.w = w;
+        j.score = j.arr - now + w.walk * j.walkM / WALK + w.transfer * j.transfers;
         const old = best.get(j.key);
         if (!old || j.score < old.score) best.set(j.key, j);
         if (j.arr < bestArr) bestArr = j.arr;
@@ -132,7 +142,7 @@
         for (const [j, m] of destOf.get(pt.n) || []) {
           if (j <= k) continue;
           const arr = tr.dep[q] + pt.t[j] * tr.dur[q] + m / WALK;
-          const sc = arr + WALK_PENALTY * m / WALK;
+          const sc = arr + w.walk * m / WALK;
           if (!out || sc < out.sc) out = { j, m, arr, sc };
         }
         return out;
@@ -179,7 +189,7 @@
               if (!d) continue;
               const walkM = f.mo + m2 + d.m;
               const key = `${pt.l}|${pt.s}>${pt2.l}|${pt2.s}`;
-              const sc = d.arr - now + WALK_PENALTY * walkM / WALK + TRANSFER_PENALTY;
+              const sc = d.arr - now + w.walk * walkM / WALK + w.transfer;
               const old = best.get(key);
               if (old && old.score <= sc) continue;
               const l1 = busLeg(pt, tr, q, k, x), l2 = busLeg(pt2, tr2, nt.q, k2, d.j);
@@ -198,7 +208,70 @@
       // Salir lo más tarde posible en las opciones con transbordo (menos espera en el cambio).
       for (const j of best.values()) if (j.transfers) laterFirst(j, trips, now);
 
-      return pick([...best.values()], now, walk, true);
+      return raw ? [...best.values()] : pick([...best.values()], now, walk, true);
+    }
+
+    // "Llegar a las X" (10). time: ahora (o desde cuándo se puede salir); arriveBy: Date de llegada.
+    // Se busca hacia delante desde 3 h antes (o desde ahora) y cada opción se retrasa todo lo
+    // posible: el último bus, el más tardío que llega a tiempo; los anteriores, los más tardíos que
+    // enlazan. Se ordenan por lo tarde que se puede salir (y las mismas preferencias de ruta).
+    // Los tiempos van en segundos desde la medianoche del día de la búsqueda, como siempre, y cada
+    // opción lleva "arriveBy" (la hora pedida en esos segundos).
+    function searchArriveBy(opts) {
+      const time = opts.time || new Date();
+      const start = new Date(Math.max(time.getTime(), opts.arriveBy.getTime() - 3 * 3600 * 1000));
+      const base = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const now = (start - base) / 1000, T = (opts.arriveBy - base) / 1000;
+      const trips = tripsFor(start);
+      // Varias búsquedas, cada vez más cerca de la hora de llegada: cada una puede encontrar otras
+      // paradas de subida o bajada con las que se sale más tarde. Por combinación, la más tardía.
+      const best = new Map();
+      const starts = [180, 120, 75, 40].map((back) => new Date(Math.max(time.getTime(), opts.arriveBy.getTime() - back * 60000)));
+      const tried = new Set();
+      const run = (from) => {
+        if (tried.has(from.getTime())) return;
+        tried.add(from.getTime());
+        const off = (from - start) / 1000;
+        for (const j of searchWithin({ ...opts, time: from }, HORIZON, true)) {
+          // Los tiempos de cada búsqueda van desde la medianoche de su día: se pasan al de "start".
+          const shift = off - ((from - new Date(from.getFullYear(), from.getMonth(), from.getDate())) / 1000 - now);
+          if (shift) { j.dep += shift; j.arr += shift; j.legs.forEach((l) => { if (l.type === "bus") { l.dep += shift; l.arr += shift; l.tripDep += shift; } }); }
+          if (!shiftToArriveBy(j, trips, now, T)) continue;
+          const w = j.w || PREFS.fast;
+          j.arriveBy = T;
+          j.score = T - j.dep + w.walk * j.walkM / WALK + w.transfer * j.transfers;
+          const old = best.get(j.key);
+          if (!old || j.score < old.score) best.set(j.key, j);
+        }
+      };
+      starts.forEach(run);
+      // Afinado: desde 2 min después de la salida de las 3 mejores, por si se puede salir aún más tarde.
+      [...best.values()].sort((x, y) => x.score - y.score).slice(0, 3)
+        .forEach((j) => run(new Date(base.getTime() + (j.dep + 120) * 1000)));
+      return pick([...best.values()], now, opts.walk == null ? Infinity : opts.walk, true);
+    }
+    // Retrasa el último bus al viaje más tardío que llega a tiempo y, después, los anteriores.
+    // Devuelve false si ni el viaje encontrado llega a tiempo.
+    function shiftToArriveBy(j, trips, now, T) {
+      const legs = j.legs, last = legs[legs.length - 1];
+      let li = legs.length - 2;
+      while (li > 0 && legs[li].type !== "bus") li--;
+      const l = legs[li];
+      const need = T + 59 - last.m / WALK;   // "llega a las 15:00" vale aunque sean las 15:00:40
+      const prevBus = legs.slice(0, li).reverse().find((x) => x.type === "bus");
+      const ready = prevBus ? prevBus.arr + legs[li - 1].m / WALK + TRANSFER : now + legs[0].m / WALK;
+      const pt = pats[l.pat], tr = trips(pt);
+      let best = null;
+      for (let q = 0; q < tr.dep.length; q++) {
+        const dep = tr.dep[q] + pt.t[l.from] * tr.dur[q], arr = tr.dep[q] + pt.t[l.to] * tr.dur[q];
+        if (dep >= ready && arr <= need && (!best || dep > best.dep)) best = { q, dep, arr };
+      }
+      if (!best) return false;
+      Object.assign(l, { dep: best.dep, arr: best.arr, tripDep: tr.dep[best.q], dur: tr.dur[best.q] });
+      laterFirst(j, trips, now);
+      j.arr = l.arr + last.m / WALK;
+      j.dep = legs[1].dep - legs[0].m / WALK;
+      return true;
     }
 
     // RAPTOR (Delling, Pajor y Werneck, 2012), por rondas: en la ronda k se conocen las llegadas
@@ -325,11 +398,16 @@
     function pick(list, now, walk, wide = false) {
       const walkArr = walk < Infinity ? now + walk / WALK : Infinity;
       const all = list.filter((j) => !j.broken);
-      list = all.filter((j) => j.arr + WALK_SLACK < walkArr);
+      // "Llegar a las": compensa si deja salir más de 5 min más tarde que andando.
+      const T = all.length ? all[0].arriveBy : null;
+      const walkDep = T != null && walk < Infinity ? T - walk / WALK : -Infinity;
+      const worth = T != null ? (j) => j.dep - WALK_SLACK > walkDep : (j) => j.arr + WALK_SLACK < walkArr;
+      const slower = T != null ? (j) => j.dep <= walkDep : (j) => j.arr >= walkArr;
+      list = all.filter(worth);
       // Si ninguna opción en bus compensa frente a andar, se enseña igualmente la mejor (marcada
       // "slower"); antes de los tiempos en vivo se guardan unas pocas, porque la espera real cambia.
       if (!list.length && all.length) {
-        return all.sort((a, b) => a.score - b.score).slice(0, wide ? 3 : 1).map((j) => ({ ...j, slower: j.arr >= walkArr }));
+        return all.sort((a, b) => a.score - b.score).slice(0, wide ? 3 : 1).map((j) => ({ ...j, slower: slower(j) }));
       }
       // Un transbordo para acabar cogiendo una línea que ya se puede coger directamente (y que
       // llega más o menos a la vez) no aporta nada: "15A una parada y luego el H2" frente al H2.
@@ -367,14 +445,19 @@
       const s0 = Math.max(now, (start - base) / 1000);
       const trips = tripsFor(start);
       const out = { ...j, legs: j.legs.map((l) => ({ ...l })) };
-      let t = s0, prevBus = false;
+      // "Llegar a las": se sale cuando toca (no ya), así que se cuenta desde la salida prevista.
+      let t = j.arriveBy != null ? Math.max(s0, j.dep) : s0, prevBus = false;
       for (const leg of out.legs) {
         if (leg.type === "walk") { t += leg.m / WALK; continue; }
         const pt = pats[leg.pat], tr = trips(pt);
         const ready = t + (prevBus ? TRANSFER : 0);
         const list = live ? live(leg) : null;
-        const est = list && list.map((e) => ({ e, at: now + Number(e.minutos) * 60 }))
-          .filter((x) => isFinite(x.at) && x.at >= ready - 30).sort((a, b) => a.at - b.at)[0];
+        const cands = list ? list.map((e) => ({ e, at: now + Number(e.minutos) * 60 })).filter((x) => isFinite(x.at) && x.at >= ready - 30) : [];
+        // "Llegar a las": el bus en vivo que corresponde al previsto (como mucho 10 min de diferencia);
+        // si no, el primero que se pueda coger.
+        const est = j.arriveBy != null
+          ? cands.filter((x) => Math.abs(x.at - leg.dep) <= 600).sort((a, b) => Math.abs(a.at - leg.dep) - Math.abs(b.at - leg.dep))[0]
+          : cands.sort((a, b) => a.at - b.at)[0];
         leg.liveKnown = list != null;
         leg.live = est ? est.e : null;
         if (est) {
@@ -390,10 +473,14 @@
         } else {
           // Sin dato en vivo que sirva: el horario (si la API respondió y no da ningún bus en
           // su horizonte de unos 100 min, el programado se marca como dudoso).
-          const nt = nextTrip(pt, tr, leg.from, ready, Math.max(ready + HORIZON, leg.dep + HORIZON));
-          if (!nt) { out.broken = true; return out; }
-          leg.dep = nt.at;
-          leg.arr = tr.dep[nt.q] + pt.t[leg.to] * tr.dur[nt.q];
+          if (j.arriveBy != null && leg.dep >= ready - 30) {
+            // "Llegar a las": se mantiene el viaje previsto si aún se puede coger.
+          } else {
+            const nt = nextTrip(pt, tr, leg.from, ready, Math.max(ready + HORIZON, leg.dep + HORIZON));
+            if (!nt) { out.broken = true; return out; }
+            leg.dep = nt.at;
+            leg.arr = tr.dep[nt.q] + pt.t[leg.to] * tr.dur[nt.q];
+          }
           leg.doubtful = list != null && list.length === 0 && leg.dep - now < 90 * 60;
         }
         t = leg.arr;
@@ -402,7 +489,12 @@
       out.arr = t;
       const first = out.legs.find((l) => l.type === "bus");
       out.dep = first.dep - out.legs[0].m / WALK;
-      out.score = out.arr - s0 + WALK_PENALTY * out.walkM / WALK + TRANSFER_PENALTY * out.transfers + (out.legs.some((l) => l.doubtful) ? 1200 : 0);
+      const w = j.w || PREFS.fast;
+      const doubt = out.legs.some((l) => l.doubtful) ? 1200 : 0;
+      if (j.arriveBy != null) {
+        out.late = out.arr > j.arriveBy + 60;   // con los buses en vivo ya no llega a tiempo
+        out.score = j.arriveBy - out.dep + w.walk * out.walkM / WALK + w.transfer * out.transfers + doubt + (out.late ? 3600 : 0);
+      } else out.score = out.arr - s0 + w.walk * out.walkM / WALK + w.transfer * out.transfers + doubt;
       return out;
     }
 
