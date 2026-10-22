@@ -201,6 +201,22 @@ def main(gtfs_zip: str) -> None:
             # sin los que salen también en otro sentido de la línea: no sirven para distinguirlos.
             propios = {titulo(h) for (k, _), c in destinos.items() if k == clave for h in c if h.strip()}
             ajenos = {titulo(h) for (k, _), c in destinos.items() if k[0] == linea and k != clave for h in c if h.strip()}
+            # Qué trazado dibujado (-1 el principal, k el ramal k) hace cada letrero: cada recorrido
+            # del GTFS va a un solo trazado, el que contiene (casi) todas sus paradas y más se le
+            # parece (los viajes cortos caben en varios). Un letrero puede quedar con varios si sus
+            # viajes van por sitios distintos.
+            dibujados = [forma] + ramales[clave]
+            paradas_dib = [set(paradas_de(f)) for f in dibujados]
+            por_letrero = defaultdict(set)
+            for f in uso[clave]:
+                pf = set(paradas_de(f))
+                if not pf:
+                    continue
+                nota = lambda k: (len(pf & paradas_dib[k]) / len(pf) >= 0.9, len(pf & paradas_dib[k]) / len(pf | paradas_dib[k]), -k)
+                k = max(range(len(dibujados)), key=nota)
+                for h in destinos[(clave, f)]:
+                    if h.strip():
+                        por_letrero[titulo(h)].add(k - 1)
             sentidos.append({
                 "destino": destino,
                 "letreros": sorted(propios - ajenos - {destino}),
@@ -211,6 +227,9 @@ def main(gtfs_zip: str) -> None:
                 "ramales": [codificar(simplificar([(la, lo) for _, la, lo in sorted(formas[f])], TOLERANCIA_M))
                             for f in ramales[clave]],
             })
+            # Solo si hay ramales: letrero → trazados que hace (la web dibuja solo el del próximo bus).
+            if ramales[clave]:
+                sentidos[-1]["trazados"] = {h: sorted(v) for h, v in sorted(por_letrero.items())}
         salida[linea] = {
             "nombre": titulo(r["route_long_name"]),
             "color": f"#{color}",

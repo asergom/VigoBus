@@ -510,18 +510,34 @@
       s.marker.setOpacity(on ? 1 : 0.12).setZIndexOffset(on ? 500 : 0);
       if (on || prev.has(s.id)) refreshIcon(s);
     });
+    // Con el próximo bus hacia la parada de un ramal concreto, solo se dibuja su recorrido.
+    const only = track && track.dir === active.dir ? track.only : null;
+    if (only && !only.includes(-1) && only.length === 1) {
+      lineStroke(decodePolyline(dir.ramales[only[0]]), l.color);
+      return;
+    }
     // Trazado con borde para que se vea sobre cualquier fondo.
     // Ramales (solo algunos viajes): trazo continuo más fino, debajo del recorrido principal.
-    (dir.ramales || []).forEach((r) => {
+    (dir.ramales || []).forEach((r, k) => {
+      if (only && !only.includes(k)) return;
       const rp = decodePolyline(r);
       L.polyline(rp, { renderer, color: "#13222C", weight: 7, opacity: 0.25, interactive: false }).addTo(lineGroup);
       L.polyline(rp, { renderer, color: "#FFFFFF", weight: 6, opacity: 1, interactive: false }).addTo(lineGroup);
       L.polyline(rp, { renderer, color: l.color, weight: 3.5, opacity: 0.9, interactive: false, lineCap: "round" }).addTo(lineGroup);
     });
-    const pts = decodePolyline(dir.trazado);
+    if (!only || only.includes(-1)) lineStroke(decodePolyline(dir.trazado), l.color);
+  }
+  function lineStroke(pts, color) {
     L.polyline(pts, { renderer, color: "#13222C", weight: 11, opacity: 0.35, interactive: false }).addTo(lineGroup);
     L.polyline(pts, { renderer, color: "#FFFFFF", weight: 9, opacity: 1, interactive: false }).addTo(lineGroup);
-    L.polyline(pts, { renderer, color: l.color, weight: 6, opacity: 1, interactive: false, lineCap: "round" }).addTo(lineGroup);
+    L.polyline(pts, { renderer, color, weight: 6, opacity: 1, interactive: false, lineCap: "round" }).addTo(lineGroup);
+  }
+  // Trazados (-1 principal, k ramal k) que hace un bus con este letrero, o null si no se sabe.
+  function branchesOf(d, ruta) {
+    if (!d || !d.trazados || !ruta) return null;
+    const r = norm(String(ruta));
+    const k = Object.keys(d.trazados).find((x) => norm(x) === r);
+    return k ? d.trazados[k] : null;
   }
 
   // ¿Se ve este punto en la zona del mapa que no tapa el panel?
@@ -664,8 +680,24 @@
       if (same.length) mine = same;
     }
     mine.sort((a, b) => Number(a.minutos) - Number(b.minutos));
+    // Si el próximo bus es de un ramal, el mapa dibuja solo ese recorrido y los buses que lo hacen.
+    const d = l.sentidos[tr.dir];
+    const only = mine[0] ? branchesOf(d, mine[0].ruta) : null;
+    if (only) mine = mine.filter((e) => { const b = branchesOf(d, e.ruta); return !b || b.some((x) => only.includes(x)); });
+    const changed = String(only) !== String(tr.only || null);
+    tr.only = only;
+    // Bus de un solo ramal que pasa por la parada: su posición se calcula sobre ese ramal.
+    if (changed) {
+      tr.loc = tr.baseLoc = tr.baseLoc || tr.loc;
+      if (only && only.length === 1 && only[0] >= 0 && d.ramales[only[0]]) {
+        const sh = BUS.prepare(BUS.decode(d.ramales[only[0]]));
+        const p = BUS.project(sh, byId.get(tr.stop).ll);
+        if (p.off < 60) tr.loc = { shape: sh, along: p.along, off: p.off, branch: only[0] };
+      }
+    }
     tr.ests = mine;
     tr.est = mine[0] || null;
+    if (changed && active && active.code === tr.code && active.dir === tr.dir) drawLine();
     tr.at = at;
     tr.state = tr.est ? "ok" : "none";
     drawBus();
