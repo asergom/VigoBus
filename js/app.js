@@ -1749,13 +1749,12 @@
     let head = "";
     if (lt.planError) head = `<p class="trip-note">${esc(t("plan_error"))}</p>`;
     else if (!lt.opts.length) head = `<div class="state"><strong>${esc(t("plan_none"))}</strong></div>`;
-    // Andar es más rápido, pero se enseña igualmente la mejor opción en bus.
-    else if (lt.opts.every((o) => o.slower)) head = `<p class="trip-note">${esc(t(arr ? "walk_later" : "walk_faster"))}</p>`;
     if (lt.arriveLate && trip.when) head = `<p class="trip-note warn">${esc(t("arrive_impossible", { time: trip.when.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" }) }))}</p>` + head;
     if (!items.length) head = `<div class="state"><strong>${esc(t("trip_none"))}</strong></div>`;
     const date = lt.plan ? new Date(`${lt.plan.fecha}T12:00:00`).toLocaleDateString(lang, { day: "numeric", month: "short", year: "numeric" }) : "";
-    const foot = lt.opts.length ? `<p class="trip-note">${lt.live ? "" : `${esc(t("live_checking"))} `}${esc(t("plan_note", { date }))}</p>` : "";
-    box.innerHTML = `${head}<ul class="trip-opts">${items.join("")}</ul>${notes}${foot}`;
+    // Origen de los tiempos, encima de las opciones.
+    const src = lt.opts.length ? `<p class="trip-note">${lt.live ? "" : `${esc(t("live_checking"))} `}${esc(t("plan_note", { date }))}</p>` : "";
+    box.innerHTML = `${head}${src}<ul class="trip-opts">${items.join("")}</ul>${notes}`;
   }
 
   function renderSteps(j) {
