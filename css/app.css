@@ -186,11 +186,23 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   background: var(--surface); color: var(--granite); font: 600 13px/1.15 var(--sans);
 }
 .trip-pref button[aria-checked="true"] { border-color: var(--focus); color: var(--ink); box-shadow: inset 0 0 0 1px var(--focus); }
-.when-pick input { flex: 1; min-width: 0; border: 0; background: none; color: inherit; font: 600 14px/1 var(--sans); padding: 0; }
+/* Selector de modo y de hora: textos de la web; el control nativo, encima e invisible */
+.when-pick { gap: 0; padding: 0; cursor: default; }
+.when-mode, .when-time { position: relative; display: inline-flex; align-items: center; gap: 4px; min-height: 34px; padding: 0 10px; min-width: 0; }
+.when-mode { flex: none; border-right: 1px solid var(--line); }
+.when-time { flex: 1; overflow: hidden; }
+#when-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.when-pick .caret { width: 16px; height: 16px; color: var(--granite); flex: none; }
+.when-pick .clock { width: 16px; height: 16px; color: var(--granite); flex: none; }
+.when-pick select, .when-pick input {
+  position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; border: 0; padding: 0;
+  font: inherit; cursor: pointer; -webkit-appearance: none; appearance: none;
+}
+.when-mode:has(:focus-visible), .when-time:has(:focus-visible) { outline: 3px solid var(--focus); outline-offset: -3px; border-radius: 999px; }
 .when-pick input:focus { outline: none; }
 .when-pick select { border: 0; background: none; color: inherit; font: inherit; padding: 0 2px 0 0; cursor: pointer; flex: none; max-width: 48%; }
 .when-pick select:focus { outline: none; }
-.when-pick:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+
 /* Opciones de viaje (bus y a pie) */
 .trip-opts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
 .opt {

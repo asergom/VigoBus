@@ -1818,18 +1818,45 @@
     }
     return walkCache.get(k);
   }
+  // Trazado de un tramo en bus. Muchos recorridos mezclan el trazado principal de la línea y algún
+  // ramal (p. ej. los viajes de la 18A que empiezan en Rúa do Areal), así que cada trozo entre
+  // paradas se dibuja con el trazado que pasa por ellas (a menos de 60 m), alargándolo todo lo
+  // posible; si ninguno pasa, en línea recta. Así siempre empieza y acaba en sus paradas.
+  const ON_SHAPE = 60;
   function busPath(leg) {
     const plan = lastTrip.plan;
     const pt = plan.pats[leg.pat];
     if (!patShape.has(pt.n)) {
       const dir = lines[pt.l].sentidos[pt.s];
-      const sh = BUS.prepare(BUS.decode(pt.f < 0 ? dir.trazado : dir.ramales[pt.f]));
-      const along = BUS.stopsAlong(sh, pt.p.map((i) => byId.get(plan.ids[i]).ll)).map((r) => r.along);
-      patShape.set(pt.n, { sh, along });
+      const lls = pt.p.map((i) => byId.get(plan.ids[i]).ll);
+      const shapes = [dir.trazado, ...(dir.ramales || [])].map((enc) => {
+        const sh = BUS.prepare(BUS.decode(enc));
+        const r = BUS.stopsAlong(sh, lls);
+        return { sh, along: r.map((x) => x.along), off: r.map((x) => x.off) };
+      });
+      patShape.set(pt.n, { shapes, lls });
     }
-    const { sh, along } = patShape.get(pt.n);
-    return along[leg.to] > along[leg.from] ? BUS.slice(sh, along[leg.from], along[leg.to])
-      : [byId.get(plan.ids[leg.board]).ll, byId.get(plan.ids[leg.alight]).ll];
+    const { shapes, lls } = patShape.get(pt.n);
+    const out = [];
+    let k = leg.from;
+    while (k < leg.to) {
+      let best = null;
+      for (const s of shapes) {
+        let e = k;
+        while (e < leg.to && s.off[e] <= ON_SHAPE && s.off[e + 1] <= ON_SHAPE && s.along[e + 1] >= s.along[e]) e++;
+        if (e > k && (!best || e > best.e)) best = { s, e };
+      }
+      if (best) {
+        if (!out.length) out.push(lls[k]);   // desde la propia parada
+        out.push(...BUS.slice(best.s.sh, best.s.along[k], best.s.along[best.e]));
+        k = best.e;
+      } else {
+        out.push(lls[k], lls[k + 1]);
+        k++;
+      }
+    }
+    out.push(lls[leg.to]);                   // hasta la propia parada
+    return out;
   }
   const walkStyle = (pts) => [
     L.polyline(pts, { renderer, color: "#FFFFFF", weight: 10, opacity: 0.95, interactive: false, lineCap: "round", lineJoin: "round" }),
@@ -2018,11 +2045,25 @@
     $("#when-now").setAttribute("aria-pressed", !later);
     inp.closest(".when-pick").classList.toggle("on", later);
     $("#when-mode").value = trip.whenMode === "arr" ? "arr" : "dep";
+    $("#when-mode-text").textContent = t(trip.whenMode === "arr" ? "arrive_by" : "leave_at");
+    $("#when-text").textContent = later ? whenLabel(trip.when) : t("when_pick");
     if (later) inp.value = localISO(trip.when);
     else if (document.activeElement !== inp) inp.value = "";
   }
+  // "hoy, 13:00", "mañana, 8:30" o "vie 23 oct, 9:00", en el idioma de la web.
+  function whenLabel(d) {
+    const time = d.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const day = Math.round((new Date(d.getFullYear(), d.getMonth(), d.getDate()) - today) / 86400000);
+    if (day === 0) return t("when_today", { time });
+    if (day === 1) return t("when_tomorrow", { time });
+    return `${d.toLocaleDateString(lang, { weekday: "short", day: "numeric", month: "short" })}, ${time}`;
+  }
+  // En el ordenador, tocar la hora abre el calendario del navegador (en el móvil ya lo hace el toque).
+  $("#when-at").addEventListener("click", (e) => { try { e.target.showPicker(); } catch { /* no lo admite */ } });
   $("#when-mode").addEventListener("change", (e) => {
     trip.whenMode = e.target.value;
+    renderWhen();
     if (!trip.when) { $("#when-at").focus(); return; }   // falta elegir la hora
     trip.sel = null;
     tripReplace();
@@ -2200,6 +2241,7 @@
     else if (!$("#sched").hidden && sched) showSched(sched.id);
     else if (tripOpen()) {
       renderTripFields();
+      renderWhen();
       if (lastTrip) renderTripResult(); else computeTrip(false);
       document.title = `${t("trip_title")} · Próximo Vitrasa`;
     }
