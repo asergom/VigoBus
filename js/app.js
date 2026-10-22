@@ -1476,6 +1476,15 @@
     return parts.join(CHEV);
   }
 
+  // Transbordos justos: minutos que quedan entre llegar (andando) a la parada del siguiente bus y
+  // que este salga. Se sigue proponiendo la opción, pero con aviso si son menos de 5.
+  const TIGHT_MIN = 5;
+  function transferSlack(j, k) {   // k: posición del tramo a pie del transbordo en j.legs
+    const prev = j.legs[k - 1], next = j.legs[k + 1];
+    return (next.dep - prev.arr - j.legs[k].m / lastTrip.plan.WALK) / 60;
+  }
+  const isTight = (j) => j.legs.some((l, k) => l.transfer && transferSlack(j, k) < TIGHT_MIN);
+
   // Opción que se ve en el mapa: la elegida o, si no, la primera de la lista.
   function shownKey() {
     const lt = lastTrip;
@@ -1505,7 +1514,7 @@
       return `<li><button type="button" class="opt" data-opt="${esc(j.key)}"${cur(j.key)}>
         <span class="chain">${chain(j)}</span>
         <span class="eta">${durHtml(total)}</span>
-        <span class="when">${whenHtml(first)} · ${esc(stopName(first.board))}${first.doubtful ? ` <span class="warn">${esc(t("no_live"))}</span>` : ""}</span>
+        <span class="when">${whenHtml(first)} · ${esc(stopName(first.board))}${first.doubtful ? ` <span class="warn">${esc(t("no_live"))}</span>` : ""}${isTight(j) ? ` <span class="warn">${esc(t("tight_transfer"))}</span>` : ""}</span>
         <span class="arr">${esc(arriveAt(j.arr))}</span>
       </button></li>`;
     });
@@ -1553,8 +1562,13 @@
         else if (l.transfer) text = l.m < 30 ? t("step_change_same") : t("step_change", { dist: fmtDist(l.m), place: stopName(next.board) });
         else text = t("step_walk_dest", { dist: fmtDist(l.m) });
         if (l.m < 30 && !l.transfer) return;
+        let tight = "";
+        if (l.transfer) {
+          const n = Math.floor(transferSlack(j, k));
+          if (n < TIGHT_MIN) tight = `<small class="warn">${esc(n < 1 ? t("tight_step_0") : t("tight_step", { n }))}</small>`;
+        }
         steps.push(`<li class="step walk"><span class="ico">${ICON_WALK}</span>
-          <span class="txt">${esc(text)}<small>${esc(t("walk", { n: walkMin(l.m) }))}</small></span></li>`);
+          <span class="txt">${esc(text)}<small>${esc(t("walk", { n: walkMin(l.m) }))}</small>${tight}</span></li>`);
       } else {
         const ln = lines[l.line];
         const dest = ln && ln.sentidos[l.dir] ? ln.sentidos[l.dir].destino : "";
