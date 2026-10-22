@@ -250,6 +250,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .step .txt small { display: block; margin-top: 2px; color: var(--granite); font-size: 14px; font-weight: 500; }
 .step .txt small.dest { color: var(--ink); }
 .step .txt small.warn { color: var(--bus); font-weight: 600; }
+.step .txt small.wait { color: var(--ink); font-weight: 600; }
 .step .alight { display: block; margin-top: 6px; font-weight: 600; }
 .step.bus .txt { padding-left: 12px; border-left: 4px solid var(--lc); }
 .trip-pin { filter: drop-shadow(0 1px 2px rgba(19, 34, 44, .5)); }

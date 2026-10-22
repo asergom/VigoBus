@@ -1780,10 +1780,13 @@
         else if (l.transfer) text = l.m < 30 ? t("step_change_same") : t("step_change", { dist: fmtDist(l.m), place: stopName(next.board) });
         else text = t("step_walk_dest", { dist: fmtDist(l.m) });
         if (l.m < 30 && !l.transfer) return;
+        // Transbordo: siempre la espera prevista en la parada hasta que pase el siguiente bus
+        // (con aviso si es menos de 5 min).
         let tight = "";
         if (l.transfer) {
-          const n = Math.floor(transferSlack(j, k));
-          if (n < TIGHT_MIN) tight = `<small class="warn">${esc(n < 1 ? t("tight_step_0") : t("tight_step", { n }))}</small>`;
+          const n = Math.max(0, Math.floor(transferSlack(j, k)));
+          tight = n < TIGHT_MIN ? `<small class="warn">${esc(n < 1 ? t("tight_step_0") : t("tight_step", { n }))}</small>`
+            : `<small class="wait">${esc(t("wait_step", { dur: n < 60 ? `${n} ${t("min")}` : `${Math.floor(n / 60)} h ${n % 60} ${t("min")}` }))}</small>`;
         }
         steps.push(`<li class="step walk"><span class="ico">${ICON_WALK}</span>
           <span class="txt">${esc(text)}<small>${esc(t("walk", { n: walkMin(l.m) }))}</small>${tight}</span></li>`);
