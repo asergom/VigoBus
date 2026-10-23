@@ -1719,6 +1719,10 @@
   // dispositivo con la red peatonal de OpenStreetMap (js/peaton.js), sin servicios externos.
   const trip = { a: null, b: null, editing: null, picking: null, sel: null, when: null, whenMode: "dep" };   // sel: opción abierta; when: hora elegida (Date) o null = ahora; whenMode: "dep" salir a esa hora, "arr" llegar a esa hora
   const tripLayer = L.layerGroup().addTo(map);
+  // Recorrido que le queda al bus en vivo hasta la parada de subida: en su propio panel, debajo de
+  // los tramos del viaje (así no tapa la parada de subida).
+  map.createPane("tripTail").style.zIndex = 390;
+  const tailRenderer = L.canvas({ padding: 0.3, pane: "tripTail" });
   const tripPins = {};
   let tripSeq = 0;
   let lastTrip = null;
@@ -1932,7 +1936,7 @@
     clearTimeout(tripTimer);
     clearInterval(tripTick);
     tripTimer = tripTick = null;
-    tripBuses.forEach((b) => b.marker && b.marker.remove());
+    tripBuses.forEach((b) => { if (b.marker) b.marker.remove(); if (b.tail) b.tail.forEach((x) => x.remove()); });
     tripBuses = [];
   }
 
@@ -2353,7 +2357,7 @@
   function drawTrip(fit) {
     const lt = lastTrip;
     tripLayer.clearLayers();
-    tripBuses.forEach((b) => b.marker && b.marker.remove());
+    tripBuses.forEach((b) => { if (b.marker) b.marker.remove(); if (b.tail) b.tail.forEach((x) => x.remove()); });
     tripBuses = [];
     clearInterval(tripTick);
     tripRouteOn = !!lt;
@@ -2418,9 +2422,24 @@
       // En los pasos: a qué distancia va el bus de la parada.
       const span = document.querySelector(`#trip-result .bus-pos[data-bus="${CSS.escape(b.key)}"]`);
       if (span) span.textContent = s && s.state === "route" ? `· ${t("bus_far", { dist: fmtDist(s.left) })}` : s && s.state === "depot" ? `· ${t("bus_depot")}` : "";
-      if (!s || s.state !== "route") { if (b.marker) b.marker.remove(); return; }
+      if (!s || s.state !== "route") {
+        if (b.marker) { b.marker.remove(); b.marker = null; }
+        if (b.tail) { b.tail.forEach((x) => x.remove()); b.tail = null; }
+        return;
+      }
       if (!b.marker) b.marker = busMarker(b.color, b.texto, s.ll);
       placeBus(b.marker, s, b.est, b.at);
+      // Lo que le queda por recorrer hasta la parada de subida: mismo color, más clarito.
+      const sh = b.loc.shape;
+      const pts = s.d <= b.loc.along ? BUS.slice(sh, s.d, b.loc.along)
+        : [...BUS.slice(sh, s.d, sh.length), ...BUS.slice(sh, 0, b.loc.along)];   // circular: termina la vuelta
+      if (!b.tail) {
+        b.tail = [
+          L.polyline(pts, { renderer: tailRenderer, color: "#FFFFFF", weight: 8, opacity: 0.9, interactive: false, lineCap: "round", lineJoin: "round" }),
+          L.polyline(pts, { renderer: tailRenderer, color: b.color, weight: 5, opacity: 0.45, interactive: false, lineCap: "round", lineJoin: "round" }),
+        ];
+        b.tail.forEach((x) => x.addTo(map));
+      } else b.tail.forEach((x) => x.setLatLngs(pts));
     });
   }
 
