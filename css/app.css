@@ -88,7 +88,8 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .brand-mark { width: 18px; height: 18px; border-radius: 50%; background: var(--bus); box-shadow: inset 0 0 0 4px var(--paper), 0 0 0 2px var(--bus); }
 
 /* Instalar la app (solo móvil) */
-.install { display: flex; align-items: center; gap: 6px; margin: 0 0 10px; }
+.install { position: fixed; z-index: 1000; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px; right: 16px; display: flex; align-items: center; gap: 6px; }
+.install .install-btn, .install .install-close { box-shadow: var(--shadow); }
 .install[hidden] { display: none; }
 .install-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; height: 40px; border: 0; border-radius: 10px; background: var(--ink); color: var(--paper); font: 700 17px/1 var(--cond); letter-spacing: .02em; }
 .install-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
