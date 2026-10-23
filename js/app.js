@@ -618,9 +618,11 @@
     // Variante (un letrero): su destino como título y, en lugar de los sentidos, "ver toda la línea".
     $("#line-name").textContent = v ? t("towards", { dest: titleCase(v.ruta) }) : l.nombre;
     $("#line-whole").hidden = !v;
-    $("#line-dirs").hidden = !!v || l.sentidos.length < 2;
-    $("#line-dirs").innerHTML = l.sentidos.map((d, i) =>
-      `<button role="tab" type="button" data-dir="${i}" aria-selected="${i === active.dir}">${esc(t("towards", { dest: d.destino }))}</button>`).join("");
+    // Desde una parada, solo los sentidos que pasan por ella (pestañas solo si pasan los dos).
+    const dirs = l.sentidos.map((d, i) => i).filter((i) => !from || l.sentidos[i].paradas.includes(from) || (l.sentidos[i].otras || []).includes(from));
+    $("#line-dirs").hidden = !!v || dirs.length < 2;
+    $("#line-dirs").innerHTML = dirs.map((i) =>
+      `<button role="tab" type="button" data-dir="${i}" aria-selected="${i === active.dir}">${esc(t("towards", { dest: l.sentidos[i].destino }))}</button>`).join("");
     renderLineStops();
     document.title = `${t("line_n", { code })} · Próximo Vitrasa`;
     if (!isDesktop()) panel.dataset.state = "peek";
@@ -816,13 +818,7 @@
     const s = byId.get(tr.stop);
     card.style.setProperty("--lc", l.color);
     card.style.setProperty("--lt", l.texto);
-    // Otro sentido a la vista que no pasa por la parada: decirlo (en vez de dejar el hueco).
-    if (active.dir !== tr.dir) {
-      card.innerHTML = `<span class="bus-dot">${BUS_ICON}</span>
-        <span class="what"><b>${esc(t("dir_not_here", { stop: s ? s.name : tr.stop }))}</b></span>`;
-      card.hidden = false;
-      return;
-    }
+    if (active.dir !== tr.dir) { card.hidden = true; return; }   // no debería pasar: solo se ven sentidos que pasan por la parada
     const b = busNow();
     let main, sub = "";
     if (tr.state === "loading") main = "…";
