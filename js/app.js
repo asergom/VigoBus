@@ -588,7 +588,7 @@
     clearLine();
     showView("home");
     if (!isDesktop() && panel.dataset.state !== "full") panel.dataset.state = "peek";
-    document.title = "Próximo Vitrasa";
+    document.title = "ProximoVitrasa";
     render();
   }
 
@@ -730,7 +730,7 @@
     $("#line-dirs").innerHTML = dirs.map((i) =>
       `<button role="tab" type="button" data-dir="${i}" aria-selected="${i === active.dir}">${esc(t("towards", { dest: l.sentidos[i].destino }))}</button>`).join("");
     renderLineStops();
-    document.title = `${t("line_n", { code })} · Próximo Vitrasa`;
+    document.title = `${t("line_n", { code })} · ProximoVitrasa`;
     if (!isDesktop()) panel.dataset.state = "peek";
     drawLine();
     if (changed) {
@@ -998,7 +998,7 @@
     $("#stop-dist").textContent = me ? ` · ${fmtDist(haversine(me, s.ll))}, ${t("walk", { n: walkMin(haversine(me, s.ll)) })}` : "";
     $("#infobus").href = INFOBUS_URL(s.id);
     updateFavBtn();
-    document.title = `${s.name} · Próximo Vitrasa`;
+    document.title = `${s.name} · ProximoVitrasa`;
     if (repaint) return;           // solo volver a escribir los textos (cambio de idioma)
     if (!isDesktop()) panel.dataset.state = "stop";
     selRing.setLatLng(s.ll).addTo(map);
@@ -1215,7 +1215,7 @@
     clearLine();
     showView("sched");
     if (!sched || sched.id !== id) sched = { id, day: todayType() };
-    document.title = `${t("sched_title")} · ${s.name} · Próximo Vitrasa`;
+    document.title = `${t("sched_title")} · ${s.name} · ProximoVitrasa`;
     $("#sched-name").textContent = s.name;
     $("#sched-meta").textContent = t("stop_n", { id });
     if (!isDesktop()) panel.dataset.state = "full";
@@ -1527,7 +1527,7 @@
     const same = place && placeToken(place) === placeToken(next);   // p. ej., al cambiar de idioma
     showView("place");
     place = next;
-    document.title = `${place.label} · Próximo Vitrasa`;
+    document.title = `${place.label} · ProximoVitrasa`;
     $("#place-name").textContent = place.label;
     updatePlaceFav();
     $("#place-meta").textContent = place.site ? t(`site_${place.site}`) : place.approx ? t("addr_approx") : /\d/.test(place.label) ? t("addr_exact") : t("addr_whole");
@@ -1594,7 +1594,7 @@
     const d = shareData(ctx);
     if (!d) return;
     if (navigator.share && touchDevice()) {
-      try { await navigator.share({ title: "Próximo Vitrasa", text: d.text, url: d.url }); return; }
+      try { await navigator.share({ title: "ProximoVitrasa", text: d.text, url: d.url }); return; }
       catch (e) { if (e && e.name === "AbortError") return; }   // cerrado por el usuario: nada que hacer
     }
     try { await copyText(d.url); toast(t("share_copied")); } catch { toast(t("share_fail")); }
@@ -1634,7 +1634,7 @@
     leaveStop();
     clearLine();
     showView("info");
-    document.title = `${t("info_title")} · Próximo Vitrasa`;
+    document.title = `${t("info_title")} · ProximoVitrasa`;
     renderInfo();
     if (!isDesktop()) panel.dataset.state = "full";
   }
@@ -1780,7 +1780,7 @@
     trip.picking = null;
     const same = tripOpen() && lastTrip && lastTrip.hash === location.hash;
     showView("trip");
-    document.title = `${t("trip_title")} · Próximo Vitrasa`;
+    document.title = `${t("trip_title")} · ProximoVitrasa`;
     if (!isDesktop() && panel.dataset.state !== "full") panel.dataset.state = baseState();
     closeSugg();
     renderTripFields();
@@ -2887,14 +2887,14 @@
       if (lastArrivals) renderArrivals(lastArrivals);
       showUpdated();
     } else if (active) showLine(active.code, active.from, active.variant ? active.variant.ruta : null);
-    else if (place) { document.title = "Próximo Vitrasa"; showPlace(); }
+    else if (place) { document.title = "ProximoVitrasa"; showPlace(); }
     else if (!$("#info").hidden) showInfo();
     else if (!$("#sched").hidden && sched) showSched(sched.id);
     else if (tripOpen()) {
       renderTripFields();
       renderWhen();
       if (lastTrip) renderTripResult(); else computeTrip(false);
-      document.title = `${t("trip_title")} · Próximo Vitrasa`;
+      document.title = `${t("trip_title")} · ProximoVitrasa`;
     }
     else render();
   }
