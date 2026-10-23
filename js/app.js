@@ -133,6 +133,19 @@
   const placeKey = (p) => `${fmtLL(p.ll)}|${p.label}`;
   const favPlace = (p) => favs.places.find((f) => placeKey(f) === placeKey(p));
 
+  // Buscadas recientemente (14): las últimas paradas, direcciones y sitios elegidos en el buscador o
+  // en Desde/Hasta, para volver a ellos sin escribir. [{ id } | { ll, label, site? }], la última primero.
+  const RECENT_KEY = "pv:recientes", RECENT_MAX = 8;
+  let recents = [];
+  try { const r = JSON.parse(localStorage.getItem(RECENT_KEY)); if (Array.isArray(r)) recents = r.filter((x) => x && (x.id || (x.ll && x.label))); } catch { /* sin almacenamiento */ }
+  const recentKey = (r) => (r.id ? `s${r.id}` : placeKey(r));
+  function saveRecents() { try { localStorage.setItem(RECENT_KEY, JSON.stringify(recents)); } catch { /* sin almacenamiento */ } }
+  function addRecent(r) {
+    const e = r.id ? { id: String(r.id) } : { ll: [Number(r.ll[0].toFixed(5)), Number(r.ll[1].toFixed(5))], label: r.label, ...(r.site ? { site: r.site } : {}) };
+    recents = [e, ...recents.filter((x) => recentKey(x) !== recentKey(e))].slice(0, RECENT_MAX);
+    saveRecents();
+  }
+
   // ---------- Mapa ----------
   const map = L.map("map", { zoomControl: false, preferCanvas: true, attributionControl: true })
     .setView(VIGO, 14);
@@ -426,6 +439,31 @@
     return li;
   }
 
+  // Elementos de "Buscadas recientemente" (en el buscador y en Desde/Hasta).
+  function recentItems(opts = {}) {
+    const items = [];
+    recents.forEach((r, k) => {
+      if (r.id) {
+        const s = byId.get(r.id);
+        if (s) items.push(stopItem(s, { noLines: opts.noLines, dist: me ? haversine(me, s.ll) : null }));
+        return;
+      }
+      const li = document.createElement("li");
+      li.innerHTML = `<button type="button" data-recent="${k}">
+        <span class="name">${esc(r.label)}</span>
+        <span class="sub">${esc(r.site ? t(`site_${r.site}`) : t("fav_address"))}</span>
+        ${me ? `<span class="dist">${fmtDist(haversine(me, r.ll))}</span>` : ""}
+      </button>`;
+      items.push(li);
+    });
+    if (!items.length) return [];
+    const head = document.createElement("li");
+    head.className = "group-head recent-head";
+    head.innerHTML = `<span>${esc(t("recent_title"))}</span><button type="button" class="recent-clear" data-recent-clear="1">${esc(t("recent_clear"))}</button>`;
+    return [head, ...items];
+  }
+  function renderRecent() { fillList(recentItems(), ""); }
+
   function renderLines() {
     if (!lines) { fillList([], t("loading_lines")); return; }
     const items = Object.keys(lines).map((code) => lineItem(code));
@@ -436,7 +474,8 @@
   function render() {
     const q = $("#q").value.trim();
     if (q) { mode = "search"; renderSearch(q); return; }
-    if (mode === "search") mode = TABS.find((t) => $(`#tab-${t}`).getAttribute("aria-selected") === "true") || "near";
+    if (document.activeElement === $("#q") && !location.hash && recents.length) { mode = "recent"; renderRecent(); return; }
+    if (mode === "search" || mode === "recent") mode = TABS.find((t) => $(`#tab-${t}`).getAttribute("aria-selected") === "true") || "near";
     if (mode === "fav") renderFav();
     else if (mode === "lines") renderLines();
     else renderNear();
@@ -1867,7 +1906,7 @@
     }
     // Con texto escrito, primero lo encontrado (que se vea encima del teclado del móvil) y después
     // "Mi ubicación" y "Elegir en el mapa"; sin texto, solo esas dos.
-    $("#trip-sugg").replaceChildren(...(typed ? [...items, ...special] : special));
+    $("#trip-sugg").replaceChildren(...(typed ? [...items, ...special] : [...special, ...recentItems({ noLines: true })]));
     $("#trip-sugg").hidden = false;
     $("#trip-result").hidden = true;
     $("#trip").classList.add("editing");   // mientras se escribe, sin las filas de hora y preferencias
@@ -2499,9 +2538,12 @@
     e.stopPropagation();   // aquí una parada no abre su ficha: se elige como origen o destino
     const w = trip.editing || targetEnd();
     const stop = e.target.closest("button[data-id]");
-    if (stop) { setEnd(w, stopEnd(byId.get(stop.dataset.id))); return; }
+    if (e.target.closest("button[data-recent-clear]")) { recents = []; saveRecents(); openSugg(w); return; }
+    if (stop) { addRecent({ id: stop.dataset.id }); setEnd(w, stopEnd(byId.get(stop.dataset.id))); return; }
+    const rc = e.target.closest("button[data-recent]");
+    if (rc) { const r = recents[Number(rc.dataset.recent)]; if (r) { addRecent(r); setEnd(w, { kind: "addr", ll: r.ll, label: r.label }); } return; }
     const si = e.target.closest("button[data-site]");
-    if (si && sitesData) { const s = sitesData[Number(si.dataset.site)]; setEnd(w, { kind: "addr", ll: s.ll, label: s.name }); return; }
+    if (si && sitesData) { const s = sitesData[Number(si.dataset.site)]; addRecent({ ll: s.ll, label: s.name, site: s.type }); setEnd(w, { kind: "addr", ll: s.ll, label: s.name }); return; }
     const ad = e.target.closest("button[data-addr]");
     if (ad && dirData) {
       const st = dirData.streets[Number(ad.dataset.addr)];
@@ -2518,6 +2560,7 @@
       }
       const num = ad.dataset.num;
       const r = dirData.resolve(st, num);
+      addRecent({ ll: r.ll, label: num ? `${st.name}, ${num}` : st.name });
       setEnd(w, { kind: "addr", ll: r.ll, label: num ? `${st.name}, ${num}` : st.name, approx: !r.exact && !!num });
       return;
     }
@@ -2646,10 +2689,24 @@
     const stop = e.target.closest("button[data-id]");
     // Abrir un resultado anula la búsqueda que estaba a punto de ejecutarse.
     if (stop || e.target.closest("button[data-line], button[data-addr], button[data-site]")) clearTimeout(qTimer);
+    const fromSearch = mode === "search" || mode === "recent";
+    if (e.target.closest("#list button[data-recent-clear]")) {
+      recents = []; saveRecents(); $("#q").focus(); render(); return;
+    }
+    const rc = e.target.closest("#list button[data-recent]");
+    if (rc) {
+      const r = recents[Number(rc.dataset.recent)];
+      if (!r) return;
+      addRecent(r);
+      $("#q").blur();
+      openPlace({ ll: r.ll, label: r.label, approx: false, ...(r.site ? { site: r.site } : {}) });
+      return;
+    }
     // Sitio del buscador: su ficha (como una dirección), con su tipo.
     const si = e.target.closest("#list button[data-site]");
     if (si && sitesData) {
       const s = sitesData[Number(si.dataset.site)];
+      addRecent({ ll: s.ll, label: s.name, site: s.type });
       $("#q").blur();
       openPlace({ ll: s.ll, label: s.name, approx: false, site: s.type });
       return;
@@ -2668,11 +2725,12 @@
       }
       const num = ad.dataset.num;
       const r = dirData.resolve(st, num);
+      addRecent({ ll: r.ll, label: num ? `${st.name}, ${num}` : st.name });
       $("#q").blur();
       openPlace({ ll: r.ll, label: num ? `${st.name}, ${num}` : st.name, approx: !r.exact && !!num });
       return;
     }
-    if (stop) { $("#q").blur(); navigate(stop.dataset.id); return; }
+    if (stop) { if (fromSearch && stop.closest("#list")) addRecent({ id: stop.dataset.id }); $("#q").blur(); navigate(stop.dataset.id); return; }
     const line = e.target.closest("button[data-line]");
     if (line) {
       $("#q").blur();
@@ -2724,7 +2782,13 @@
     clearTimeout(qTimer);
     qTimer = setTimeout(() => { if (location.hash) navigate(""); else render(); }, 120);
   });
-  $("#q").addEventListener("focus", () => { if (!isDesktop()) $("#panel").dataset.state = "full"; });
+  $("#q").addEventListener("focus", () => {
+    if (!isDesktop()) $("#panel").dataset.state = "full";
+    if (!$("#q").value.trim() && !location.hash && recents.length) render();
+  });
+  // Al salir del buscador vacío, vuelve la pestaña. Tocar un reciente no quita el foco (mousedown).
+  $("#q").addEventListener("blur", () => setTimeout(() => { if (mode === "recent" && document.activeElement !== $("#q")) render(); }, 150));
+  $("#list").addEventListener("mousedown", (e) => { if (mode === "recent" && e.target.closest("button")) e.preventDefault(); });
   $("#q").addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       // Resultados al día con lo escrito antes de abrir el primero.

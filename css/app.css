@@ -351,6 +351,9 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .stop-meta { margin: 0; color: var(--granite); font-size: 15px; }
 .stop-meta strong { color: var(--ink); font-weight: 600; }
 .fav[aria-pressed="true"] svg { fill: var(--bus); stroke: var(--bus); }
+/* ---------- Buscadas recientemente ---------- */
+.recent-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.stops .recent-head .recent-clear, #trip-sugg .recent-clear { display: inline; width: auto; padding: 4px 0; border: 0; background: none; color: var(--focus); font: inherit; font-weight: 600; cursor: pointer; }
 /* ---------- Sale ya cerca de ti ---------- */
 .stops .near-dep { border-bottom: 0; }
 .near-dep .group-head { margin: 0; }
