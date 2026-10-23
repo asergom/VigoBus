@@ -2146,6 +2146,16 @@
     return `<span class="sched">${esc(m < 60 && m > 0 ? atTime(leg.dep) : txt)} · ${esc(t("scheduled"))}</span>`;
   }
   // Hora de una salida o llegada, con "mañana" si es del día siguiente.
+  // Duración de una opción: desde que sales de A (andando hasta la primera parada incluido) hasta
+  // que llegas a B; sin la espera hasta que toca salir (p. ej. de noche, al primer bus de la mañana).
+  const LEAVE_NOTE_MIN = 20;   // si toca salir más de 20 min después, se dice a qué hora
+  const leaveSec = (j) => Math.max(j.dep, nowSec());
+  const tripMin = (j) => (j.arr - leaveSec(j)) / 60;
+  function leaveText(j, always) {
+    const s = leaveSec(j);
+    if (!always && s - startSec() <= LEAVE_NOTE_MIN * 60) return "";
+    return t(nextDay(s) ? "leave_time_tomorrow" : "leave_time", { time: clock(s) });
+  }
   const nextDay = (sec) => sec >= 86400 && new Date(lastTrip.base + sec * 1000).getDate() !== new Date().getDate();
   const atTime = (sec) => t(nextDay(sec) ? "tomorrow_at" : "at_time", { time: clock(sec) });
   const arriveAt = (sec) => t(nextDay(sec) ? "arrive_tomorrow" : "arrive_at", { time: clock(sec) });
@@ -2204,8 +2214,9 @@
     const arr = !!lt.arriveBy;
     const items = lt.opts.map((j) => {
       const first = j.legs.find((l) => l.type === "bus");
-      const total = (j.arr - (arr ? j.dep : startSec())) / 60;
-      const leave = arr ? `${esc(t("leave_time", { time: clock(Math.max(j.dep, nowSec())) }))} · ` : "";
+      const total = tripMin(j);
+      const lt0 = leaveText(j, arr);
+      const leave = lt0 ? `${esc(lt0)} · ` : "";
       const late = j.late ? ` <span class="warn">${esc(t("arrive_late_live"))}</span>` : "";
       return `<li><button type="button" class="opt" data-opt="${esc(j.key)}"${cur(j.key)}>
         <span class="chain">${chain(j)}</span>
@@ -2284,8 +2295,9 @@
     });
     steps.push(`<li class="step end"><span class="ico"><span class="pin pin-b">B</span></span>
       <span class="txt">${esc(t(nextDay(j.arr) ? "step_arrive_tomorrow" : "step_arrive", { time: clock(j.arr) }))}</span></li>`);
-    const total = (j.arr - (lt.arriveBy ? j.dep : startSec())) / 60;
-    const leave = lt.arriveBy ? `<p class="trip-note">${esc(t("leave_time", { time: clock(Math.max(j.dep, nowSec())) }))}${j.late ? ` · <span class="warn">${esc(t("arrive_late_live"))}</span>` : ""}</p>` : "";
+    const total = tripMin(j);
+    const lt0 = leaveText(j, !!lt.arriveBy);
+    const leave = lt0 ? `<p class="trip-note">${esc(lt0)}${lt.arriveBy && j.late ? ` · <span class="warn">${esc(t("arrive_late_live"))}</span>` : ""}</p>` : "";
     return `${back}<div class="opt-head"><span class="chain">${chain(j)}</span><span class="eta">${durHtml(total)}</span></div>${leave}
       <ol class="steps">${steps.join("")}</ol>`;
   }
