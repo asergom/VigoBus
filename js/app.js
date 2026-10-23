@@ -2918,8 +2918,8 @@
   }
   // Botón "Instala la app": solo en el móvil, nunca si ya se usa como app ni si se cerró con la X.
   // Android (Chrome, Edge, Samsung…): abre la instalación del navegador (beforeinstallprompt).
-  // iPhone: la web no puede instalarse sola; se explican los pasos de Safari (pendiente de aprobar).
-  const IOS_INSTALL = false;
+  // iPhone: la web no puede instalarse sola; se explican los pasos de Safari (aprobado el 23/10).
+  const IOS_INSTALL = true;
   const INSTALL_KEY = "pv:instalar-oculto";
   const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
   const onPhone = () => matchMedia("(pointer: coarse)").matches && !isDesktop();
