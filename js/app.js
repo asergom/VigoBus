@@ -332,16 +332,64 @@
         if (p.num && found[0]) dirData.numbersStarting(found[0], p.num, 3).forEach((n) => addr.push(addrItem(found[0], n, tokens)));
       }
     }
+    // Sitios importantes, también a partir de 3 letras.
+    let sites = [];
+    if (/\p{L}.*\p{L}.*\p{L}/u.test(q)) {
+      if (!sitesData) ensureSites().then(() => { if ($("#q").value.trim() === q && mode === "search") renderSearch(q); }).catch(() => {});
+      else sites = matchSites(q);
+    }
     const items = [];
     if (lineRes.length) {
       items.push(groupHead(t("res_lines")));
       lineRes.forEach((code) => items.push(lineItem(code, highlight(lines[code].nombre, tokens))));
     }
+    if (sites.length) items.push(groupHead(t("res_sites")), ...sites.map((s) => siteItem(s, tokens)));
     if (addr.length) items.push(groupHead(t("res_addr")), ...addr);
-    if ((lineRes.length || addr.length) && shown.length) items.push(groupHead(t("res_stops")));
+    if ((lineRes.length || addr.length || sites.length) && shown.length) items.push(groupHead(t("res_stops")));
     shown.forEach((s) => items.push(stopItem(s, { nameHtml: highlight(s.name, tokens), dist: me ? haversine(me, s.ll) : null })));
     fillList(items,
-      res.length || lineRes.length || addr.length ? (res.length > shown.length ? t("many", { n: res.length }) : "") : t("no_results", { q }));
+      res.length || lineRes.length || addr.length || sites.length ? (res.length > shown.length ? t("many", { n: res.length }) : "") : t("no_results", { q }));
+  }
+
+
+  // ---------- Sitios importantes (6) ----------
+  // De OpenStreetMap (data/sitios.json, tools/actualizar_sitios.py): solo para buscarlos por su nombre
+  // (o por sus otros nombres), sin dibujarlos en el mapa. Se descarga al empezar a escribir.
+  let sitesData = null, sitesPending = null;
+  function ensureSites() {
+    if (sitesData) return Promise.resolve(sitesData);
+    if (!sitesPending) {
+      sitesPending = fetch("data/sitios.json").then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then((d) => (sitesData = d.sitios.map(([name, la, lo, ty, extra], i) => ({
+          i, name, ll: [la / 1e5, lo / 1e5], type: d.tipos[ty], key: norm(name), alt: norm(extra || ""),
+        }))))
+        .catch((e) => { sitesPending = null; throw e; });
+    }
+    return sitesPending;
+  }
+  // Cada palabra escrita es el principio de alguna palabra del nombre (o de sus otros nombres).
+  function matchSites(q, limit = 5) {
+    if (!sitesData) return [];
+    const tokens = norm(q).split(" ").filter(Boolean);
+    if (!tokens.length) return [];
+    const starts = (key, tk) => key.startsWith(tk) || key.includes(` ${tk}`);
+    const out = [];
+    for (const s of sitesData) {
+      const inName = tokens.every((tk) => starts(s.key, tk));
+      if (!inName && !tokens.every((tk) => starts(s.key, tk) || starts(s.alt, tk))) continue;
+      out.push({ s, score: (inName ? 0 : 2) + (s.key.startsWith(tokens[0]) ? 0 : 1) });
+    }
+    out.sort((a, b) => a.score - b.score || (me ? haversine(me, a.s.ll) - haversine(me, b.s.ll) : 0) || a.s.name.localeCompare(b.s.name, "es"));
+    return out.slice(0, limit).map((x) => x.s);
+  }
+  function siteItem(s, tokens) {
+    const li = document.createElement("li");
+    li.innerHTML = `<button type="button" data-site="${s.i}">
+      <span class="name">${highlight(s.name, tokens)}</span>
+      <span class="sub">${esc(t(`site_${s.type}`))}</span>
+      ${me ? `<span class="dist">${fmtDist(haversine(me, s.ll))}</span>` : ""}
+    </button>`;
+    return li;
   }
 
   function lineItem(code, nameHtml) {
@@ -1169,7 +1217,7 @@
   let placeMarker = null;
   let place = null;   // { ll, label, approx }
 
-  const placeToken = (p) => `dir/${fmtLL(p.ll)}~${encodeURIComponent(p.label)}${p.approx ? "~a" : ""}`;
+  const placeToken = (p) => `dir/${fmtLL(p.ll)}~${encodeURIComponent(p.label)}${p.approx ? "~a" : p.site ? `~s-${p.site}` : ""}`;
   function openPlace(p, { replace = false } = {}) { navigate(placeToken(p), { replace }); }
 
   function showPlace(tok) {
@@ -1178,13 +1226,14 @@
     if (!m || !parts[1]) return false;
     leaveStop();
     clearLine();
-    const next = { ll: [Number(m[1]), Number(m[2])], label: parts[1], approx: parts[2] === "a" };
+    const site = parts[2] && parts[2].startsWith("s-") ? parts[2].slice(2) : null;
+    const next = { ll: [Number(m[1]), Number(m[2])], label: parts[1], approx: parts[2] === "a", site };
     const same = place && placeToken(place) === placeToken(next);   // p. ej., al cambiar de idioma
     showView("place");
     place = next;
     document.title = `${place.label} · Próximo Vitrasa`;
     $("#place-name").textContent = place.label;
-    $("#place-meta").textContent = place.approx ? t("addr_approx") : /\d/.test(place.label) ? t("addr_exact") : t("addr_whole");
+    $("#place-meta").textContent = place.site ? t(`site_${place.site}`) : place.approx ? t("addr_approx") : /\d/.test(place.label) ? t("addr_exact") : t("addr_whole");
     $("#place-dist").textContent = me ? ` · ${fmtDist(haversine(me, place.ll))}` : "";
     $("#place-stops").replaceChildren(...nearest(place.ll, 6).map(({ s, d }) => stopItem(s, { dist: d, sub: t("walk", { n: walkMin(d * 1.25) }) })));
     if (!placeMarker) placeMarker = L.marker(place.ll, { icon: placeIcon, keyboard: false, interactive: false, zIndexOffset: 1200 });
@@ -1543,12 +1592,15 @@
         if (p.num && found[0]) dirData.numbersStarting(found[0], p.num).forEach((n) => addr.push(addrItem(found[0], n, tokens)));
       }
       const res = matchStops(typed).slice(0, addr.length ? 25 : 40);
+      if (!sitesData && /\p{L}.*\p{L}.*\p{L}/u.test(typed)) ensureSites().then(() => { if (trip.editing === which) openSugg(which); }).catch(() => {});
+      const sites = /\p{L}.*\p{L}.*\p{L}/u.test(typed) ? matchSites(typed) : [];
+      if (sites.length) items.push(groupHead(t("res_sites")), ...sites.map((s) => siteItem(s, tokens)));
       if (addr.length) items.push(groupHead(t("res_addr")), ...addr);
       if (res.length) {
         items.push(groupHead(t("res_stops")));
         res.forEach((s) => items.push(stopItem(s, { nameHtml: highlight(s.name, tokens), noLines: true, dist: me ? haversine(me, s.ll) : null })));
       }
-      if (!addr.length && !res.length) {
+      if (!addr.length && !res.length && !sites.length) {
         const li = document.createElement("li");
         li.className = "group-head";
         li.textContent = t("trip_no_stops", { q: typed });
@@ -2177,7 +2229,7 @@
     inp.addEventListener("input", () => openSugg(w));
     inp.addEventListener("keydown", (e) => {
       if (e.key === "Enter") {
-        const first = $("#trip-sugg button[data-addr], #trip-sugg button[data-id]");
+        const first = $("#trip-sugg button[data-site], #trip-sugg button[data-addr], #trip-sugg button[data-id]");
         if (first) first.click();
       }
       if (e.key === "Escape") { inp.value = endLabel(trip[w]); inp.blur(); closeSugg(); setPanel(baseState()); }
@@ -2190,6 +2242,8 @@
     const w = trip.editing || targetEnd();
     const stop = e.target.closest("button[data-id]");
     if (stop) { setEnd(w, stopEnd(byId.get(stop.dataset.id))); return; }
+    const si = e.target.closest("button[data-site]");
+    if (si && sitesData) { const s = sitesData[Number(si.dataset.site)]; setEnd(w, { kind: "addr", ll: s.ll, label: s.name }); return; }
     const ad = e.target.closest("button[data-addr]");
     if (ad && dirData) {
       const st = dirData.streets[Number(ad.dataset.addr)];
@@ -2333,7 +2387,15 @@
   $("#panel").addEventListener("click", (e) => {
     const stop = e.target.closest("button[data-id]");
     // Abrir un resultado anula la búsqueda que estaba a punto de ejecutarse.
-    if (stop || e.target.closest("button[data-line], button[data-addr]")) clearTimeout(qTimer);
+    if (stop || e.target.closest("button[data-line], button[data-addr], button[data-site]")) clearTimeout(qTimer);
+    // Sitio del buscador: su ficha (como una dirección), con su tipo.
+    const si = e.target.closest("#list button[data-site]");
+    if (si && sitesData) {
+      const s = sitesData[Number(si.dataset.site)];
+      $("#q").blur();
+      openPlace({ ll: s.ll, label: s.name, approx: false, site: s.type });
+      return;
+    }
     // Dirección del buscador: sin número, se completa "Calle, " para escribirlo; con número, se abre.
     const ad = e.target.closest("#list button[data-addr]");
     if (ad && dirData) {
@@ -2409,7 +2471,7 @@
       // Resultados al día con lo escrito antes de abrir el primero.
       clearTimeout(qTimer);
       if (!location.hash) render();
-      const first = $("#list button[data-id], #list button[data-line], #list button[data-addr]");
+      const first = $("#list button[data-id], #list button[data-line], #list button[data-site], #list button[data-addr]");
       if (first) first.click();
     }
     if (e.key === "Escape") { e.target.value = ""; render(); }

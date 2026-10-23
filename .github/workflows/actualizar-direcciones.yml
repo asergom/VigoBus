@@ -51,6 +51,9 @@ jobs:
           }
           descargar "[out:json][timeout:300];(way[\"highway\"]($BBOX););(._;>;);out body;" /tmp/fuentes/vias.json
           descargar "[out:json][timeout:300];(nwr[\"addr:housenumber\"]($BBOX););out center tags;" /tmp/fuentes/portales_osm.json
+          # Sitios importantes con nombre, para el buscador (tools/actualizar_sitios.py).
+          SITIOS="[out:json][timeout:300];(nwr[name][amenity~'^(hospital|clinic|doctors|police|townhall|courthouse|university|college|school|library|theatre|cinema|arts_centre|marketplace|bus_station|ferry_terminal|fire_station|post_office|community_centre|conference_centre|exhibition_centre)\$']($BBOX);nwr[name][shop~'^(mall|department_store)\$']($BBOX);nwr[name][railway=station]($BBOX);nwr[name][aeroway~'^(aerodrome|terminal)\$']($BBOX);nwr[name][leisure~'^(stadium|sports_centre|park|marina|water_park)\$']($BBOX);nwr[name][natural=beach]($BBOX);nwr[name][tourism~'^(museum|attraction|viewpoint|hotel|gallery|zoo)\$']($BBOX);nwr[name][office=government]($BBOX););out center tags;"
+          descargar "$SITIOS" /tmp/fuentes/sitios.json
 
       - name: Comprobar que los datos están completos
         run: |
@@ -63,7 +66,8 @@ jobs:
           print(f"Concello: {nuevo} portales con número (antes {antes})")
           if nuevo < 0.9 * antes: sys.exit("La numeración del Concello parece incompleta")
           for nombre, nuevo_p, antes_p in (("vías", "/tmp/fuentes/vias.json", "data/osm/vias.json.gz"),
-                                           ("portales OSM", "/tmp/fuentes/portales_osm.json", "data/osm/direcciones.json.gz")):
+                                           ("portales OSM", "/tmp/fuentes/portales_osm.json", "data/osm/direcciones.json.gz"),
+                                           ("sitios", "/tmp/fuentes/sitios.json", "data/osm/sitios.json.gz")):
               n = len(json.load(open(nuevo_p))["elements"]); a = len(json.load(gzip.open(antes_p, "rt"))["elements"])
               print(f"OSM {nombre}: {n} elementos (antes {a})")
               if n < 0.9 * a: sys.exit(f"OSM ({nombre}) parece incompleto")
@@ -75,6 +79,7 @@ jobs:
           gzip -9 -n -c /tmp/fuentes/numeracion.csv > data/concello/numeracion.csv.gz
           gzip -9 -n -c /tmp/fuentes/vias.json > data/osm/vias.json.gz
           gzip -9 -n -c /tmp/fuentes/portales_osm.json > data/osm/direcciones.json.gz
+          gzip -9 -n -c /tmp/fuentes/sitios.json > data/osm/sitios.json.gz
           python3 tools/catastro_portales.py /tmp/fuentes/AD.36045.zip /tmp/fuentes/AD.36033.zip /tmp/fuentes/AD.36039.zip
           python3 -c "
           import csv,gzip,sys
@@ -84,6 +89,8 @@ jobs:
           python3 tools/actualizar_peatonal.py
           python3 tools/actualizar_direcciones.py
           node tools/transbordos.js
+          python3 tools/actualizar_sitios.py
+          python3 -c "import json,sys; n=len(json.load(open('data/sitios.json'))['sitios']); print(n,'sitios'); sys.exit('Pocos sitios' if n<300 else 0)"
           # Comprobación rápida: la red peatonal, las direcciones y el planificador cargan y responden.
           node -e "
           const fs=require('fs');
