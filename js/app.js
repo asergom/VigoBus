@@ -573,16 +573,21 @@
   function inView(ll) {
     const p = map.latLngToContainerPoint(ll), size = map.getSize(), m = 24;
     const left = isDesktop() ? panel.getBoundingClientRect().right : 0;
-    const bottom = isDesktop() ? size.y : size.y - Math.max(260, innerHeight * 0.46);
+    const bottom = isDesktop() ? size.y : size.y - panelCover();
     return p.x > left + m && p.x < size.x - m && p.y > m && p.y < bottom - m;
   }
 
   // Encuadra unos puntos en la zona del mapa que no tapa el panel.
+  // Altura que tapa el panel en el móvil, según su estado final (no la de mitad de animación).
+  function panelCover() {
+    const st = panel.dataset.state;
+    return st === "full" ? innerHeight - 56 : st === "stop" ? innerHeight * 0.64 : st === "min" ? 92 : Math.max(260, innerHeight * 0.46);
+  }
   function fitPoints(pts, maxZoom) {
     const r = panel.getBoundingClientRect();
     const opts = isDesktop()
       ? { paddingTopLeft: [r.right + 24, 24], paddingBottomRight: [24, 24] }
-      : { paddingTopLeft: [16, 16], paddingBottomRight: [16, Math.max(260, innerHeight * 0.46) + 16] };
+      : { paddingTopLeft: [16, 16], paddingBottomRight: [16, panelCover() + 16] };
     map.fitBounds(L.latLngBounds(pts), { ...opts, maxZoom });
   }
 
@@ -786,19 +791,49 @@
     tr.markers.slice((tr.ests || []).length).forEach((mk) => mk.remove());
   }
 
+  // Próximo paso según el horario por la parada del seguimiento, de esa línea y sentido (y, en una
+  // variante, con su letrero): segundos desde la medianoche de hoy, null si no hay en 6 h o
+  // undefined si aún no han cargado los horarios.
+  function nextScheduled(tr) {
+    if (!stopPlan) { PLAN.load().then((pl) => { stopPlan = pl; renderBusCard(); }).catch(() => {}); return undefined; }
+    const si = stopPlan.index.get(tr.stop);
+    if (si == null) return null;
+    const v = active && active.variant ? norm(active.variant.ruta) : null;
+    const now = new Date();
+    const nowS = (now - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 1000;
+    const x = stopPlan.upcoming(si, now, 6 * 3600, 0).find((p) => {
+      const pt = stopPlan.pats[p.pat];
+      return pt.l === tr.code && pt.s === tr.dir && p.at >= nowS - 30 && (!v || (pt.h && pt.h.some((h) => norm(h) === v)));
+    });
+    return x ? x.at : null;
+  }
+
   function renderBusCard() {
     const card = $("#line-bus");
     const tr = track;
-    // Solo con el sentido que pasa por la parada a la vista (en el otro, ese bus no viene aquí).
-    if (!tr || !active || active.dir !== tr.dir) { card.hidden = true; return; }
+    if (!tr || !active) { card.hidden = true; return; }
     const l = lines[tr.code];
     const s = byId.get(tr.stop);
+    card.style.setProperty("--lc", l.color);
+    card.style.setProperty("--lt", l.texto);
+    // Otro sentido a la vista que no pasa por la parada: decirlo (en vez de dejar el hueco).
+    if (active.dir !== tr.dir) {
+      card.innerHTML = `<span class="bus-dot">${BUS_ICON}</span>
+        <span class="what"><b>${esc(t("dir_not_here", { stop: s ? s.name : tr.stop }))}</b></span>`;
+      card.hidden = false;
+      return;
+    }
     const b = busNow();
     let main, sub = "";
     if (tr.state === "loading") main = "…";
-    else if (tr.state === "error") main = esc(t("times_error"));
-    else if (tr.state === "none") main = esc(t("bus_none"));
-    else if (b && b.state === "depot") {
+    else if (tr.state === "error" || tr.state === "none") {
+      // Sin bus en vivo: el próximo paso según el horario publicado.
+      const at = nextScheduled(tr);
+      if (at) {
+        main = esc(t(tr.state === "error" ? "card_sched_err" : "card_sched"));
+        sub = `<span class="eta sched"><b>${esc(hhmm(at))}</b></span>`;
+      } else main = esc(t(tr.state === "error" ? "times_error" : "bus_none"));
+    } else if (b && b.state === "depot") {
       const m = Math.max(0, Math.round(Number(tr.est.minutos) - (Date.now() - tr.at) / 60000));
       main = `${esc(t("bus_depot"))}`;
       sub = `<span class="eta"><b>${m}</b><span>${esc(t("min"))}</span></span>`;
@@ -808,8 +843,6 @@
       sub = m <= 0 ? `<span class="eta now"><b>${esc(t("arriving"))}</b></span>`
                    : `<span class="eta"><b>${m}</b><span>${esc(t("min"))}</span></span>`;
     } else main = esc(t("bus_none"));
-    card.style.setProperty("--lc", l.color);
-    card.style.setProperty("--lt", l.texto);
     card.innerHTML = `<span class="bus-dot">${BUS_ICON}</span>
       <span class="what"><b>${esc(t("bus_title", { stop: s ? s.name : tr.stop }))}</b><small>${main}</small></span>${sub}`;
     card.hidden = false;
@@ -1399,7 +1432,7 @@
     const same = tripOpen() && lastTrip && lastTrip.hash === location.hash;
     showView("trip");
     document.title = `${t("trip_title")} · Próximo Vitrasa`;
-    if (!isDesktop() && panel.dataset.state !== "full") panel.dataset.state = "peek";
+    if (!isDesktop() && panel.dataset.state !== "full") panel.dataset.state = baseState();
     closeSugg();
     renderTripFields();
     renderWhen();
@@ -1780,10 +1813,19 @@
   function shownKey() {
     const lt = lastTrip;
     if (trip.sel) return trip.sel;
-    const walkFirst = lt.walk && (!lt.opts[0] || (lt.arriveBy
-      ? (lt.arriveBy - lt.base) / 1000 - walkMin(lt.walk.dist) * 60 >= lt.opts[0].dep
-      : startSec() + walkMin(lt.walk.dist) * 60 <= lt.opts[0].arr));
-    return walkFirst || !lt.opts[0] ? "walk" : lt.opts[0].key;
+    return walkOnTop() || !lt.opts[0] ? "walk" : lt.opts[0].key;
+  }
+  // ¿Va primero ir andando? Si llega antes que el primer bus (o, con "llegar a las", deja salir más
+  // tarde), salvo con la preferencia "Menos a pie": entonces siempre al final, detrás de los buses.
+  function walkOnTop() {
+    const lt = lastTrip;
+    if (!lt.walk) return false;
+    const first = lt.opts[0];
+    if (!first) return true;
+    if (tripPref === "walk") return false;
+    return lt.arriveBy
+      ? (lt.arriveBy - lt.base) / 1000 - walkMin(lt.walk.dist) * 60 >= first.dep
+      : startSec() + walkMin(lt.walk.dist) * 60 <= first.arr;
   }
   const busKey = (l) => `${l.line}|${l.board}`;
 
@@ -1824,9 +1866,7 @@
         <span class="when">${arr ? `${esc(t("leave_time", { time: clock(Math.max(walkDep, nowSec())) }))} · ` : ""}${esc(fmtDist(lt.walk.dist))}</span>
         <span class="arr">${esc(arriveAt(walkDep + walkMinTotal * 60))}</span>
       </button></li>`;
-      const firstBus = lt.opts[0];
-      const walkFirst = !firstBus || (arr ? walkDep >= firstBus.dep : startSec() + walkMinTotal * 60 <= firstBus.arr);
-      if (walkFirst) items.unshift(w); else items.push(w);
+      if (walkOnTop()) items.unshift(w); else items.push(w);
     }
     let head = "";
     if (lt.planError) head = `<p class="trip-note">${esc(t("plan_error"))}</p>`;
@@ -2179,14 +2219,21 @@
     e.target.max = localISO(new Date(now.getTime() + 7 * 86400000));
     if (!e.target.value) e.target.value = localISO(new Date(Math.ceil(now.getTime() / 900000) * 900000 + 900000));
   });
-  $("#when-at").addEventListener("change", (e) => {
+  // La hora elegida. También al cerrar el selector sin cambiar la hora propuesta al abrirlo (en el
+  // móvil, aceptar esa hora no lanza "change") y al salir de él con otra hora escrita.
+  function applyWhen(e) {
     const d = e.target.value ? new Date(e.target.value) : null;   // "AAAA-MM-DDTHH:MM" se lee como hora local
     const now = Date.now();
-    trip.when = d && !isNaN(d) && d.getTime() > now + 60000 ? new Date(Math.min(d.getTime(), now + 7 * 86400000)) : null;
+    const when = d && !isNaN(d) && d.getTime() > now + 60000 ? new Date(Math.min(d.getTime(), now + 7 * 86400000)) : null;
+    if (when && trip.when && when.getTime() === trip.when.getTime()) return;
+    if (!when && !trip.when) { renderWhen(); return; }
+    trip.when = when;
     renderWhen();
     tripReplace();
     computeTrip(false);
-  });
+  }
+  $("#when-at").addEventListener("change", applyWhen);
+  $("#when-at").addEventListener("blur", applyWhen);
 
   // Volver (junto al título): sale de "Cómo llegar" al menú principal de una vez, aunque se hayan
   // visto varios trayectos u opciones seguidos (cada uno queda en el historial del navegador).
@@ -2248,6 +2295,12 @@
       $("#line-dirs").querySelectorAll("button").forEach((b) => b.setAttribute("aria-selected", b === dir));
       renderLineStops();
       drawLine();
+      // Si este sentido también pasa por la parada de origen, se siguen sus buses.
+      const d = lines[active.code].sentidos[active.dir];
+      if (active.from && active.fromDir !== active.dir && (d.paradas.includes(active.from) || (d.otras || []).includes(active.from))) {
+        active.fromDir = active.dir;
+        startTrack();
+      }
       drawBus();
       renderBusCard();
     }
@@ -2290,7 +2343,8 @@
 
   // Hoja inferior (móvil): deslizar hacia abajo la reduce hasta dejar casi todo el mapa a la vista;
   // hacia arriba la amplía. Tocar el asa alterna entre minimizada y normal.
-  const baseState = () => (current ? "stop" : "peek");
+  // En "Cómo llegar" con origen y destino, alto (como la ficha de parada) para ver las opciones.
+  const baseState = () => (current || (tripOpen() && trip.a && trip.b) ? "stop" : "peek");
   function setPanel(state) {
     if (isDesktop()) return;
     panel.dataset.state = state;

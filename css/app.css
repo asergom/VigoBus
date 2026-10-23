@@ -196,12 +196,12 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .when-pick .clock { width: 16px; height: 16px; color: var(--granite); flex: none; }
 .when-pick select, .when-pick input {
   position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; margin: 0; border: 0; padding: 0;
-  font: inherit; cursor: pointer; -webkit-appearance: none; appearance: none;
+  font-size: 16px; cursor: pointer; -webkit-appearance: none; appearance: none;   /* 16 px: el iPhone no amplía la página */
+  z-index: 1;   /* encima del texto, que no recibe el toque */
 }
+.when-mode > span, .when-mode > svg, .when-time > span, .when-time > svg { pointer-events: none; }
 .when-mode:has(:focus-visible), .when-time:has(:focus-visible) { outline: 3px solid var(--focus); outline-offset: -3px; border-radius: 999px; }
 .when-pick input:focus { outline: none; }
-.when-pick select { border: 0; background: none; color: inherit; font: inherit; padding: 0 2px 0 0; cursor: pointer; flex: none; max-width: 48%; }
-.when-pick select:focus { outline: none; }
 
 /* Opciones de viaje (bus y a pie) */
 .trip-opts { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
