@@ -25,7 +25,21 @@
   let lang = pickLang();
   function t(key, params = {}) {
     const str = (I18N.dict[lang] && I18N.dict[lang][key]) || I18N.dict.es[key] || key;
-    return str.replace(/\{(\w+)\}/g, (_, k) => (params[k] != null ? params[k] : ""));
+    return str
+      .replace(/\{(\w+)\} (min|Min\.)/g, (m, k, u) => (params[k] != null ? hMin(params[k], u) : m))
+      .replace(/\{(\w+)\}/g, (_, k) => (params[k] != null ? params[k] : ""));
+  }
+  // Minutos para leer: hasta 59 "45 min"; desde 60 "1 h 10 min" (o "2 h" si son horas justas).
+  function hMin(n, unit = t("min")) {
+    const v = Math.round(Number(n));
+    if (!isFinite(v) || v < 60) return `${n} ${unit}`;
+    return v % 60 ? `${Math.floor(v / 60)} h ${v % 60} ${unit}` : `${v / 60} h`;
+  }
+  // Lo mismo con el número grande (cifras en <b>, unidades en <span>).
+  function etaNum(m) {
+    m = Math.round(m);
+    if (m < 60) return `<b>${m}</b><span>${esc(t("min"))}</span>`;
+    return `<b>${Math.floor(m / 60)}</b><span>h</span>${m % 60 ? ` <b>${m % 60}</b><span>${esc(t("min"))}</span>` : ""}`;
   }
   const flagSvg = (code) => I18N.langs.find((l) => l.code === code).flag;
 
@@ -881,7 +895,7 @@
     if (!el) return;
     el.querySelector(".bus-arrow").style.transform = `rotate(${Math.round(s.bearing)}deg)`;
     const m = Math.round(Number(est.minutos) - (Date.now() - at) / 60000);
-    el.querySelector(".bus-eta").textContent = m <= 0 ? t("arriving") : `${m} ${t("min")}`;
+    el.querySelector(".bus-eta").textContent = m <= 0 ? t("arriving") : hMin(m);
   }
 
   function drawBus() {
@@ -938,12 +952,12 @@
     } else if (b && b.state === "depot") {
       const m = Math.max(0, Math.round(Number(tr.est.minutos) - (Date.now() - tr.at) / 60000));
       main = `${esc(t("bus_depot"))}`;
-      sub = `<span class="eta"><b>${m}</b><span>${esc(t("min"))}</span></span>`;
+      sub = `<span class="eta">${etaNum(m)}</span>`;
     } else if (b) {
       const m = Math.round(Number(tr.est.minutos) - (Date.now() - tr.at) / 60000);
       main = `${esc(fmtDist(b.left))} · ${esc(t("bus_estimated"))}`;
       sub = m <= 0 ? `<span class="eta now"><b>${esc(t("arriving"))}</b></span>`
-                   : `<span class="eta"><b>${m}</b><span>${esc(t("min"))}</span></span>`;
+                   : `<span class="eta">${etaNum(m)}</span>`;
     } else main = esc(t("bus_none"));
     card.innerHTML = `<span class="bus-dot">${BUS_ICON}</span>
       <span class="what"><b>${esc(t("bus_title", { stop: s ? s.name : tr.stop }))}</b><small>${main}</small></span>${sub}`;
@@ -1172,7 +1186,7 @@
       if (g.live) {
         const m = g.mins[0];
         eta = m <= 0 ? `<span class="eta now"><b>${esc(t("arriving"))}</b></span>`
-                     : `<span class="eta"><b>${m}</b><span>${esc(t("min"))}</span></span>`;
+                     : `<span class="eta">${etaNum(m)}</span>`;
         sub = delayHtml(g.delay) + (g.mins[1] != null ? `<small>${esc(t("next", { n: g.mins[1] }))}</small>` : "");
       } else {
         eta = `<span class="eta sched"><b>${esc(hhmm(g.at[0]))}</b></span>`;
@@ -1300,7 +1314,7 @@
       const once = new Set();
       const top = rows.filter((r) => { const k = `${r.code}|${norm(r.raw)}`; if (once.has(k)) return false; once.add(k); return true; }).slice(0, NEAR_DEP_MAX);
       box2.innerHTML = top.length ? top.map((r) => {
-        const eta = r.m <= 0 ? `<span class="eta now"><b>${esc(t("arriving"))}</b></span>` : `<span class="eta"><b>${r.m}</b><span>${esc(t("min"))}</span></span>`;
+        const eta = r.m <= 0 ? `<span class="eta now"><b>${esc(t("arriving"))}</b></span>` : `<span class="eta">${etaNum(r.m)}</span>`;
         const known = lines && lines[r.code];
         return `<${known ? "button" : "div"} class="arrival"${known ? ` type="button" data-near-line="${esc(r.code)}" data-near-stop="${esc(r.s.id)}" data-near-raw="${esc(r.raw)}"` : ""}>
           <span class="badge"${lineStyle(r.code)}>${esc(r.code)}</span>
@@ -1394,7 +1408,7 @@
       const rows = [...by].map(([code, ms]) => [code, ms.sort((a, b) => a - b).filter((m) => m >= 0).slice(0, 2)]).filter(([, ms]) => ms.length)
         .sort((a, b) => a[1][0] - b[1][0]);
       box.innerHTML = rows.length ? rows.map(([code, ms]) =>
-        `<span class="fl"><i${lineStyle(code)}>${esc(code)}</i>${ms.map((m) => (m <= 0 ? esc(t("arriving")) : `${m}`)).join(", ")}${ms.some((m) => m > 0) ? ` ${esc(t("min"))}` : ""}</span>`).join("")
+        `<span class="fl"><i${lineStyle(code)}>${esc(code)}</i>${ms.map((m) => (m <= 0 ? esc(t("arriving")) : m < 60 ? `${m}` : esc(hMin(m).replace(` ${t("min")}`, "")))).join(", ")}${ms.some((m) => m > 0 && (m < 60 || m % 60)) ? ` ${esc(t("min"))}` : ""}</span>`).join("")
         : `<span class="fl-none">${esc(t(f.lines ? "fav_none_lines" : "bus_none"))}</span>`;
     }));
     favTimer = setTimeout(() => { if (!document.hidden) refreshFavLive(); }, REFRESH_MS);
@@ -2130,13 +2144,11 @@
   const startSec = () => Math.max(nowSec(), (lastTrip.start - lastTrip.base) / 1000);
   const clock = (sec) => new Date(lastTrip.base + sec * 1000).toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" });
   function durHtml(min) {
-    min = Math.max(1, Math.round(min));
-    return min < 60 ? `<b>${min}</b><span>${esc(t("min"))}</span>`
-      : `<b>${Math.floor(min / 60)}</b><span>h</span> <b>${min % 60}</b><span>${esc(t("min"))}</span>`;
+    return etaNum(Math.max(1, Math.round(min)));
   }
   const stopName = (i) => { const s = byId.get(lastTrip.plan.ids[i]); return s ? s.name : lastTrip.plan.ids[i]; };
   const badge = (code) => `<span class="badge"${lineStyle(code)}>${esc(code)}</span>`;
-  const walkChip = (m) => `<span class="walk-chip">${ICON_WALK}<small>${walkMin(m)}</small></span>`;
+  const walkChip = (m) => { const n = walkMin(m); return `<span class="walk-chip">${ICON_WALK}<small>${n < 60 ? n : `${Math.floor(n / 60)}h${n % 60 ? String(n % 60).padStart(2, "0") : ""}`}</small></span>`; };
   const CHEV = '<svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
   // "Pasa en 4 min" (en vivo) / "A las 9:14" (horario).
   function whenHtml(leg) {
@@ -2276,7 +2288,7 @@
         if (l.transfer) {
           const n = Math.max(0, Math.floor(transferSlack(j, k)));
           tight = n < TIGHT_MIN ? `<small class="warn">${esc(n < 1 ? t("tight_step_0") : t("tight_step", { n }))}</small>`
-            : `<small class="wait">${esc(t("wait_step", { dur: n < 60 ? `${n} ${t("min")}` : `${Math.floor(n / 60)} h ${n % 60} ${t("min")}` }))}</small>`;
+            : `<small class="wait">${esc(t("wait_step", { dur: hMin(n) }))}</small>`;
         }
         steps.push(`<li class="step walk"><span class="ico">${ICON_WALK}</span>
           <span class="txt">${esc(text)}<small>${esc(t("walk", { n: walkMin(l.m) }))}</small>${tight}</span></li>`);
@@ -2297,8 +2309,9 @@
       <span class="txt">${esc(t(nextDay(j.arr) ? "step_arrive_tomorrow" : "step_arrive", { time: clock(j.arr) }))}</span></li>`);
     const total = tripMin(j);
     const lt0 = leaveText(j, !!lt.arriveBy);
-    const leave = lt0 ? `<p class="trip-note">${esc(lt0)}${lt.arriveBy && j.late ? ` · <span class="warn">${esc(t("arrive_late_live"))}</span>` : ""}</p>` : "";
-    return `${back}<div class="opt-head"><span class="chain">${chain(j)}</span><span class="eta">${durHtml(total)}</span></div>${leave}
+    const leave = lt0 ? `<span class="leave">${esc(lt0)}</span>` : "";
+    const late = lt.arriveBy && j.late ? `<p class="trip-note"><span class="warn">${esc(t("arrive_late_live"))}</span></p>` : "";
+    return `${back}<div class="opt-head"><span class="chain">${chain(j)}</span><span class="opt-time">${leave}<span class="eta">${durHtml(total)}</span></span></div>${late}
       <ol class="steps">${steps.join("")}</ol>`;
   }
 
