@@ -351,6 +351,29 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .stop-meta { margin: 0; color: var(--granite); font-size: 15px; }
 .stop-meta strong { color: var(--ink); font-weight: 600; }
 .fav[aria-pressed="true"] svg { fill: var(--bus); stroke: var(--bus); }
+/* ---------- Favoritas ---------- */
+.stops .fav-hw { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.fav-hw .hw { display: flex; align-items: stretch; gap: 2px; min-width: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+.fav-hw .hw-go { flex: 1; min-width: 0; display: block; padding: 8px 10px; border: 0; background: none; text-align: left; border-bottom: 0; }
+.fav-hw .hw-go b { display: block; font: 700 17px/1.15 var(--cond); }
+.fav-hw .hw-go small { display: block; margin-top: 2px; color: var(--granite); font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fav-hw .hw-go.unset b { color: var(--focus); }
+.fav-hw .hw-edit { width: 36px; height: auto; flex: none; }
+.fav-hw .hw-edit svg { width: 18px; height: 18px; color: var(--granite); }
+.stops .fav-picker { padding: 10px 16px; border-bottom: 1px solid var(--line); }
+.fav-picker .stops { margin: 6px -16px 0; overflow: visible; }
+.fav-cancel, .fav-tools button, .fav-go { border: 0; background: none; padding: 6px 0; color: var(--focus); font-weight: 600; font-size: 14px; }
+.stops .fav-stop, .stops .fav-place { border-bottom: 1px solid var(--line); }
+.stops .fav-stop > button, .stops .fav-place > button[data-fplace] { border-bottom: 0; padding-bottom: 4px; }
+.fav-live { display: flex; flex-wrap: wrap; gap: 6px 14px; padding: 0 16px 4px; font: 600 15px/1.2 var(--sans); }
+.fav-live .fl { display: inline-flex; align-items: center; gap: 6px; }
+.fav-live .fl i { font: normal 600 13px/1 var(--cond); padding: 3px 5px 2px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface); }
+.fav-live .fl [style*="--lc"] { background: var(--lc); color: var(--lt); border-color: color-mix(in srgb, var(--lc) 70%, #13222C); }
+.fav-live .fl-none { color: var(--granite); font-weight: 500; font-size: 14px; }
+.fav-tools, .fav-place .fav-go { padding: 0 16px 6px; display: block; }
+.fav-linepick { padding: 2px 16px 10px; }
+.fav-linepick .chip[aria-pressed="false"] { background: var(--surface) !important; color: var(--granite) !important; border-color: var(--line) !important; opacity: .75; }
+@media (min-width: 860px) { .stops .fav-hw, .stops .fav-picker, .fav-live, .fav-tools, .fav-place .fav-go, .fav-linepick { padding-left: 20px; padding-right: 20px; } }
 
 .arrivals { flex: 1; overflow-y: auto; overscroll-behavior: contain; margin: 12px -16px 0; padding: 0 16px; }
 .arrival {

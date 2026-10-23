@@ -11,6 +11,7 @@
   const REFRESH_MS = 30000;
   const NEAR_COUNT = 15;
   const FAV_KEY = "pv:favoritas";
+  const FAV_KEY2 = "pv:favoritas2";
   const VIGO = [42.2286, -8.7226];
 
   // ---------- Idioma ----------
@@ -109,12 +110,28 @@
   let active = null;              // línea iluminada: { code, dir, stops, from, fromDir }
   let tripRouteOn = false;        // hay un viaje dibujado en "Cómo llegar"
 
+  // Favoritas (5): paradas (con las líneas que se quieren ver, o todas), direcciones o sitios, y
+  // casa y trabajo. Se guardan en este dispositivo; las de antes (una lista de paradas) se pasan solas.
+  // { stops: [{ id, lines: null | [códigos] }], places: [{ ll, label, site? }], home, work }
   function loadFavs() {
-    try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch { return []; }
+    const empty = { stops: [], places: [], home: null, work: null };
+    try {
+      const v2 = JSON.parse(localStorage.getItem(FAV_KEY2));
+      if (v2 && Array.isArray(v2.stops)) return { ...empty, ...v2 };
+      const old = JSON.parse(localStorage.getItem(FAV_KEY));
+      if (Array.isArray(old)) return { ...empty, stops: old.map((id) => ({ id: String(id), lines: null })) };
+    } catch { /* sin almacenamiento o datos raros */ }
+    return empty;
   }
   function saveFavs() {
-    try { localStorage.setItem(FAV_KEY, JSON.stringify(favs)); } catch { /* sin almacenamiento */ }
+    try {
+      localStorage.setItem(FAV_KEY2, JSON.stringify(favs));
+      localStorage.setItem(FAV_KEY, JSON.stringify(favs.stops.map((f) => f.id)));   // por si se vuelve a una versión anterior
+    } catch { /* sin almacenamiento */ }
   }
+  const favStop = (id) => favs.stops.find((f) => f.id === id);
+  const placeKey = (p) => `${fmtLL(p.ll)}|${p.label}`;
+  const favPlace = (p) => favs.places.find((f) => placeKey(f) === placeKey(p));
 
   // ---------- Mapa ----------
   const map = L.map("map", { zoomControl: false, preferCanvas: true, attributionControl: true })
@@ -149,7 +166,7 @@
     let bg = "#D3202F", fg = "#FFFFFF";
     const l = active && lines && lines[active.code];
     if (l && active.stops.has(s.id)) { bg = l.color; fg = l.texto; }
-    else if (favs.includes(s.id)) bg = "#13222C";
+    else if (favStop(s.id)) bg = "#13222C";
     const size = sizeFor(z) + (l && active.stops.has(s.id) ? 4 : 0), k = `${bg}|${fg}|${size}`;
     if (!iconCache.has(k)) {
       iconCache.set(k, L.icon({
@@ -272,14 +289,6 @@
     }
   }
 
-  function renderFav() {
-    const list = favs.map((id) => byId.get(id)).filter(Boolean);
-    if (!list.length) {
-      fillList([], t("no_favs"));
-      return;
-    }
-    fillList(list.map((s) => stopItem(s, { dist: me ? haversine(me, s.ll) : null })), "");
-  }
 
   function highlight(name, tokens) {
     // Subraya las coincidencias sin tener en cuenta tildes.
@@ -955,7 +964,7 @@
   }
 
   function updateFavBtn() {
-    const on = current && favs.includes(current.id);
+    const on = current && !!favStop(current.id);
     const b = $("#fav");
     b.setAttribute("aria-pressed", !!on);
     b.setAttribute("aria-label", on ? t("fav_remove") : t("fav_add"));
@@ -1210,6 +1219,195 @@
   $("#sched-open").addEventListener("click", () => { if (current) navigate(`horario/${current.id}`); });
   $("#sched-back").addEventListener("click", goBack);
 
+
+  // ---------- Pestaña Favoritas (5) ----------
+  const EDIT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';
+  let favTimer = null;
+  let favPicking = null;          // "home" | "work" mientras se elige con el buscador del propio botón
+  const favOpenLines = new Set(); // paradas con el selector de líneas abierto
+  function renderFav() {
+    clearTimeout(favTimer);
+    const items = [];
+    // Ir a casa / al trabajo; sin elegir, el botón abre un buscador para escribir la dirección.
+    const hw = document.createElement("li");
+    hw.className = "fav-hw";
+    hw.innerHTML = ["home", "work"].map((k) => {
+      const p = favs[k];
+      return p ? `<div class="hw"><button type="button" class="hw-go" data-go="${k}"><b>${esc(t(`go_${k}`))}</b><small>${esc(p.label)}</small></button>
+          <button type="button" class="icon-btn hw-edit" data-pick="${k}" aria-label="${esc(t(`change_${k}`))}" title="${esc(t(`change_${k}`))}">${EDIT_SVG}</button></div>`
+        : `<div class="hw"><button type="button" class="hw-go unset" data-pick="${k}"><b>${esc(t(`set_${k}`))}</b><small>${esc(t("set_hint"))}</small></button></div>`;
+    }).join("");
+    items.push(hw);
+    if (favPicking) items.push(pickerItem());
+    // Paradas: con los tiempos en vivo de sus líneas (todas o las elegidas).
+    favs.stops.forEach((f) => {
+      const s = byId.get(f.id);
+      if (!s) return;
+      const li = stopItem(s, { dist: me ? haversine(me, s.ll) : null, noLines: true });
+      li.classList.add("fav-stop");
+      const live = document.createElement("div");
+      live.className = "fav-live";
+      live.dataset.live = f.id;
+      live.textContent = "…";
+      const tools = document.createElement("div");
+      tools.className = "fav-tools";
+      const n = f.lines ? f.lines.length : 0;
+      tools.innerHTML = `<button type="button" data-flines="${esc(f.id)}" aria-expanded="${favOpenLines.has(f.id)}">${esc(n === 1 ? t("fav_lines_1") : n ? t("fav_lines_n", { n }) : t("fav_lines_all"))}</button>`;
+      li.append(live, tools);
+      if (favOpenLines.has(f.id)) {
+        const pick = document.createElement("div");
+        pick.className = "fav-linepick lines";
+        pick.innerHTML = s.lines.map((code) => `<button type="button" class="chip" data-fl="${esc(code)}" data-flstop="${esc(f.id)}" aria-pressed="${!f.lines || f.lines.includes(code)}"${lineStyle(code)}>${esc(code)}</button>`).join("");
+        li.append(pick);
+      }
+      items.push(li);
+    });
+    // Direcciones y sitios.
+    favs.places.forEach((p, i) => {
+      const li = document.createElement("li");
+      li.className = "fav-place";
+      li.innerHTML = `<button type="button" data-fplace="${i}">
+        <span class="name">${esc(p.label)}</span>
+        <span class="sub">${esc(p.site ? t(`site_${p.site}`) : t("fav_address"))}</span>
+        ${me ? `<span class="dist">${fmtDist(haversine(me, p.ll))}</span>` : ""}
+      </button>
+      <button type="button" class="fav-go" data-ftrip="${i}">${esc(t("trip_here"))}</button>`;
+      items.push(li);
+    });
+    fillList(items, favs.stops.length || favs.places.length ? "" : t("no_favs"));
+    if (favPicking) { const q = $("#fav-pick-q"); q.focus(); fillPicker(); }
+    refreshFavLive();
+  }
+  // Tiempos en vivo de las paradas favoritas (cada 30 s mientras se ve la pestaña).
+  function refreshFavLive() {
+    clearTimeout(favTimer);
+    if (mode !== "fav" || $("#home").hidden) return;
+    favs.stops.forEach((f) => getLive(f.id).then((e) => {
+      const box = document.querySelector(`.fav-live[data-live="${CSS.escape(f.id)}"]`);
+      if (!box) return;
+      if (!e.list) { box.textContent = t("times_error"); return; }
+      const by = new Map();
+      e.list.forEach((x) => {
+        const code = normLine(x.linea), m = Number(x.minutos);
+        if (isNaN(m) || (f.lines && !f.lines.includes(code))) return;
+        if (!by.has(code)) by.set(code, []);
+        by.get(code).push(m - Math.round((Date.now() - e.at) / 60000));
+      });
+      const rows = [...by].map(([code, ms]) => [code, ms.sort((a, b) => a - b).filter((m) => m >= 0).slice(0, 2)]).filter(([, ms]) => ms.length)
+        .sort((a, b) => a[1][0] - b[1][0]);
+      box.innerHTML = rows.length ? rows.map(([code, ms]) =>
+        `<span class="fl"><i${lineStyle(code)}>${esc(code)}</i>${ms.map((m) => (m <= 0 ? esc(t("arriving")) : `${m}`)).join(", ")}${ms.some((m) => m > 0) ? ` ${esc(t("min"))}` : ""}</span>`).join("")
+        : `<span class="fl-none">${esc(t(f.lines ? "fav_none_lines" : "bus_none"))}</span>`;
+    }));
+    favTimer = setTimeout(() => { if (!document.hidden) refreshFavLive(); }, REFRESH_MS);
+  }
+  // Buscador del botón "Elegir casa / trabajo".
+  function pickerItem() {
+    const li = document.createElement("li");
+    li.className = "fav-picker";
+    li.innerHTML = `<label class="visually-hidden" for="fav-pick-q">${esc(t(`set_${favPicking}`))}</label>
+      <div class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21"/></svg>
+      <input id="fav-pick-q" type="search" autocomplete="off" spellcheck="false" placeholder="${esc(t(`pick_${favPicking}`))}"></div>
+      <ul id="fav-pick-res" class="stops"></ul>
+      <button type="button" class="fav-cancel" data-pickcancel="1">${esc(t("cancel"))}</button>`;
+    return li;
+  }
+  const pickBtn = (attrs, name, sub) => `<li><button type="button" ${attrs}><span class="name">${name}</span><span class="sub">${esc(sub)}</span></button></li>`;
+  function fillPicker() {
+    const box = $("#fav-pick-res");
+    if (!box) return;
+    const q = $("#fav-pick-q").value.trim();
+    const out = [];
+    if (me && !farFromVigo(me)) out.push(pickBtn('data-pk="me"', esc(t("my_location_now")), t("my_location")));
+    if (/\p{L}.*\p{L}.*\p{L}/u.test(q)) {
+      const tokens = norm(q).split(" ").filter(Boolean);
+      if (!sitesData) ensureSites().then(fillPicker).catch(() => {});
+      if (!dirData) ensureDir().then(fillPicker).catch(() => {});
+      matchSites(q, 4).forEach((s) => out.push(pickBtn(`data-pk="site" data-i="${s.i}"`, highlight(s.name, tokens), t(`site_${s.type}`))));
+      if (dirData) {
+        const p = dirData.parse(q);
+        dirData.matchStreets(p.street, 4).forEach((st) => {
+          const label = p.num ? `${st.name}, ${p.num}` : st.name;
+          out.push(pickBtn(`data-pk="addr" data-i="${st.i}" data-num="${esc(p.num || "")}"`, highlight(label, tokens), p.num ? t("res_addr") : t("addr_add_num")));
+        });
+      }
+      matchStops(q).slice(0, 4).forEach((s) => out.push(pickBtn(`data-pk="stop" data-i="${esc(s.id)}"`, highlight(s.name, tokens), t("stop_n", { id: s.id }))));
+    }
+    box.innerHTML = out.join("");
+  }
+  function savePick(p) {
+    favs[favPicking] = p;
+    saveFavs();
+    toast(t(`saved_${favPicking}`));
+    favPicking = null;
+    renderFav();
+  }
+  // Ir a casa o al trabajo: Cómo llegar desde tu ubicación (si se puede) hasta allí.
+  function goTo(p) {
+    trip.a = trip.b = null;
+    trip.sel = null;
+    trip.b = { kind: "addr", ll: p.ll, label: p.label };
+    if (me && !farFromVigo(me)) trip.a = { kind: "me", ll: me };
+    navigate(`ir/${endToken(trip.a)}/${endToken(trip.b)}`);
+    if (!trip.a) getPosition((ll) => { if (tripOpen() && !trip.a && !farFromVigo(ll)) setEnd("a", { kind: "me", ll }); });
+  }
+  $("#list").addEventListener("input", (e) => { if (e.target.id === "fav-pick-q") fillPicker(); });
+  $("#list").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b || mode !== "fav") return;
+    if (b.dataset.pick) { e.stopPropagation(); favPicking = favPicking === b.dataset.pick ? null : b.dataset.pick; renderFav(); return; }
+    if (b.dataset.pickcancel) { e.stopPropagation(); favPicking = null; renderFav(); return; }
+    if (b.dataset.go) { e.stopPropagation(); goTo(favs[b.dataset.go]); return; }
+    if (b.dataset.pk) {
+      e.stopPropagation();
+      const k = b.dataset.pk;
+      if (k === "me") savePick({ ll: me.slice(), label: t("saved_here") });
+      else if (k === "site") { const s = sitesData[Number(b.dataset.i)]; savePick({ ll: s.ll, label: s.name, site: s.type }); }
+      else if (k === "stop") { const s = byId.get(b.dataset.i); savePick({ ll: s.ll, label: s.name }); }
+      else if (k === "addr") {
+        const st = dirData.streets[Number(b.dataset.i)];
+        if (!b.dataset.num) { const q = $("#fav-pick-q"); q.value = `${st.name}, `; q.focus(); fillPicker(); return; }
+        const r = dirData.resolve(st, b.dataset.num);
+        savePick({ ll: r.ll, label: `${st.name}, ${b.dataset.num}` });
+      }
+      return;
+    }
+    if (b.dataset.flines) {
+      e.stopPropagation();
+      const id = b.dataset.flines;
+      if (favOpenLines.has(id)) favOpenLines.delete(id); else favOpenLines.add(id);
+      renderFav();
+      return;
+    }
+    if (b.dataset.fl) {
+      e.stopPropagation();
+      const f = favStop(b.dataset.flstop), s = byId.get(f.id);
+      const on = new Set(f.lines || s.lines);
+      if (on.has(b.dataset.fl)) on.delete(b.dataset.fl); else on.add(b.dataset.fl);
+      f.lines = on.size === s.lines.length || !on.size ? null : s.lines.filter((c) => on.has(c));
+      saveFavs();
+      renderFav();
+      return;
+    }
+    if (b.dataset.fplace) { e.stopPropagation(); const p = favs.places[Number(b.dataset.fplace)]; openPlace({ ll: p.ll, label: p.label, approx: false, site: p.site }); return; }
+    if (b.dataset.ftrip) { e.stopPropagation(); goTo(favs.places[Number(b.dataset.ftrip)]); }
+  }, true);
+  // Estrella en la ficha de una dirección o de un sitio.
+  function updatePlaceFav() {
+    const on = !!(place && favPlace(place));
+    const b = $("#place-fav");
+    b.setAttribute("aria-pressed", on);
+    b.setAttribute("aria-label", on ? t("fav_remove") : t("fav_add"));
+  }
+  $("#place-fav").addEventListener("click", () => {
+    if (!place) return;
+    if (favPlace(place)) favs.places = favs.places.filter((f) => placeKey(f) !== placeKey(place));
+    else favs.places.push({ ll: place.ll.slice(), label: place.label, ...(place.site ? { site: place.site } : {}) });
+    saveFavs();
+    updatePlaceFav();
+    toast(favPlace(place) ? t("fav_added") : t("fav_removed"));
+  });
+
   // ---------- Dirección (calle y número) ----------
   // En la dirección web: #dir/<lat,lon>~<Calle, número>[~a] ("~a": posición aproximada).
   const PIN_SVG = '<svg viewBox="0 0 34 44" aria-hidden="true"><path d="M17 42s-14-13.2-14-24.5a14 14 0 0 1 28 0C31 28.8 17 42 17 42z" fill="#D3202F" stroke="#fff" stroke-width="2.5"/><circle cx="17" cy="17.5" r="5" fill="#fff"/></svg>';
@@ -1233,6 +1431,7 @@
     place = next;
     document.title = `${place.label} · Próximo Vitrasa`;
     $("#place-name").textContent = place.label;
+    updatePlaceFav();
     $("#place-meta").textContent = place.site ? t(`site_${place.site}`) : place.approx ? t("addr_approx") : /\d/.test(place.label) ? t("addr_exact") : t("addr_whole");
     $("#place-dist").textContent = me ? ` · ${fmtDist(haversine(me, place.ll))}` : "";
     $("#place-stops").replaceChildren(...nearest(place.ll, 6).map(({ s, d }) => stopItem(s, { dist: d, sub: t("walk", { n: walkMin(d * 1.25) }) })));
@@ -2450,11 +2649,12 @@
   $("#fav").addEventListener("click", () => {
     if (!current) return;
     const id = current.id;
-    favs = favs.includes(id) ? favs.filter((x) => x !== id) : [...favs, id];
+    if (favStop(id)) favs.stops = favs.stops.filter((f) => f.id !== id);
+    else favs.stops.push({ id, lines: null });
     saveFavs();
     updateFavBtn();
     refreshIcon(current);
-    toast(favs.includes(id) ? t("fav_added") : t("fav_removed"));
+    toast(favStop(id) ? t("fav_added") : t("fav_removed"));
   });
   $("#refresh").addEventListener("click", () => loadArrivals(false));
   // Tocar una pestaña muestra su contenido aunque quedara texto en el buscador.
