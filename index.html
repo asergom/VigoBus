@@ -18,6 +18,20 @@
   <div id="map" data-i18n-aria="map"></div>
 
 
+  <!-- iPhone: no se puede instalar desde la web; se explica cómo hacerlo con Safari -->
+  <div id="ios-install" class="ios-install" hidden role="dialog" aria-modal="true" aria-labelledby="ios-install-title">
+    <div class="ios-card">
+      <h2 id="ios-install-title" data-i18n="ios_title"></h2>
+      <ol>
+        <li><span data-i18n="ios_step1"></span>
+          <svg class="ios-share" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M7 11H5.5v9.5h13V11H17"/></svg></li>
+        <li data-i18n="ios_step2"></li>
+        <li data-i18n="ios_step3"></li>
+      </ol>
+      <button id="ios-install-ok" class="ios-ok" type="button" data-i18n="ios_ok"></button>
+    </div>
+  </div>
+
   <aside id="panel" class="panel" data-state="peek" data-i18n-aria="panel">
     <button id="grip" class="grip" type="button" data-i18n-aria="grip"><span></span></button>
 
@@ -54,6 +68,16 @@
 
     <!-- Lista: resultados de búsqueda, cerca de mí o favoritas -->
     <section id="home" class="view">
+      <!-- Instalar la web como app: solo en el móvil y si aún no se usa como app -->
+      <div id="install" class="install" hidden>
+        <button id="install-btn" class="install-btn" type="button">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7.5 10.5 12 15l4.5-4.5M5 19.5h14"/></svg>
+          <span data-i18n="install_app"></span>
+        </button>
+        <button id="install-close" class="install-close" type="button" data-i18n-aria="install_hide" data-i18n-title="install_hide">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
       <div class="tabs" role="tablist">
         <button role="tab" id="tab-near" aria-selected="true" type="button" data-i18n="tab_near"></button>
         <button role="tab" id="tab-fav" aria-selected="false" type="button" data-i18n="tab_fav"></button>

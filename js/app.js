@@ -2916,4 +2916,34 @@
   if ("serviceWorker" in navigator && location.protocol === "https:") {
     addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
   }
+  // Botón "Instala la app": solo en el móvil, nunca si ya se usa como app ni si se cerró con la X.
+  // Android (Chrome, Edge, Samsung…): abre la instalación del navegador (beforeinstallprompt).
+  // iPhone: la web no puede instalarse sola; se explican los pasos de Safari (pendiente de aprobar).
+  const IOS_INSTALL = false;
+  const INSTALL_KEY = "pv:instalar-oculto";
+  const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+  const onPhone = () => matchMedia("(pointer: coarse)").matches && !isDesktop();
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  let installEvt = null;
+  function installHidden() { try { return localStorage.getItem(INSTALL_KEY) === "1"; } catch { return false; } }
+  function showInstall() {
+    const can = onPhone() && !standalone() && !installHidden() && (installEvt || (IOS_INSTALL && isIOS));
+    $("#install").hidden = !can;
+  }
+  addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; showInstall(); });
+  addEventListener("appinstalled", () => { installEvt = null; $("#install").hidden = true; });
+  $("#install-btn").addEventListener("click", () => {
+    if (installEvt) {
+      const e = installEvt;
+      e.prompt();
+      e.userChoice.then((r) => { if (r.outcome === "accepted") { installEvt = null; $("#install").hidden = true; } }).catch(() => {});
+    } else if (IOS_INSTALL && isIOS) $("#ios-install").hidden = false;
+  });
+  $("#install-close").addEventListener("click", () => {
+    try { localStorage.setItem(INSTALL_KEY, "1"); } catch { /* sin almacenamiento */ }
+    $("#install").hidden = true;
+  });
+  $("#ios-install-ok").addEventListener("click", () => { $("#ios-install").hidden = true; });
+  $("#ios-install").addEventListener("click", (e) => { if (e.target.id === "ios-install") e.currentTarget.hidden = true; });
+  showInstall();
 })();
