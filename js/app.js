@@ -1358,8 +1358,11 @@
     }
     return best;
   }
+  // El toque que sigue a una pulsación larga ("Desde aquí / Hasta aquí") no cuenta como toque.
+  let heldAt = 0;
+  const justHeld = () => Date.now() - heldAt < 700;
   map.on("click", (e) => {
-    if (tripOpen()) return;   // en "Cómo llegar" lo atiende su propio manejador
+    if (tripOpen() || justHeld()) return;   // en "Cómo llegar" lo atiende su propio manejador
     const pt = numAt(e.containerPoint);
     if (pt) openPlace({ ll: pt.ll, label: `${pt.s.name}, ${pt.n}`, approx: false }, { replace: panel.dataset.view === "place" });
   });
@@ -1526,7 +1529,8 @@
     const q = inp.value.trim();
     const typed = q && q !== endLabel(trip[which]) ? q : "";
     $(`[data-clear="${which}"]`).hidden = !inp.value;
-    const items = [specialItem("me", ICON_ME, t("my_location")), specialItem("map", ICON_MAP, t("pick_map"))];
+    const special = [specialItem("me", ICON_ME, t("my_location")), specialItem("map", ICON_MAP, t("pick_map"))];
+    const items = [];
     if (typed && !dirData) ensureDir().then(() => { if (trip.editing === which) openSugg(which); }).catch(() => {});
     if (typed) {
       const tokens = norm(typed).split(" ").filter(Boolean);
@@ -1551,14 +1555,19 @@
         items.push(li);
       }
     }
-    $("#trip-sugg").replaceChildren(...items);
+    // Con texto escrito, primero lo encontrado (que se vea encima del teclado del móvil) y después
+    // "Mi ubicación" y "Elegir en el mapa"; sin texto, solo esas dos.
+    $("#trip-sugg").replaceChildren(...(typed ? [...items, ...special] : special));
     $("#trip-sugg").hidden = false;
     $("#trip-result").hidden = true;
+    $("#trip").classList.add("editing");   // mientras se escribe, sin las filas de hora y preferencias
+    $("#trip-sugg").scrollTop = 0;
   }
   function closeSugg() {
     trip.editing = null;
     $("#trip-sugg").hidden = true;
     $("#trip-result").hidden = false;
+    $("#trip").classList.remove("editing");
   }
 
   // ---------- Planificador: en bus de A a B ----------
@@ -2079,12 +2088,81 @@
   });
 
   map.on("click", (e) => {
-    if (!tripOpen()) return;
+    if (!tripOpen() || justHeld()) return;
     // Si se toca un número de portal, se elige esa dirección; si no, el punto del mapa.
     const pt = numAt(e.containerPoint);
     if (pt) setEnd(targetEnd(), { kind: "addr", ll: pt.ll, label: `${pt.s.name}, ${pt.n}` });
     else setEnd(targetEnd(), { kind: "map", ll: [e.latlng.lat, e.latlng.lng] });
   });
+
+  // ---------- "Desde aquí / Hasta aquí" en cualquier punto del mapa (32) ----------
+  // Móvil: mantener pulsado; ordenador: botón derecho. Un menú pequeño en ese punto (con la
+  // dirección si hay un portal a menos de 40 m) para usarlo como origen o destino de Cómo llegar.
+  const hereMenu = L.popup({ closeButton: false, className: "here-pop", autoPanPaddingTopLeft: [16, 16], autoPanPaddingBottomRight: [16, 16] });
+  let herePoint = null;
+  function nearestAddr(ll) {
+    if (!dirData) return null;
+    const d = 0.0005;
+    let best = null, bd = 40;
+    for (const pt of dirData.portalsIn(ll[0] - d, ll[1] - d * 1.35, ll[0] + d, ll[1] + d * 1.35)) {
+      const m = haversine(ll, pt.ll);
+      if (m < bd) { bd = m; best = pt; }
+    }
+    return best ? { kind: "addr", ll: best.ll, label: `${best.s.name}, ${best.n}` } : null;
+  }
+  function openHereMenu(latlng) {
+    const ll = [latlng.lat, latlng.lng];
+    const fill = () => {
+      herePoint = nearestAddr(ll) || { kind: "map", ll };
+      herePoint.at = ll;
+      const box = L.DomUtil.create("div", "here");
+      box.innerHTML = `<small>${esc(herePoint.kind === "addr" ? herePoint.label : t("map_point"))}</small>
+        <button type="button" data-here="a"><span class="pin pin-a">A</span>${esc(t("here_from"))}</button>
+        <button type="button" data-here="b"><span class="pin pin-b">B</span>${esc(t("here_to"))}</button>`;
+      L.DomEvent.disableClickPropagation(box);
+      box.addEventListener("click", (e) => { const b = e.target.closest("[data-here]"); if (b) useHere(b.dataset.here); });
+      hereMenu.setLatLng(latlng).setContent(box);
+      if (!map.hasLayer(hereMenu)) hereMenu.openOn(map);
+    };
+    fill();
+    if (!dirData) ensureDir().then(() => { if (map.hasLayer(hereMenu) && herePoint && herePoint.at === ll) fill(); }).catch(() => {});
+  }
+  function useHere(which) {
+    const p = herePoint && { kind: herePoint.kind, ll: herePoint.ll, label: herePoint.label };
+    map.closePopup(hereMenu);
+    if (!p) return;
+    if (p.kind !== "addr") delete p.label;
+    if (tripOpen()) { setEnd(which, p); return; }
+    // Fuera de Cómo llegar: un viaje nuevo (con "Mi ubicación" como origen si se elige el destino).
+    trip.a = trip.b = null;
+    trip.sel = null;
+    trip[which] = p;
+    if (which === "b" && me && !farFromVigo(me)) trip.a = { kind: "me", ll: me };
+    navigate(`ir/${endToken(trip.a)}/${endToken(trip.b)}`.replace(/\/+$/, ""));
+  }
+  // Ordenador (y algunos móviles, que lo lanzan al mantener pulsado): botón derecho.
+  map.on("contextmenu", (e) => { if (justHeld()) return; heldAt = Date.now(); openHereMenu(e.latlng); });
+  // Móvil: pulsación larga propia (no todos los navegadores lanzan "contextmenu"), sin moverse.
+  {
+    let timer = null, x0 = 0, y0 = 0;
+    const el = map.getContainer();
+    const cancel = () => { clearTimeout(timer); timer = null; };
+    el.addEventListener("touchstart", (e) => {
+      cancel();
+      if (e.touches.length !== 1 || e.target.closest(".leaflet-popup, .leaflet-control")) return;
+      x0 = e.touches[0].clientX; y0 = e.touches[0].clientY;
+      timer = setTimeout(() => {
+        timer = null;
+        heldAt = Date.now();
+        const r = el.getBoundingClientRect();
+        openHereMenu(map.containerPointToLatLng([x0 - r.left, y0 - r.top]));
+        if (navigator.vibrate) try { navigator.vibrate(15); } catch { /* sin vibración */ }
+      }, 550);
+    }, { passive: true });
+    el.addEventListener("touchmove", (e) => { if (timer && Math.hypot(e.touches[0].clientX - x0, e.touches[0].clientY - y0) > 10) cancel(); }, { passive: true });
+    el.addEventListener("touchend", cancel, { passive: true });
+    el.addEventListener("touchcancel", cancel, { passive: true });
+  }
 
   ["a", "b"].forEach((w) => {
     const inp = $(`#trip-${w}`);

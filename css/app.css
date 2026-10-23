@@ -111,6 +111,14 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .group-label { margin: 16px 0 0; padding-bottom: 6px; font-size: 14px; font-weight: 600; color: var(--granite); border-bottom: 1px solid var(--line); flex: none; }
 .place-pin { filter: drop-shadow(0 2px 3px rgba(19, 34, 44, .45)); }
 .place-pin svg { display: block; width: 34px; height: 44px; }
+/* Menú "Desde aquí / Hasta aquí" sobre el mapa */
+.here-pop .leaflet-popup-content-wrapper, .here-pop .leaflet-popup-tip { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.here-pop .leaflet-popup-content-wrapper { border-radius: 12px; padding: 0; }
+.here-pop .leaflet-popup-content { margin: 8px; min-width: 170px; }
+.here small { display: block; padding: 2px 6px 6px; color: var(--granite); font: 500 13px/1.25 var(--sans); max-width: 230px; }
+.here button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 4px 8px; border: 0; border-radius: 8px; background: none; color: var(--ink); font: 600 16px/1 var(--sans); text-align: left; cursor: pointer; }
+.here button:hover { background: var(--paper); }
+.here .pin { position: static; transform: none; flex: none; }
 /* Números de portal dibujados sobre el mapa (zoom alto) */
 .num-label {
   font: 600 12px/1 var(--sans); color: #4A3E33; white-space: nowrap; cursor: pointer;
@@ -179,6 +187,8 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 }
 #when-now[aria-pressed="true"], .when-pick.on { border-color: var(--focus); color: var(--ink); box-shadow: inset 0 0 0 1px var(--focus); }
 .when-pick { flex: 1; min-width: 0; }
+/* Escribiendo origen o destino: las sugerencias justo debajo (encima del teclado del móvil) */
+#trip.editing .trip-when, #trip.editing .trip-pref { display: none; }
 /* Preferencia de ruta */
 .trip-pref { display: flex; gap: 6px; margin-top: 8px; flex: none; }
 .trip-pref button {
