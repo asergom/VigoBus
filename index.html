@@ -33,11 +33,18 @@
   <div id="ios-install" class="ios-install" hidden role="dialog" aria-modal="true" aria-labelledby="ios-install-title">
     <div class="ios-card">
       <h2 id="ios-install-title" data-i18n="ios_title"></h2>
-      <ol>
+      <ol class="steps-ios">
         <li><span data-i18n="ios_step1"></span>
           <svg class="ios-share" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M8 7l4-4 4 4M7 11H5.5v9.5h13V11H17"/></svg></li>
         <li data-i18n="ios_step2"></li>
         <li data-i18n="ios_step3"></li>
+      </ol>
+      <!-- Firefox en Android: no permite que la web abra la instalación; se hace desde su menú -->
+      <ol class="steps-ff" hidden>
+        <li><span data-i18n="ff_step1"></span>
+          <svg class="ios-share" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="12" cy="19" r="1.6"/></svg></li>
+        <li data-i18n="ff_step2"></li>
+        <li data-i18n="ff_step3"></li>
       </ol>
       <button id="ios-install-ok" class="ios-ok" type="button" data-i18n="ios_ok"></button>
     </div>

@@ -2924,10 +2924,13 @@
   const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
   const onPhone = () => matchMedia("(pointer: coarse)").matches && !isDesktop();
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  // Firefox en Android tampoco deja que la web abra la instalación: se explican los pasos de su menú.
+  const isFirefoxAndroid = /Android/.test(navigator.userAgent) && /Firefox\//.test(navigator.userAgent);
+  const manualSteps = () => (IOS_INSTALL && isIOS) || isFirefoxAndroid;
   let installEvt = null;
   function installHidden() { try { return localStorage.getItem(INSTALL_KEY) === "1"; } catch { return false; } }
   function showInstall() {
-    const can = onPhone() && !standalone() && !installHidden() && (installEvt || (IOS_INSTALL && isIOS));
+    const can = onPhone() && !standalone() && !installHidden() && (installEvt || manualSteps());
     $("#install").hidden = !can;
   }
   addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); installEvt = e; showInstall(); });
@@ -2937,7 +2940,13 @@
       const e = installEvt;
       e.prompt();
       e.userChoice.then((r) => { if (r.outcome === "accepted") { installEvt = null; $("#install").hidden = true; } }).catch(() => {});
-    } else if (IOS_INSTALL && isIOS) $("#ios-install").hidden = false;
+    } else if (manualSteps()) {
+      const ff = isFirefoxAndroid;
+      $("#ios-install-title").textContent = t(ff ? "ff_title" : "ios_title");
+      $("#ios-install .steps-ios").hidden = ff;
+      $("#ios-install .steps-ff").hidden = !ff;
+      $("#ios-install").hidden = false;
+    }
   });
   $("#install-close").addEventListener("click", () => {
     try { localStorage.setItem(INSTALL_KEY, "1"); } catch { /* sin almacenamiento */ }
