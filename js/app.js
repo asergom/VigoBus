@@ -271,11 +271,21 @@
       .sort((a, b) => a.d - b.d).slice(0, n);
   }
 
+  // "Qué sale ya cerca de mí" (22): con la ubicación, primero los próximos buses de las paradas a
+  // menos de 600 m, mezclados por minutos (sin los que pasan antes de poder llegar andando).
+  const NEAR_DEP_M = 600, NEAR_DEP_MAX = 8;
+  let nearTimer = null;
   function renderNear() {
     if (!stops.length) return;
+    clearTimeout(nearTimer);
     if (me) {
-      const items = nearest(me, NEAR_COUNT).map(({ s, d }) => stopItem(s, { dist: d, sub: t("walk", { n: walkMin(d) }) }));
+      const near = nearest(me, NEAR_COUNT);
+      const dep = document.createElement("li");
+      dep.className = "near-dep";
+      dep.innerHTML = `<p class="group-head">${esc(t("near_dep"))}</p><div class="arrivals near-dep-list"><p class="note">…</p></div>`;
+      const items = [dep, groupHead(t("near_stops")), ...near.map(({ s, d }) => stopItem(s, { dist: d, sub: t("walk", { n: walkMin(d) }) }))];
       fillList(items, "");
+      refreshNearDep();
     } else {
       const c = map.getCenter();
       const items = nearest([c.lat, c.lng], NEAR_COUNT).map(({ s }) => stopItem(s, {}));
@@ -1219,6 +1229,55 @@
   $("#sched-open").addEventListener("click", () => { if (current) navigate(`horario/${current.id}`); });
   $("#sched-back").addEventListener("click", goBack);
 
+
+  function refreshNearDep() {
+    clearTimeout(nearTimer);
+    const box = document.querySelector(".near-dep-list");
+    if (!box || !me || mode !== "near" || $("#home").hidden) return;
+    if (document.hidden) { nearTimer = setTimeout(refreshNearDep, REFRESH_MS); return; }
+    const near = nearest(me, 12).filter(({ d }) => d <= NEAR_DEP_M).slice(0, 6);
+    if (!near.length) { box.innerHTML = `<p class="note">${esc(t("near_dep_none_stops"))}</p>`; return; }
+    Promise.all(near.map(({ s }) => getLive(s.id))).then((res) => {
+      const box2 = document.querySelector(".near-dep-list");
+      if (!box2) return;
+      const rows = [];
+      res.forEach((e, k) => {
+        if (!e.list) return;
+        const { s, d } = near[k];
+        const walk = walkMin(d * 1.25);
+        const seen = new Set();
+        e.list.forEach((x) => {
+          const m = Number(x.minutos) - Math.round((Date.now() - e.at) / 60000);
+          const code = normLine(x.linea), raw = String(x.ruta || "").trim();
+          if (isNaN(m) || m < walk - 1) return;   // no da tiempo a llegar andando
+          const key = `${code}|${norm(raw)}`;
+          if (seen.has(key)) return;              // de cada línea y letrero, el próximo en esa parada
+          seen.add(key);
+          rows.push({ code, raw, ruta: titleCase(raw), m, s, walk });
+        });
+      });
+      // De cada línea y letrero, solo en la parada donde sale antes.
+      rows.sort((a, b) => a.m - b.m || a.walk - b.walk);
+      const once = new Set();
+      const top = rows.filter((r) => { const k = `${r.code}|${norm(r.raw)}`; if (once.has(k)) return false; once.add(k); return true; }).slice(0, NEAR_DEP_MAX);
+      box2.innerHTML = top.length ? top.map((r) => {
+        const eta = r.m <= 0 ? `<span class="eta now"><b>${esc(t("arriving"))}</b></span>` : `<span class="eta"><b>${r.m}</b><span>${esc(t("min"))}</span></span>`;
+        const known = lines && lines[r.code];
+        return `<${known ? "button" : "div"} class="arrival"${known ? ` type="button" data-near-line="${esc(r.code)}" data-near-stop="${esc(r.s.id)}" data-near-raw="${esc(r.raw)}"` : ""}>
+          <span class="badge"${lineStyle(r.code)}>${esc(r.code)}</span>
+          <span class="route"><b>${esc(r.ruta)}</b><small>${esc(r.s.name)} · ${esc(t("walk", { n: r.walk }))}</small></span>${eta}
+        </${known ? "button" : "div"}>`;
+      }).join("") : `<p class="note">${esc(t("near_dep_none"))}</p>`;
+    });
+    nearTimer = setTimeout(refreshNearDep, REFRESH_MS);
+  }
+  // Tocar uno: esa línea (solo los viajes con ese letrero) desde su parada.
+  $("#list").addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-near-line]");
+    if (!b) return;
+    e.stopPropagation();
+    navigate(`linea/${b.dataset.nearLine}/${b.dataset.nearStop}${b.dataset.nearRaw ? `/${encodeURIComponent(b.dataset.nearRaw)}` : ""}`);
+  }, true);
 
   // ---------- Pestaña Favoritas (5) ----------
   const EDIT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>';

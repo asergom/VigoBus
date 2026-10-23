@@ -351,6 +351,14 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .stop-meta { margin: 0; color: var(--granite); font-size: 15px; }
 .stop-meta strong { color: var(--ink); font-weight: 600; }
 .fav[aria-pressed="true"] svg { fill: var(--bus); stroke: var(--bus); }
+/* ---------- Sale ya cerca de ti ---------- */
+.stops .near-dep { border-bottom: 0; }
+.near-dep .group-head { margin: 0; }
+.stops .near-dep-list { margin: 0; padding: 0 16px; overflow: visible; flex: none; }
+.near-dep-list .note { margin: 8px 0; }
+.stops .near-dep-list .arrival { grid-template-columns: 58px 1fr auto; padding: 10px 0; }
+.near-dep-list .arrival:last-child { border-bottom: 0; }
+@media (min-width: 860px) { .stops .near-dep-list { margin: 0; padding: 0 20px; } }
 /* ---------- Favoritas ---------- */
 .stops .fav-hw { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--line); }
 .fav-hw .hw { display: flex; align-items: stretch; gap: 2px; min-width: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
