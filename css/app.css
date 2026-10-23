@@ -268,7 +268,7 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .opts-back:hover { background: var(--surface); }
 .opt-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 2px 10px; border-bottom: 1px solid var(--line); }
 .opt-head .eta b { font-size: 32px; }
-.opt-head .opt-time { display: flex; align-items: center; gap: 10px; flex: none; }
+.opt-head .opt-time { display: flex; align-items: baseline; gap: 10px; flex: none; }
 .opt-head .leave { font-weight: 600; font-size: 15px; color: var(--granite); text-align: right; line-height: 1.15; }
 .steps { list-style: none; margin: 0; padding: 4px 0 0; }
 .step { position: relative; display: grid; grid-template-columns: 52px 1fr; gap: 12px; padding: 12px 0; }
