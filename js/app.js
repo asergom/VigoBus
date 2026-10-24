@@ -1642,7 +1642,7 @@
   const EXT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
   // Sobre esta web: autoría y código fuente (AGPL-3.0: quien use la web tiene que poder conseguir
   // el código; TERMINOS-ADICIONALES.md pide además esta mención visible en las copias).
-  const REPO = "https://github.com/asergom/proximovitrasa";
+  const REPO = "https://github.com/proximovitrasa/proximovitrasa.github.io";
   function renderInfo() {
     $("#info-list").innerHTML = INFO_LINKS.map(([grp, links]) =>
       `<li class="group-head">${esc(t(grp))}</li>` + links.map(([k, path]) =>

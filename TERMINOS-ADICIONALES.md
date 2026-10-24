@@ -19,7 +19,7 @@ la licencia para más detalles.
    mostrarla de forma visible en su interfaz de usuario, en la pantalla principal o en una
    pantalla de información o «Acerca de» a la que se llegue directamente desde ella:
 
-   > Basado en ProximoVitrasa, de asergom — https://github.com/asergom/proximovitrasa
+   > Basado en ProximoVitrasa, de asergom — https://github.com/proximovitrasa/proximovitrasa.github.io
 
    El texto debe ser legible y el enlace, funcional. Puede traducirse al idioma de la obra
    siempre que se mantengan el nombre «ProximoVitrasa», el autor y el enlace.
