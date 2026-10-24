@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: AGPL-3.0-only · © 2026 asergom · ver LICENSE y TERMINOS-ADICIONALES.md */
 /* Próximo Vitrasa: búsqueda de direcciones (calle y número): calles de OpenStreetMap y portales de
    OpenStreetMap y del Concello de Vigo. data/direcciones.json se descarga una vez, al primer uso
    (buscar una calle, abrir "Cómo llegar" o acercar el mapa hasta ver los números).

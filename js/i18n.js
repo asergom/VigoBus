@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: AGPL-3.0-only · © 2026 asergom · ver LICENSE y TERMINOS-ADICIONALES.md */
 /* Textos de la interfaz en cada idioma. Los nombres de paradas y líneas no se traducen. */
 window.PV_I18N = {
   // Banderas dibujadas aquí mismo (viewBox 30×20), sin imágenes externas.
@@ -55,6 +56,7 @@ window.PV_I18N = {
       trip_net_error: "No se pudo cargar el mapa de calles. Comprueba la conexión y vuelve a intentarlo.", trip_source: "Ruta a pie calculada en tu dispositivo con las calles de OpenStreetMap ({date}).",
       trip_compare: "Comparar en OpenStreetMap", trip_no_stops: "No hay calles ni paradas que coincidan con «{q}».",
       res_addr: "Direcciones", near_stops: "Paradas cercanas",
+      info_grp_about: "Sobre esta web", about_line: "ProximoVitrasa © 2026 asergom. Software libre con licencia AGPL-3.0. Web independiente, no oficial de Vitrasa.", about_code: "Código fuente", about_license: "Licencia y condiciones",
       leave_time_tomorrow: "Sal mañana a las {time}",
       ff_title: "Instalar con Firefox", ff_step1: "Toca el menú de Firefox", ff_step2: "Elige «Añadir a la pantalla de inicio» (o «Instalar»)", ff_step3: "Confirma con «Añadir»: la app aparecerá con su icono",
       install_app: "Instala la app", install_hide: "No mostrar más", ios_title: "Instalar en el iPhone", ios_step1: "Toca el botón Compartir de Safari", ios_step2: "Elige «Añadir a pantalla de inicio»", ios_step3: "Toca «Añadir»: la app aparecerá con su icono", ios_ok: "Entendido",
@@ -127,6 +129,7 @@ window.PV_I18N = {
       trip_net_error: "Non se puido cargar o mapa de rúas. Comproba a conexión e volve intentalo.", trip_source: "Ruta a pé calculada no teu dispositivo coas rúas de OpenStreetMap ({date}).",
       trip_compare: "Comparar en OpenStreetMap", trip_no_stops: "Non hai rúas nin paradas que coincidan con «{q}».",
       res_addr: "Enderezos", near_stops: "Paradas próximas",
+      info_grp_about: "Sobre esta web", about_line: "ProximoVitrasa © 2026 asergom. Software libre con licenza AGPL-3.0. Web independente, non oficial de Vitrasa.", about_code: "Código fonte", about_license: "Licenza e condicións",
       leave_time_tomorrow: "Sae mañá ás {time}",
       ff_title: "Instalar con Firefox", ff_step1: "Toca o menú de Firefox", ff_step2: "Escolle «Engadir á pantalla de inicio» (ou «Instalar»)", ff_step3: "Confirma con «Engadir»: a app aparecerá coa súa icona",
       install_app: "Instala a app", install_hide: "Non amosar máis", ios_title: "Instalar no iPhone", ios_step1: "Toca o botón Compartir de Safari", ios_step2: "Escolle «Engadir á pantalla de inicio»", ios_step3: "Toca «Engadir»: a app aparecerá coa súa icona", ios_ok: "Entendido",
@@ -199,6 +202,7 @@ window.PV_I18N = {
       trip_net_error: "Não foi possível carregar o mapa de ruas. Verifique a ligação e tente novamente.", trip_source: "Percurso a pé calculado no seu dispositivo com as ruas do OpenStreetMap ({date}).",
       trip_compare: "Comparar no OpenStreetMap", trip_no_stops: "Não há ruas nem paragens que correspondam a «{q}».",
       res_addr: "Moradas", near_stops: "Paragens próximas",
+      info_grp_about: "Sobre este site", about_line: "ProximoVitrasa © 2026 asergom. Software livre com licença AGPL-3.0. Site independente, não oficial da Vitrasa.", about_code: "Código-fonte", about_license: "Licença e condições",
       leave_time_tomorrow: "Sai amanhã às {time}",
       ff_title: "Instalar com o Firefox", ff_step1: "Toca no menu do Firefox", ff_step2: "Escolhe «Adicionar ao ecrã principal» (ou «Instalar»)", ff_step3: "Confirma com «Adicionar»: a app aparece com o seu ícone",
       install_app: "Instala a app", install_hide: "Não mostrar mais", ios_title: "Instalar no iPhone", ios_step1: "Toca no botão Partilhar do Safari", ios_step2: "Escolhe «Adicionar ao ecrã principal»", ios_step3: "Toca em «Adicionar»: a app aparece com o seu ícone", ios_ok: "Entendido",
@@ -271,6 +275,7 @@ window.PV_I18N = {
       trip_net_error: "Ezin izan da kaleen mapa kargatu. Egiaztatu konexioa eta saiatu berriro.", trip_source: "Oinezko ibilbidea zure gailuan kalkulatu da, OpenStreetMap-eko kaleekin ({date}).",
       trip_compare: "Alderatu OpenStreetMap-en", trip_no_stops: "Ez dago «{q}» bilaketarekin bat datorren kale edo geltokirik.",
       res_addr: "Helbideak", near_stops: "Geltoki hurbilak",
+      info_grp_about: "Webgune honi buruz", about_line: "ProximoVitrasa © 2026 asergom. Software librea, AGPL-3.0 lizentziarekin. Webgune independentea, ez Vitrasaren ofiziala.", about_code: "Iturburu-kodea", about_license: "Lizentzia eta baldintzak",
       leave_time_tomorrow: "Irten bihar, {time}etan",
       ff_title: "Firefoxekin instalatu", ff_step1: "Sakatu Firefoxen menua", ff_step2: "Aukeratu «Gehitu hasierako pantailan» (edo «Instalatu»)", ff_step3: "Berretsi «Gehitu» sakatuta: aplikazioa bere ikonoarekin agertuko da",
       install_app: "Instalatu aplikazioa", install_hide: "Ez erakutsi gehiago", ios_title: "iPhonean instalatu", ios_step1: "Sakatu Safariko Partekatu botoia", ios_step2: "Aukeratu «Gehitu hasierako pantailan»", ios_step3: "Sakatu «Gehitu»: aplikazioa bere ikonoarekin agertuko da", ios_ok: "Ados",
@@ -343,6 +348,7 @@ window.PV_I18N = {
       trip_net_error: "No s'ha pogut carregar el mapa de carrers. Comprova la connexió i torna-ho a provar.", trip_source: "Ruta a peu calculada al teu dispositiu amb els carrers d'OpenStreetMap ({date}).",
       trip_compare: "Compara a OpenStreetMap", trip_no_stops: "No hi ha carrers ni parades que coincideixin amb «{q}».",
       res_addr: "Adreces", near_stops: "Parades properes",
+      info_grp_about: "Sobre aquest web", about_line: "ProximoVitrasa © 2026 asergom. Programari lliure amb llicència AGPL-3.0. Web independent, no oficial de Vitrasa.", about_code: "Codi font", about_license: "Llicència i condicions",
       leave_time_tomorrow: "Surt demà a les {time}",
       ff_title: "Instal·lar amb Firefox", ff_step1: "Toca el menú de Firefox", ff_step2: "Tria «Afegeix a la pantalla d'inici» (o «Instal·la»)", ff_step3: "Confirma amb «Afegeix»: l'app apareixerà amb la seva icona",
       install_app: "Instal·la l'app", install_hide: "No mostris més", ios_title: "Instal·lar a l'iPhone", ios_step1: "Toca el botó Comparteix de Safari", ios_step2: "Tria «Afegeix a la pantalla d'inici»", ios_step3: "Toca «Afegeix»: l'app apareixerà amb la seva icona", ios_ok: "Entesos",
@@ -415,6 +421,7 @@ window.PV_I18N = {
       trip_net_error: "The street map couldn't be loaded. Check your connection and try again.", trip_source: "Walking route worked out on your device with OpenStreetMap streets ({date}).",
       trip_compare: "Compare on OpenStreetMap", trip_no_stops: "No streets or stops match “{q}”.",
       res_addr: "Addresses", near_stops: "Nearby stops",
+      info_grp_about: "About this site", about_line: "ProximoVitrasa © 2026 asergom. Free software under the AGPL-3.0 licence. Independent site, not affiliated with Vitrasa.", about_code: "Source code", about_license: "Licence and terms",
       leave_time_tomorrow: "Leave tomorrow at {time}",
       ff_title: "Install with Firefox", ff_step1: "Tap the Firefox menu", ff_step2: "Choose “Add to Home screen” (or “Install”)", ff_step3: "Confirm with “Add”: the app appears with its icon",
       install_app: "Install the app", install_hide: "Don't show again", ios_title: "Install on iPhone", ios_step1: "Tap the Share button in Safari", ios_step2: "Choose “Add to Home Screen”", ios_step3: "Tap “Add”: the app appears with its icon", ios_ok: "Got it",
@@ -487,6 +494,7 @@ window.PV_I18N = {
       trip_net_error: "Impossible de charger le plan des rues. Vérifiez la connexion et réessayez.", trip_source: "Itinéraire à pied calculé sur votre appareil avec les rues d'OpenStreetMap ({date}).",
       trip_compare: "Comparer sur OpenStreetMap", trip_no_stops: "Aucune rue ni aucun arrêt ne correspond à « {q} ».",
       res_addr: "Adresses", near_stops: "Arrêts à proximité",
+      info_grp_about: "À propos de ce site", about_line: "ProximoVitrasa © 2026 asergom. Logiciel libre sous licence AGPL-3.0. Site indépendant, non officiel de Vitrasa.", about_code: "Code source", about_license: "Licence et conditions",
       leave_time_tomorrow: "Partez demain à {time}",
       ff_title: "Installer avec Firefox", ff_step1: "Touchez le menu de Firefox", ff_step2: "Choisissez « Ajouter à l'écran d'accueil » (ou « Installer »)", ff_step3: "Confirmez avec « Ajouter » : l'app apparaît avec son icône",
       install_app: "Installer l'app", install_hide: "Ne plus afficher", ios_title: "Installer sur iPhone", ios_step1: "Touchez le bouton Partager de Safari", ios_step2: "Choisissez « Sur l'écran d'accueil »", ios_step3: "Touchez « Ajouter » : l'app apparaît avec son icône", ios_ok: "Compris",
@@ -559,6 +567,7 @@ window.PV_I18N = {
       trip_net_error: "Der Straßenplan konnte nicht geladen werden. Prüfe die Verbindung und versuche es erneut.", trip_source: "Fußweg auf deinem Gerät mit den Straßen von OpenStreetMap berechnet ({date}).",
       trip_compare: "Auf OpenStreetMap vergleichen", trip_no_stops: "Keine Straße oder Haltestelle passt zu „{q}“.",
       res_addr: "Adressen", near_stops: "Haltestellen in der Nähe",
+      info_grp_about: "Über diese Seite", about_line: "ProximoVitrasa © 2026 asergom. Freie Software unter der Lizenz AGPL-3.0. Unabhängige Seite, nicht offiziell von Vitrasa.", about_code: "Quellcode", about_license: "Lizenz und Bedingungen",
       leave_time_tomorrow: "Morgen um {time} losgehen",
       ff_title: "Mit Firefox installieren", ff_step1: "Tippe auf das Firefox-Menü", ff_step2: "Wähle „Zum Startbildschirm hinzufügen“ (oder „Installieren“)", ff_step3: "Bestätige mit „Hinzufügen“: Die App erscheint mit ihrem Symbol",
       install_app: "App installieren", install_hide: "Nicht mehr anzeigen", ios_title: "Auf dem iPhone installieren", ios_step1: "Tippe in Safari auf „Teilen“", ios_step2: "Wähle „Zum Home-Bildschirm“", ios_step3: "Tippe auf „Hinzufügen“: Die App erscheint mit ihrem Symbol", ios_ok: "Verstanden",

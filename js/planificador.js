@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: AGPL-3.0-only · © 2026 asergom · ver LICENSE y TERMINOS-ADICIONALES.md */
 /* Próximo Vitrasa: planificador de viajes en bus de A a B (directos y con uno o más transbordos).
    Usa data/viajes.json (horarios del GTFS) para elegir las opciones y, después, la web corrige la
    espera con los tiempos en vivo de la API (retime). Todo se calcula en el propio dispositivo.

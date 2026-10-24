@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: AGPL-3.0-only · © 2026 asergom · ver LICENSE y TERMINOS-ADICIONALES.md */
 /* Próximo Vitrasa: rutas a pie con la red peatonal propia (data/peatonal.json).
    Sin servicios externos: la red se descarga una vez y la ruta se calcula en el propio dispositivo.
    Red: © colaboradores de OpenStreetMap, licencia ODbL. */

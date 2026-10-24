@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: AGPL-3.0-only · © 2026 asergom · ver LICENSE y TERMINOS-ADICIONALES.md */
 /* ---------- Fuentes (Barlow, OFL) ---------- */
 @font-face { font-family: "Barlow"; src: url(../fonts/Barlow-Regular.woff2) format("woff2"); font-weight: 400; font-display: swap; }
 @font-face { font-family: "Barlow"; src: url(../fonts/Barlow-Medium.woff2) format("woff2"); font-weight: 500; font-display: swap; }
@@ -101,6 +102,8 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
 .ios-card h2 { margin: 0 0 12px; font: 700 22px/1.15 var(--cond); }
 .ios-card ol { margin: 0 0 16px; padding-left: 22px; font-size: 16px; line-height: 1.45; }
 .ios-card li { margin: 0 0 8px; }
+.info-list .about-line { padding: 12px 16px; font-size: 15px; line-height: 1.4; color: var(--granite); border-bottom: 1px solid var(--line); }
+@media (min-width: 860px) { .info-list .about-line { padding-left: 20px; padding-right: 20px; } }
 .ios-card ol[hidden] { display: none; }
 .steps-ff .ios-share { fill: var(--focus); stroke: none; }
 .ios-share { width: 20px; height: 20px; vertical-align: -4px; margin-left: 4px; fill: none; stroke: var(--focus); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

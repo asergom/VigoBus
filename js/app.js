@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: AGPL-3.0-only · © 2026 asergom · ver LICENSE y TERMINOS-ADICIONALES.md */
 /* Próximo Vitrasa: mapa de paradas y próximos buses en Vigo. */
 (() => {
   "use strict";
@@ -1639,10 +1640,17 @@
     ]],
   ];
   const EXT_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>';
+  // Sobre esta web: autoría y código fuente (AGPL-3.0: quien use la web tiene que poder conseguir
+  // el código; TERMINOS-ADICIONALES.md pide además esta mención visible en las copias).
+  const REPO = "https://github.com/asergom/proximovitrasa";
   function renderInfo() {
     $("#info-list").innerHTML = INFO_LINKS.map(([grp, links]) =>
       `<li class="group-head">${esc(t(grp))}</li>` + links.map(([k, path]) =>
-        `<li><a class="info-link" href="${VITRASA}${path}" target="_blank" rel="noopener"><span class="name">${esc(t(k))}</span>${EXT_SVG}</a></li>`).join("")).join("");
+        `<li><a class="info-link" href="${VITRASA}${path}" target="_blank" rel="noopener"><span class="name">${esc(t(k))}</span>${EXT_SVG}</a></li>`).join("")).join("") +
+      `<li class="group-head">${esc(t("info_grp_about"))}</li>
+       <li class="about-line">${esc(t("about_line"))}</li>
+       <li><a class="info-link" href="${REPO}" target="_blank" rel="noopener"><span class="name">${esc(t("about_code"))}</span>${EXT_SVG}</a></li>
+       <li><a class="info-link" href="${REPO}/blob/main/TERMINOS-ADICIONALES.md" target="_blank" rel="noopener"><span class="name">${esc(t("about_license"))}</span>${EXT_SVG}</a></li>`;
   }
   function showInfo() {
     leaveStop();

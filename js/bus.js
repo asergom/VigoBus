@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: AGPL-3.0-only · © 2026 asergom · ver LICENSE y TERMINOS-ADICIONALES.md */
 /* Próximo Vitrasa: posición estimada del próximo bus sobre el trazado de su línea.
    La API del Concello da, para cada bus que se acerca a una parada, los metros que le faltan.
    Posición del bus = distancia de la parada a lo largo del trazado − esos metros.
