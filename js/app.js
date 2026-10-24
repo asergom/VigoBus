@@ -2251,6 +2251,7 @@
     }
     let head = "";
     if (lt.planError) head = `<p class="trip-note">${esc(t("plan_error"))}</p>`;
+    else if (!lt.opts.length && lt.walk && lt.cands && lt.cands.length) head = `<p class="trip-note">${esc(t("bus_pointless"))}</p>`;
     else if (!lt.opts.length) head = `<div class="state"><strong>${esc(t("plan_none"))}</strong></div>`;
     if (lt.arriveLate && trip.when) head = `<p class="trip-note warn">${esc(t("arrive_impossible", { time: trip.when.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" }) }))}</p>` + head;
     if (!items.length) head = `<div class="state"><strong>${esc(t("trip_none"))}</strong></div>`;

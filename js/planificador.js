@@ -22,6 +22,7 @@
   const WIDE_OPTIONS = 8;
   const CUTOFF = 25 * 60;        // se descartan opciones que cuestan 25 min más que la mejor
   const WALK_SLACK = 5 * 60;     // el bus tiene que ahorrar más de 5 min frente a ir andando
+  const USELESS_M = 150;          // ver pick(): bus que no ahorra andar
   const MAX_WAIT = 3600;         // espera máxima en un transbordo
 
   // Festivos con horario de domingo: nacionales, de Galicia y de Vigo (los fijos), más Jueves
@@ -397,7 +398,10 @@
     // que llegan 10 min más tarde que otra mejor en todo lo demás: la espera real puede cambiarlo.
     function pick(list, now, walk, wide = false) {
       const walkArr = walk < Infinity ? now + walk / WALK : Infinity;
-      const all = list.filter((j) => !j.broken);
+      // Un bus con el que se anda lo mismo (o casi, USELESS_M) que yendo andando hasta el destino no
+      // sirve para nada (p. ej. 60 m hasta la parada, una parada hacia atrás y 770 m andando, frente
+      // a 660 m andando): no se ofrece, aunque no quede ninguna opción en bus.
+      const all = list.filter((j) => !j.broken && !(walk < Infinity && j.walkM >= walk - USELESS_M));
       // "Llegar a las": compensa si deja salir más de 5 min más tarde que andando.
       const T = all.length ? all[0].arriveBy : null;
       const walkDep = T != null && walk < Infinity ? T - walk / WALK : -Infinity;
